@@ -96,51 +96,10 @@ function StatsBase.fit{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{Hurdle},::Ty
   if !fittedpos
     # create blank model without fitting
     if M <: RegularizationPath
-      try
-        mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=false, λ=[0.0], wts=wts[ixpos], offset=offpos, verbose=verbose, fitargs...)
-        verbose && info("Blank positives model without fitting:\n$mpos")
-        verbose && info("Blank (null) model's intercept is $(mpos.nullb0)")
-      catch
-        verbose && warn("failed to blank truncated $M counts model to positive subsample.")
-        verbose && warn("possibly not enough variation in ypos:")
-        verbose && warn("countmap(y)=$(countmap(y))")
-        if typeof(e) <: ErrorException && (contains(e.msg,"step-halving") || contains(e.msg,"failure to converge") || contains(e.msg,"failed to converge")) ||
-            typeof(e) == Base.LinAlg.PosDefException || typeof(e) == DomainError
-          # set intercept to -Inf in a bla
-          # TODO: what to do here? maybe fit an intercept free model first? but then what about other coeficeints?
-          mpos = fit(M, Xpos, ypos, dpos, lpos; intercept=false, dofit=false, λ=[0.0], wts=wts[ixpos], offset=offpos, verbose=verbose, fitargs...)
-        else
-          verbose && warn("countmap(y)=$(countmap(y))")
-          verbose && warn("X'=$(X')")
-          verbose && warn("y=$y)")
-          rethrow(e)
-        end
-      end
+      mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=false, λ=[0.0], wts=wts[ixpos], offset=offpos, verbose=verbose, fitargs...)
     else
       mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=false, wts=wts[ixpos], offset=offpos, verbose=verbose, fitargs...)
-      verbose && info("Blank positives model without fitting:\n$mpos")
     end
-    # fitargsdict = Dict(fitargs)
-    # println("fitargsdict=$fitargsdict")
-    # if haskey(fitargsdict,:intercept) && fitargsdict[:intercept]
-    #   # fit null model (intercept only)
-    #   Xnull = ones(T, length(y), 1)
-    #   if M <: RegularizationPath
-    #     # nothing to do here, already taken care of by Lasso.jl's coef()
-    #     # mnullpos = fit(M, Xnull, ypos, dpos, lpos; λ=[0.0], wts=wts[ixpos], offset=offpos, verbose=verbose, fitargs...)
-    #     # # set intercept in blank model
-    #     # mpos.nullb0 = coef(mnullpos)[1]
-    #   else
-    #     mnullpos = fit(M, Xnull, ypos, dpos, lpos; wts=wts[ixpos], offset=offpos, verbose=verbose, fitargs...)
-    #     # set intercept in blank model
-    #     nullb0 = coef(mnullpos)[1]
-    #     mpos.b0 = coef(mpos)
-    #     mpos.b0[1] = nullb0
-    #   end
-    #   verbose && info("Intercept only positives model:\n$mpos")
-    # else
-    #   verbose && info("Blank positives model without fitting:\n$mpos")
-    # end
   end
 
   Hurdle(mzero,mpos,fittedzero,fittedpos)

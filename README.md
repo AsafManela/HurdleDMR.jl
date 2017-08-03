@@ -1,30 +1,15 @@
 # HurdleDMR
 
-[![Build Status](https://travis-ci.org/simonster/Lasso.jl.svg?branch=master)](https://travis-ci.org/simonster/Lasso.jl)
-[![Coverage Status](https://coveralls.io/repos/simonster/Lasso.jl/badge.svg?branch=master)](https://coveralls.io/r/simonster/Lasso.jl?branch=master)
+<!-- [![Build Status](https://travis-ci.org/simonster/Lasso.jl.svg?branch=master)](https://travis-ci.org/simonster/Lasso.jl)
+[![Coverage Status](https://coveralls.io/repos/simonster/Lasso.jl/badge.svg?branch=master)](https://coveralls.io/r/simonster/Lasso.jl?branch=master) -->
 
-Lasso.jl is a pure Julia implementation of the glmnet coordinate
-descent algorithm for fitting linear and generalized linear Lasso and
-Elastic Net models, as described in:
+HurdledMR.jl is a Julia implementation of the Hurdle Distributed Multinomial Regression (HDMR), as described in:
 
-Friedman, J., Hastie, T., & Tibshirani, R. (2010). Regularization paths
-for generalized linear models via coordinate descent. Journal of
-Statistical Software, 33(1), 1. http://www.jstatsoft.org/v33/i01/
+Kelly, Bryan, Asaf Manela, and Alan Moreira (2017). Text Selection. Working paper
 
-Lasso.jl also includes an implementation of the O(n) fused Lasso
-implementation described in:
+It includes a Julia implementation of the Distributed Multinomial Regression (DMR) model of Taddy (2015).
 
-Johnson, N. A. (2013). A dynamic programming algorithm for the fused
-lasso and L0-segmentation. Journal of Computational and Graphical
-Statistics, 22(2), 246–260. doi:10.1080/10618600.2012.681238
-
-As well as an implementation of polynomial trend filtering based on:
-
-Ramdas, A., & Tibshirani, R. J. (2014). Fast and flexible ADMM
-algorithms for trend filtering. arXiv Preprint arXiv:1406.2082.
-Retrieved from http://arxiv.org/abs/1406.2082
-
-## Quick start
+<!--## Quick start
 
 To fit a Lasso path with default parameters:
 
@@ -61,4 +46,4 @@ More documentation is available at [ReadTheDocs](http://lassojl.readthedocs.org/
    glmnet Fortran code.
  - [LARS.jl](https://github.com/simonster/LARS.jl), an implementation
    of least angle regression for fitting entire linear (but not
-   generalized linear) Lasso and Elastic Net coordinate paths.
+   generalized linear) Lasso and Elastic Net coordinate paths. -->

@@ -219,36 +219,10 @@ end
 ###########################################################
 facts("hurdle-dmr with covarspos == covarszero") do
 
-reload("HurdleDMR")
+# reload("HurdleDMR")
 
 # hurdle dmr parallel local cluster
 @time coefsHppos, coefsHpzero = HurdleDMR.hdmr(covars, counts; parallel=true)
-js = find(coefsHppos[1,:] .== 0)
-j = js[1]
-m = sum(counts,2)
-μ = vec(log(m))
-X = covars
-y = full(counts[:,j])
-countmap(y)
-writecsv(joinpath(testfolder,"degenerate_hurdle_4.X.csv"),X)
-writecsv(joinpath(testfolder,"degenerate_hurdle_4.y.csv"),X)
-writecsv(joinpath(testfolder,"degenerate_hurdle_4.offset.csv"),μ)
-X = readcsv(joinpath(testfolder,"degenerate_hurdle_4.X.csv"))
-X == X1
-fit(HurdleDMR.Hurdle,Lasso.GammaLassoPath,X,y; offsetpos=μ, verbose=false)
-M = Lasso.GammaLassoPath
-Lasso.GammaLassoPath()
-Lasso.GammaLassoPath{typeof(model),T}(model, nulldev, nullb0, λ, autoλ, γ, Xnorm)
-countmaps = (countmap(counts[:,j]) for j = 1:size(counts,2))
-countmapj = first(countmaps)
-js = find([length(countmapj) == 3 && haskey(countmapj,2) && countmapj[2] <= 2 for countmapj in countmaps])
-maximum(var(counts[:,js],1))
-counts[:,first(js)]
-j = js[2]
-y = full(counts[:,j])
-countmap(y)
-fit(HurdleDMR.Hurdle,Lasso.GammaLassoPath,covars,full(countsj); offsetpos=μ, verbose=false)
-
 @fact size(coefsHppos) --> (p+1, d)
 @fact size(coefsHpzero) --> (p+1, d)
 
