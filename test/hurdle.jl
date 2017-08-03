@@ -1,11 +1,8 @@
-testfolder = dirname(@__FILE__)
-push!(LOAD_PATH, joinpath(testfolder,".."))
-push!(LOAD_PATH, joinpath(testfolder,"..","src"))
+# testfolder = dirname(@__FILE__)
+# push!(LOAD_PATH, joinpath(testfolder,".."))
+# push!(LOAD_PATH, joinpath(testfolder,"..","src"))
 
 using FactCheck, Lasso, DataFrames
-
-rdist(x::Number,y::Number) = abs(x-y)/max(abs(x),abs(y))
-rdist{T<:Number,S<:Number}(x::AbstractArray{T}, y::AbstractArray{S}; norm::Function=vecnorm) = norm(x - y) / max(norm(x), norm(y))
 
 using HurdleDMR
 
