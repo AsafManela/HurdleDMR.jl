@@ -55,7 +55,6 @@ end
 
 function poisson_regression!{T<:AbstractFloat,V}(coefs::AbstractMatrix{T}, j::Int64, covars::AbstractMatrix{T},counts::AbstractMatrix{V}; kwargs...)
   cj = vec(full(counts[:,j]))
-  println("c$j = $cj")
   path = fit(GammaLassoPath,covars,cj,Poisson(),LogLink(); kwargs...)
   # coefs[:,j] = vcat(coef(path;select=:AICc)...)
   coefs[:,j] = coef(path;select=:AICc)
