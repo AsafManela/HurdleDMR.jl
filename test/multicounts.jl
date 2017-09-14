@@ -53,15 +53,25 @@ T = Float64
 # split counts matrix to 3 multicounts vector
 d = size(we8thereCounts,2)
 dl = Int(d/3)
-multicounts = [sparse(convert(Matrix{T},we8thereCounts[:,1+(l-1)*dl:l*dl])) for l=1:3]
+# multicounts = [sparse(convert(Matrix{T},we8thereCounts[:,1+(l-1)*dl:l*dl])) for l=1:3]
+multicounts = [sparse(convert(Matrix{T},we8thereCounts[:,1:end])) for l=1:3]
 covars=convert(Array{T,2},covars)
 covarspos=convert(Array{T,2},covarspos)
+# counts = hcat(multicounts...)
+# typeof(counts)
+# typeof(multicounts[1])
+# typeof(hcat(multicounts[1:1]...))
+# Z = Array(T,n,0)
+# [covars Z] == covars
 
 npos,ppos = size(covarspos)
 
 γ=1.0
 
 facts("mcdmr") do
+counts = hcat(multicounts[1:1]...)
+# vec(full(counts[:,1])) == vec(full(multicounts[1][:,1]))
+@time coefs = HurdleDMR.dmr(covars, counts; γ=γ, λminratio=0.01, parallel=true, local_cluster=false)
 
 @time Z, multicoefs = HurdleDMR.mcdmr(covars, multicounts, 1; γ=γ, λminratio=0.01)
 find(Z[:,1] .!= 0)
