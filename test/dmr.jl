@@ -65,6 +65,9 @@ facts("dmr") do
 @time coefs = HurdleDMR.dmr(covars, counts; γ=γ, λminratio=0.01)
 @fact size(coefs) --> (p+1, d)
 
+# @time coefssubset = HurdleDMR.dmr(covars, counts[:,1:880]; γ=γ, λminratio=0.01)
+# @fact size(coefssubset) --> (p+1, 880)
+#
 @time coefs2 = HurdleDMR.dmr(covars, counts; local_cluster=false, γ=γ, λminratio=0.01)
 @fact coefs --> roughly(coefs2)
 
