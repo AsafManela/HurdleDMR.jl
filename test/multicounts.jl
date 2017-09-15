@@ -79,10 +79,14 @@ facts("mcdmr") do
 @time coefs = HurdleDMR.dmr(covars, multicounts[1]; γ=γ, λminratio=0.01)
 
 @time Z, multicoefs = HurdleDMR.mcdmr(covars, multicounts, 1; γ=γ, λminratio=0.01)
-find(Z[:,1] .!= 0)
-methods(mcdmr)
+
 @fact size(coefs) --> (p+1, d)
-SparseMatrixCSC{Float64,Int64} <: AbstractArray{Float64,}
+@fact multicoefs[1] --> coefs
+@fact size(multicoefs[2],2) --> size(coefs,2)
+@fact size(multicoefs[2],1) --> size(coefs,1) + 2
+@fact size(multicoefs[3],2) --> size(coefs,2)
+@fact size(multicoefs[3],1) --> size(coefs,1) + 4
+
 @time coefs2 = HurdleDMR.dmr(covars, counts; local_cluster=false, γ=γ, λminratio=0.01)
 @fact coefs --> roughly(coefs2)
 
