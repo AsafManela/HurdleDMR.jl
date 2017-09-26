@@ -102,12 +102,12 @@ z1zero = HurdleDMR.srproj(coefsHpzero, HurdleDMR.posindic(counts), 1)
 @fact z1zero --> roughly(zHzero[:,[1,p+1]])
 
 Z1 = HurdleDMR.srproj(coefsHppos, coefsHpzero, counts, 1, 1; intercept=true)
-@fact Z1 --> [z1pos[:,1] z1zero]
+@fact Z1 --> [z1pos[:,1] z1zero[:,1] z1pos[:,2]]
 
 Z3 = HurdleDMR.srproj(coefsHppos, coefsHpzero, counts, 3, 3; intercept=true)
 z3pos = HurdleDMR.srproj(coefsHppos, counts, 3)
 z3zero = HurdleDMR.srproj(coefsHpzero, HurdleDMR.posindic(counts), 3)
-@fact Z3 --> [z3pos[:,1] z3zero]
+@fact Z3 --> [z3pos[:,1] z3zero[:,1] z3pos[:,2]]
 
 regdata = DataFrame(y=covars[:,1], zw1=z1zero[:,1], zv1=z1pos[:,1], m=z1pos[:,2])
 lmw1 = lm(@formula(y ~ zw1+m), regdata)
@@ -178,12 +178,12 @@ z1zero = HurdleDMR.srproj(coefsHpzero, HurdleDMR.posindic(counts), 1)
 @fact z1zero --> roughly(zHzero[:,[1,p+1]])
 
 Z1 = HurdleDMR.srproj(coefsHppos, coefsHpzero, counts, 1, 1; intercept=true)
-@fact Z1 --> [z1pos[:,1] z1zero]
+@fact Z1 --> [z1pos[:,1] z1zero[:,1] z1pos[:,2]]
 
 Z3 = HurdleDMR.srproj(coefsHppos, coefsHpzero, counts, 2, 3; intercept=true)
 z3pos = HurdleDMR.srproj(coefsHppos, counts, 2)
 z3zero = HurdleDMR.srproj(coefsHpzero, HurdleDMR.posindic(counts), 3)
-@fact Z3 --> [z3pos[:,1] z3zero]
+@fact Z3 --> [z3pos[:,1] z3zero[:,1] z3pos[:,2]]
 
 regdata = DataFrame(y=covars[:,1], zw1=z1zero[:,1], zv1=z1pos[:,1], m=z1pos[:,2], v1=covarspos[:,1], w1=covars[:,1])
 lmw1 = lm(@formula(y ~ zw1+m), regdata)
@@ -262,7 +262,7 @@ Z1 = HurdleDMR.srproj(coefsHppos, coefsHpzero, counts, 1, 0; intercept=true)
 Z3 = HurdleDMR.srproj(coefsHppos, coefsHpzero, counts, 2, 2; intercept=true)
 z3pos = HurdleDMR.srproj(coefsHppos, counts, 2)
 z3zero = HurdleDMR.srproj(coefsHpzero, HurdleDMR.posindic(counts), 2)
-@fact Z3 --> [z3pos[:,1] z3zero]
+@fact Z3 --> [z3pos[:,1] z3zero[:,1] z3pos[:,2]]
 
 regdata = DataFrame(y=covars[:,1], zv1=z1pos[:,1], m=z1pos[:,2], v1=covarspos[:,1], w1=covarszero[:,1])
 

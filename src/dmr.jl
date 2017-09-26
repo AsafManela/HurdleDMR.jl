@@ -60,7 +60,6 @@ end
 
 function poisson_regression!{T<:AbstractFloat,V}(coefs::AbstractMatrix{T}, j::Int64, covars::AbstractMatrix{T},counts::AbstractMatrix{V}; kwargs...)
   cj = vec(full(counts[:,j]))
-  println("c$j = $cj")
   path = fit(GammaLassoPath,covars,cj,Poisson(),LogLink(); kwargs...)
   # coefs[:,j] = vcat(coef(path;select=:AICc)...)
   coefs[:,j] = coef(path;select=:AICc)
@@ -143,13 +142,13 @@ function dmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts:
     # μ = convert(SharedArray,μ) incompatible with GLM
 
     @sync @parallel for j=1:d
-      poisson_regression!(coefs, j, covars, counts; offset=μ, verbose=false, intercept=intercept, kwargs...)
+      tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false, intercept=intercept, kwargs...)
     end
   else
     verbose && info("serial poisson run on a single node")
     coefs = Array(T,p,d)
     for j=1:d
-      poisson_regression!(coefs, j, covars, counts; offset=μ, verbose=false, intercept=intercept, kwargs...)
+      tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false, intercept=intercept, kwargs...)
     end
   end
 

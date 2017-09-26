@@ -266,8 +266,11 @@ function srproj(coefspos, coefszero, counts, dirpos::Int, dirzero::Int; intercep
   if dirpos>0 && dirzero>0
     zpos = srproj(coefspos, counts, dirpos; intercept=intercept)
     zzero = srproj(coefszero, posindic(counts), dirzero; intercept=intercept)
-    # second element is the same m in both so dropped from zpos
-    [zpos[:,1] zzero]
+    # second element should be same m in both, but because zero model
+    # only sums indicators it generates smaller totals, so use the one
+    # from the pos model
+    # TODO: this needs to be fleshed out better in the theory to guide this choice
+    [zpos[:,1] zzero zpos[:,2]]
   elseif dirpos>0
     srproj(coefspos, counts, dirpos; intercept=intercept)
   elseif dirzero>0
