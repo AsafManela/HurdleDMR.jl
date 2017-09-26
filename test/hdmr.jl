@@ -9,7 +9,7 @@ using FactCheck, Gadfly, Distributions
 if nworkers() > 1
   rmprocs(workers())
 end
-info("Starting $(Sys.CPU_CORES-1) parallel workers for dmr tests...")
+info("Starting $(Sys.CPU_CORES-1) parallel workers for hdmr tests...")
 addprocs(Sys.CPU_CORES-1)
 # rmprocs(workers())
 

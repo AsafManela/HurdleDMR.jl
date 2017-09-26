@@ -79,9 +79,8 @@ plotterms==we8thereTerms[plotix]
 
 plots=permutedims(convert(Matrix{Gadfly.Plot},reshape([plot(paths[plotix[i]].value,Guide.title(plotterms[i]);select=:AICc,x=:logλ) for i=1:length(plotterms)],2,3)), [2,1])
 filename = joinpath(testfolder,"plots","we8there.svg")
-# # TODO: uncomment after Gadfly get's its get_stroke_vector bug fixed
-# draw(SVG(filename,9inch,11inch),Gadfly.gridstack(plots))
-# @fact isfile(filename) --> true
+draw(SVG(filename,9inch,11inch),Gadfly.gridstack(plots))
+@fact isfile(filename) --> true
 
 #reload("HurdleDMR")
 @time z = HurdleDMR.srproj(coefs, counts)
