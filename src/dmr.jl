@@ -192,7 +192,7 @@ function StatsBase.coef(paths::DMRPaths; select=:all)
 
   # iterate over paths
   for j=1:d
-    nlpath = paths[j]
+    nlpath = paths.nlpaths[j]
     if !Base.isnull(nlpath)
       path = nlpath.value
       cj = coef(path;select=select)
