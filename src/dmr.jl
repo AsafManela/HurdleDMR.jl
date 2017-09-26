@@ -2,6 +2,11 @@
 # Distributed Multinomial Regression (DMR)
 ##############################################################
 
+immutable DMRPaths
+    nlpaths::Vector{Nullable{GammaLassoPath}}
+    p::Int64 # number of covariates
+end
+
 "Collapse a vector of categories to a DataFrame of indicators"
 function collapse(categories)
   cat_indicators = DataFrame()
@@ -12,7 +17,7 @@ function collapse(categories)
   (unique_categories,cat_indicators)
 end
 
-"Returns a vector of paths by map/pmap-ing a poisson gamma lasso regression to each column of counts separately"
+"Returns a DMRPaths object containing paths by map/pmap-ing a poisson gamma lasso regression to each column of counts separately"
 function dmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatrix{V};
       intercept=true,
       parallel=true,
@@ -50,7 +55,7 @@ function dmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstract
     mapfn = map
   end
 
-  convert(Vector{Nullable{GammaLassoPath}},mapfn(tryfitgl,countscols))
+  DMRPaths(convert(Vector{Nullable{GammaLassoPath}},mapfn(tryfitgl,countscols)), p)
 end
 
 function poisson_regression!{T<:AbstractFloat,V}(coefs::AbstractMatrix{T}, j::Int64, covars::AbstractMatrix{T},counts::AbstractMatrix{V}; kwargs...)
@@ -162,13 +167,22 @@ end
 
 dropnull{T<:Nullable}(v::Vector{T}) = v[!map(Base.isnull,v)]
 
-function StatsBase.coef{R<:Nullable{GammaLassoPath}}(paths::Vector{R}; select=:all)
+function StatsBase.coef(paths::DMRPaths; select=:all)
   # get dims
-  d = length(paths)
+  d = length(paths.nlpaths)
   d < 1 && return nothing
 
-  # establish maximum dimensions
-  p,nλ = maximum(map(nlpath->size(nlpath.value),dropnull(paths)))
+  # drop null paths
+  nonnullpaths = dropnull(paths.nlpaths)
+
+  # get number of variables from paths object
+  p = paths.p + 1
+
+  # establish maximum path lengths
+  nλ = 0
+  if size(nonnullpaths,1) > 0
+    nλ = maximum(map(nlpath->size(nlpath.value)[2],nonnullpaths))
+  end
 
   # allocate space
   if select==:all

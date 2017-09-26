@@ -68,7 +68,10 @@ facts("dmr") do
 @time coefs2 = HurdleDMR.dmr(covars, counts; local_cluster=false, γ=γ, λminratio=0.01)
 @fact coefs --> roughly(coefs2)
 
-@time paths = HurdleDMR.dmrpaths(covars, counts; γ=γ, λminratio=0.01, verbose=false)
+@time dmrPaths = HurdleDMR.dmrpaths(covars, counts; γ=γ, λminratio=0.01, verbose=false)
+
+paths = dmrPaths.nlpaths
+@fact dmrPaths.p --> p
 
 plotterms=["first_date","chicken_wing","ate_here", "good_food","food_fabul","terribl_servic"]
 plotix=[find(we8thereTerms.==term)[1]::Int64 for term=plotterms]
