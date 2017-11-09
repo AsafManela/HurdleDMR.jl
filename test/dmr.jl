@@ -6,21 +6,12 @@
 
 using FactCheck, Gadfly, Distributions
 
-if nworkers() > 1
-  rmprocs(workers())
-end
-info("Starting $(Sys.CPU_CORES-1) parallel workers for dmr tests...")
-addprocs(Sys.CPU_CORES-1)
-# rmprocs(workers())
-
-# @everywhere push!(LOAD_PATH, srcfolder)
+include("addworkers.jl")
 
 using GLM, DataFrames, LassoPlot
-if isinteractive()
-  import HurdleDMR
-else
-  @everywhere using HurdleDMR
-end
+
+@everywhere using HurdleDMR
+
 # uncomment following for debugging and comment the previous @everywhere line. then use reload after making changes
 # reload("HurdleDMR")
 
