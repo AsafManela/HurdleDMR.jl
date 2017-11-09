@@ -21,7 +21,7 @@ xs = 1:10000
 @time μscheck=map(η->linkinv(LogProductLogLink(),η),ηs)
 @fact μs --> roughly(μscheck)
 
-μs=big(collect(1.0+1e-10:1e-10:1.0+1000*1e-10))
+μs=big.(collect(1.0+1e-10:1e-10:1.0+1000*1e-10))
 @time ηs=map(μ->linkfun(LogProductLogLink(),μ),μs)
 @time μscheck=map(η->linkinv(LogProductLogLink(),η),ηs)
 @fact μs --> roughly(μscheck)

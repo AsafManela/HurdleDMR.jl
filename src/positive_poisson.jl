@@ -99,8 +99,18 @@ function GLM.mueta(::LogProductLogLink, η)
   μ * (1.0 - μ*expmλ)
 end
 
+function GLM.inverselink(::LogProductLogLink, η)
+    λ = exp(η)
+    expmλ = exp(-λ)
+    μ = λ / (1.0 - expmλ)
+    dμdη = μ * (1.0 - μ*expmλ)
+    μ, dμdη, dμdη # third arg is the glmvar which in this case equals the derivative
+end
+
 GLM.canonicallink(::PositivePoisson) = LogProductLogLink()
-GLM.glmvar(::PositivePoisson, ::LogProductLogLink, μ, η) = μ * (1.0 - μ*exp(-exp(η)))
+# GLM.glmvar(::PositivePoisson, ::LogProductLogLink, μ, η) = μ * (1.0 - μ*exp(-exp(η)))
+# GLM.glmvar(::PositivePoisson, μ) = μ * (1.0 - μ*exp(-exp(log(λfn(μ)))))
+GLM.glmvar(::PositivePoisson, μ) = μ * (1.0 - μ*exp(-λfn(μ)))
 GLM.mustart(::PositivePoisson, y, wt) = y + oftype(y, 0.1)
 
 function GLM.devresid(::PositivePoisson, y, μ)
