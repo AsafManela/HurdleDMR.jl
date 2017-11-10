@@ -33,7 +33,7 @@ function hdmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstrac
 
   # shifters
   m = sum(counts,2)
-  μ = vec(log(m))
+  μ = vec(log.(m))
   # display(μ)
 
   function tryfith(countsj::SparseVector{V,Int64})
@@ -123,7 +123,7 @@ function hdmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},covars
 
   # shifters
   m = sum(counts,2)
-  μ = vec(log(m))
+  μ = vec(log.(m))
   # display(μ)
 
   function tryfith!(coefszero::AbstractMatrix{T}, coefspos::AbstractMatrix{T}, j::Int64, covars::AbstractMatrix{T},counts::AbstractMatrix{V};
@@ -143,8 +143,8 @@ function hdmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},covars
   if parallel
     verbose && info("distributed hurdle run on local cluster with $(nworkers()) nodes")
     counts = convert(SharedArray,counts)
-    coefszero = SharedArray(T,p,d)
-    coefspos = SharedArray(T,ppos,d)
+    coefszero = SharedArray{T}(p,d)
+    coefspos = SharedArray{T}(ppos,d)
     covars = convert(SharedArray,covars)
     # μ = convert(SharedArray,μ) incompatible with GLM
 

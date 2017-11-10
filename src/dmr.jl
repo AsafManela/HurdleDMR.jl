@@ -31,7 +31,7 @@ function dmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstract
 
   # shifters
   m = sum(counts,2)
-  μ = vec(log(m))
+  μ = vec(log.(m))
   # display(μ)
 
   function tryfitgl(countsj::SparseVector{V,Int64})
@@ -84,9 +84,9 @@ function dmr{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatri
 end
 
 # some helpers for converting to SharedArray
-Base.convert(::Type{SharedArray}, A::SubArray) = (S = SharedArray(eltype(A), size(A)); copy!(S, A))
+Base.convert(::Type{SharedArray}, A::SubArray) = (S = SharedArray{eltype(A)}(size(A)); copy!(S, A))
 function Base.convert(::Type{SharedArray}, A::SparseMatrixCSC)
-  S = SharedArray(eltype(A), size(A))
+  S = SharedArray{eltype(A)}(size(A))
   rows = rowvals(A)
   vals = nonzeros(A)
   n, m = size(A)
@@ -118,7 +118,7 @@ function dmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts:
 
   # shifters
   m = sum(counts,2)
-  μ = vec(log(m))
+  μ = vec(log.(m))
   # display(μ)
 
   function tryfitgl!(coefs::AbstractMatrix{T}, j::Int64, covars::AbstractMatrix{T},counts::AbstractMatrix{V}; kwargs...)
@@ -137,7 +137,7 @@ function dmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts:
   if parallel
     verbose && info("distributed poisson run on local cluster with $(nworkers()) nodes")
     counts = convert(SharedArray,counts)
-    coefs = SharedArray(T,p,d)
+    coefs = SharedArray{T}(p,d)
     covars = convert(SharedArray,covars)
     # μ = convert(SharedArray,μ) incompatible with GLM
 
@@ -164,7 +164,7 @@ function dmr_remote_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts
   coef(paths;select=:AICc)
 end
 
-dropnull{T<:Nullable}(v::Vector{T}) = v[!map(Base.isnull,v)]
+dropnull{T<:Nullable}(v::Vector{T}) = v[.!isnull.(v)]
 
 function StatsBase.coef(paths::DMRPaths; select=:all)
   # get dims

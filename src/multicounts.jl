@@ -16,8 +16,8 @@ function mcdmr{T<:AbstractFloat}(covars::AbstractMatrix{T},multicounts::Vector,p
 	L = length(multicounts)
   n,p = size(covars)
 	info("fitting mcdmr to $L counts matrices")
-  multicoefs = Array(Matrix{T},L,1)
-  Z = Array(T,n,0)
+  multicoefs = Array{Matrix{T}}(L,1)
+  Z = Array{T}(n,0)
 	for l=1:L
 		info("fitting dmr to counts matrix #$l on $p covars + $(size(Z,2)) previous SR projections ...")
 		# get l'th counts matrix
