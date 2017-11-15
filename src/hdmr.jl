@@ -39,8 +39,8 @@ function hdmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstrac
   function tryfith(countsj::SparseVector{V,Int64})
     try
       # we make it dense remotely to reduce communication costs
-      # this used to also set offsetzero=μ, but there is no theoretical reason to do so
-      Nullable{Hurdle}(fit(Hurdle,GammaLassoPath,covars,full(countsj); Xpos=covarspos, offsetpos=μ, verbose=false, kwargs...))
+      # we use the same offsets for pos and zeros
+      Nullable{Hurdle}(fit(Hurdle,GammaLassoPath,covars,full(countsj); Xpos=covarspos, offsetpos=μ, offsetzero=μ, verbose=false, kwargs...))
     catch e
       showwarnings && warn("fit(Hurdle...) failed for countsj with frequencies $(countmap(countsj)) and will return null path ($e)")
       Nullable{Hurdle}()
@@ -66,8 +66,8 @@ function hurdle_regression!{T<:AbstractFloat,V}(coefszero::AbstractMatrix{T}, co
             offset::AbstractVector=similar(y, 0),
             kwargs...)
   cj = vec(full(counts[:,j]))
-  # this used to also set offsetzero=offset, but there is no theoretical reason to do so
-  path = fit(Hurdle,GammaLassoPath,covars,cj; Xpos=covarspos, offsetpos=offset, kwargs...)
+  # we use the same offsets for pos and zeros
+  path = fit(Hurdle,GammaLassoPath,covars,cj; Xpos=covarspos, offsetpos=offset, offsetzero=offset, kwargs...)
   (coefspos[:,j], coefszero[:,j]) = coef(path;select=:AICc)
   # coefs[:,j] = vcat(coef(path;select=:AICc)...)
   nothing
