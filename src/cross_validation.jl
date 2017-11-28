@@ -1,9 +1,9 @@
 using MLBase, StatsBase, DataFrames
 
 # performance evaluation stats
-mse(y::Vector,yhat::Vector) = mean(abs2.(y-yhat))
-rmse(y::Vector,yhat::Vector) = sqrt(mean(abs2.(y-yhat)))
-StatsBase.r2(y::Vector,yhat::Vector) = 1-sum(abs2,y-yhat)/sum(abs2,y.-mean(y))
+mse(y::AbstractVector,yhat::AbstractVector) = mean(abs2.(y-yhat))
+rmse(y::AbstractVector,yhat::AbstractVector) = sqrt(mean(abs2.(y-yhat)))
+StatsBase.r2(y::AbstractVector,yhat::AbstractVector) = 1-sum(abs2,y-yhat)/sum(abs2,y.-mean(y))
 
 # non-random K-fold that simply splits into consequtive blocks of data
 # useful for time-series CV
