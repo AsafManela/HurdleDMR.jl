@@ -1,3 +1,5 @@
+__precompile__()
+
 module HurdleDMR
 
 using Lasso, GLM.FPVector, DataFrames, Reexport, Compat
