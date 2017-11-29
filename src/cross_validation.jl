@@ -26,21 +26,21 @@ Base.done(c::SerialKfold, i::Int) = (i > c.k)
 # collect(SerialKfold(13,3))
 
 type CVDataRow{T}
-  ins_y::Vector{T}
-  oos_y::Vector{T}
-  ins_yhat::Vector{T}
-  oos_yhat::Vector{T}
-  ins_yhat_nocounts::Vector{T}
-  oos_yhat_nocounts::Vector{T}
+  ins_y::AbstractVector{T}
+  oos_y::AbstractVector{T}
+  ins_yhat::AbstractVector{T}
+  oos_yhat::AbstractVector{T}
+  ins_yhat_nocounts::AbstractVector{T}
+  oos_yhat_nocounts::AbstractVector{T}
 end
 
 type CVData{T}
-  ins_ys::Vector{T}
-  oos_ys::Vector{T}
-  ins_yhats::Vector{T}
-  oos_yhats::Vector{T}
-  ins_yhats_nocounts::Vector{T}
-  oos_yhats_nocounts::Vector{T}
+  ins_ys::AbstractVector{T}
+  oos_ys::AbstractVector{T}
+  ins_yhats::AbstractVector{T}
+  oos_yhats::AbstractVector{T}
+  ins_yhats_nocounts::AbstractVector{T}
+  oos_yhats_nocounts::AbstractVector{T}
 end
 
 CVData(T::Type) = CVData{T}(Vector{T}(0),Vector{T}(0),Vector{T}(0),Vector{T}(0),Vector{T}(0),Vector{T}(0))
@@ -92,7 +92,7 @@ function DataFrames.DataFrame{CVType<:Union{CVStats,CVData,CVDataRow}}(x::CVType
 end
 
 "Create a DataFrame from a vector of CVTypes"
-DataFrames.DataFrame{CVType<:Union{CVStats,CVData,CVDataRow}}(v::Vector{CVType}) = vcat(DataFrame.(v))
+DataFrames.DataFrame{CVType<:Union{CVStats,CVData,CVDataRow}}(v::AbstractVector{CVType}) = vcat(DataFrame.(v))
 
 CVStats(T::Type) = CVStats{T}(zeros(T,12)...)
 
