@@ -36,7 +36,7 @@ struct CVDataRow{T} <: CVType{T}
   oos_yhat_nocounts::AbstractVector{T}
 end
 
-struct CVData{T} <: CVType{T}
+mutable struct CVData{T} <: CVType{T}
   ins_ys::AbstractVector{T}
   oos_ys::AbstractVector{T}
   ins_yhats::AbstractVector{T}
@@ -55,6 +55,17 @@ function Base.append!(d::CVData, r::CVDataRow)
   append!(d.oos_yhats,r.oos_yhat)
   append!(d.ins_yhats_nocounts,r.ins_yhat_nocounts)
   append!(d.oos_yhats_nocounts,r.oos_yhat_nocounts)
+  d
+end
+
+function Base.append!(d::CVData, r::CVData)
+  append!(d.ins_ys,r.ins_ys)
+  append!(d.oos_ys,r.oos_ys)
+  append!(d.ins_yhats,r.ins_yhats)
+  append!(d.oos_yhats,r.oos_yhats)
+  append!(d.ins_yhats_nocounts,r.ins_yhats_nocounts)
+  append!(d.oos_yhats_nocounts,r.oos_yhats_nocounts)
+  d
 end
 
 mutable struct CVStats{T} <: CVType{T}
