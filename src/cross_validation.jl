@@ -25,7 +25,9 @@ Base.done(c::SerialKfold, i::Int) = (i > c.k)
 # vcat(1:0,3:10)
 # collect(SerialKfold(13,3))
 
-type CVDataRow{T}
+abstract type CVType{T} end
+
+struct CVDataRow{T} <: CVType{T}
   ins_y::AbstractVector{T}
   oos_y::AbstractVector{T}
   ins_yhat::AbstractVector{T}
@@ -34,7 +36,7 @@ type CVDataRow{T}
   oos_yhat_nocounts::AbstractVector{T}
 end
 
-type CVData{T}
+struct CVData{T} <: CVType{T}
   ins_ys::AbstractVector{T}
   oos_ys::AbstractVector{T}
   ins_yhats::AbstractVector{T}
@@ -42,6 +44,7 @@ type CVData{T}
   ins_yhats_nocounts::AbstractVector{T}
   oos_yhats_nocounts::AbstractVector{T}
 end
+
 
 CVData(T::Type) = CVData{T}(Vector{T}(0),Vector{T}(0),Vector{T}(0),Vector{T}(0),Vector{T}(0),Vector{T}(0))
 
@@ -54,7 +57,7 @@ function Base.append!(d::CVData, r::CVDataRow)
   append!(d.oos_yhats_nocounts,r.oos_yhat_nocounts)
 end
 
-type CVStats{T}
+mutable struct CVStats{T} <: CVType{T}
   oos_rmse::T
   oos_rmse_nocounts::T
   oos_pct_change_rmse::T
@@ -70,29 +73,31 @@ type CVStats{T}
 end
 
 "Params are equal if all their fields are equal"
-function Base.isequal{CVType<:Union{CVStats,CVData,CVDataRow}}(x::CVType,y::CVType)
-  all(map(field->isequal(getfield(x,field),getfield(y,field)),fieldnames(CVType)))
+function Base.isequal(x::T,y::T) where {T <: CVType}
+  all(map(field->isequal(getfield(x,field),getfield(y,field)),fieldnames(T)))
 end
 
 "Params have the same hash if all their fields have the same hash"
-function Base.hash{CVType<:Union{CVStats,CVData,CVDataRow}}(a::CVType, h::UInt=zero(UInt))
+function Base.hash(a::T, h::UInt=zero(UInt)) where {T <: CVType}
   recursiveh = h
 #   display("fieldnames=$(fieldnames(Params))")
-  for field=fieldnames(CVType)
+  for field=fieldnames(T)
     recursiveh=hash(getfield(a,field), recursiveh)
   end
   recursiveh
 end
 
 "Create a DataFrame from a CVType instance"
-function DataFrames.DataFrame{CVType<:Union{CVStats,CVData,CVDataRow}}(x::CVType)
-  fnames = fieldnames(CVType)
+function DataFrames.DataFrame(x::T) where {T <: CVType}
+  fnames = fieldnames(T)
   fvalues = [[getfield(x,f)] for f = fnames]
-  DataFrame(fvalues,fnames)
+  DataFrames.DataFrame(fvalues,fnames)
 end
 
 "Create a DataFrame from a vector of CVTypes"
-DataFrames.DataFrame{CVType<:Union{CVStats,CVData,CVDataRow}}(v::AbstractVector{CVType}) = vcat(DataFrame.(v))
+function DataFrames.DataFrame(v::Vector{T}) where {T <: CVType}
+    vcat(DataFrames.DataFrame.(v))
+end
 
 CVStats(T::Type) = CVStats{T}(zeros(T,12)...)
 

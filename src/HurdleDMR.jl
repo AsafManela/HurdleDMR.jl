@@ -9,7 +9,7 @@ using Lasso, GLM.FPVector, DataFrames, Reexport, Compat
 export dmr, dmr2, dmrpath, hdmr, hdmr2, hdmrpath, DMR, collapse, fit, coef, srproj, @~, mcdmr
 export Hurdle, PositivePoisson, LogProductLogLink, logpdf_exact, logpdf_approx
 export cross_validate_dmr_srproj, cross_validate_dmr_srproj_for_different_specs, SerialKfold
-export CVStats
+export CVStats, CVType
 
 ##############################################
 # hurdle glm model involves
