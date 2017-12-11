@@ -286,6 +286,38 @@ end
 
 rmprocs(workers())
 
+#########################################################################3
+# degenerate cases
+#########################################################################3
+
+# column j is never zero, so hj=1 for all observations
+zcounts = deepcopy(counts)
+zcounts[:,2] = zeros(n)
+zcounts[:,3] = ones(n)
+# sum(iszero.(zcounts[:,nzj]))
+# find(var(zcounts,1) .== 0)
+
+# make sure we are not adding all zero obseravtions
+m = sum(counts,2)
+@fact sum(m .== 0) --> 0
+
+m = sum(zcounts,2)
+@fact sum(m .== 0) --> 0
+
+# hurdle dmr parallel local cluster
+@time coefsHppos, coefsHpzero = HurdleDMR.hdmr(covars, zcounts; parallel=true)
+@fact size(coefsHppos) --> (p+1, d)
+@fact size(coefsHpzero) --> (p+1, d)
+@fact coefsHppos[:,2] --> zeros(p+1)
+@fact coefsHpzero[:,2] --> zeros(p+1)
+@fact coefsHppos[:,3] --> zeros(p+1)
+@fact coefsHpzero[:,3] --> zeros(p+1)
+
+# hurdle dmr parallel remote cluster
+@time coefsHppos2, coefsHpzero2 = HurdleDMR.hdmr(covars, zcounts; parallel=true, local_cluster=false)
+@fact coefsHppos --> roughly(coefsHppos2)
+@fact coefsHpzero --> roughly(coefsHpzero)
+
 ###########################################################
 # Development
 ###########################################################

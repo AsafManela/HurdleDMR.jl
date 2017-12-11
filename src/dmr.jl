@@ -3,8 +3,8 @@
 ##############################################################
 
 immutable DMRPaths
-    nlpaths::Vector{Nullable{GammaLassoPath}}
-    p::Int64 # number of covariates
+  nlpaths::Vector{Nullable{GammaLassoPath}}
+  p::Int64 # number of covariates
 end
 
 "Collapse a vector of categories to a DataFrame of indicators"
@@ -34,7 +34,7 @@ function dmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstract
   μ = vec(log.(m))
   # display(μ)
 
-  function tryfitgl(countsj::SparseVector{V,Int64})
+  function tryfitgl(countsj::AbstractVector{V})
     try
       # we make it dense remotely to reduce communication costs
       Nullable{GammaLassoPath}(fit(GammaLassoPath,covars,full(countsj),Poisson(),LogLink(); offset=μ, verbose=false, kwargs...))
@@ -160,7 +160,7 @@ This version does not share memory across workers, so may be more efficient for 
 """
 function dmr_remote_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
           parallel,verbose,showwarnings,intercept; kwargs...)
-  paths = dmrpaths(covars, counts; parallel=parallel, verbose=verbose, showwarnings=showwarnings, kwargs...)
+  paths = dmrpaths(covars, counts; parallel=parallel, verbose=verbose, showwarnings=showwarnings, intercept=intercept, kwargs...)
   coef(paths;select=:AICc)
 end
 

@@ -10,7 +10,7 @@ include("addworkers.jl")
 
 using GLM, DataFrames, LassoPlot
 
-@everywhere using HurdleDMR
+import HurdleDMR; @everywhere using HurdleDMR
 
 # uncomment following for debugging and comment the previous @everywhere line. then use reload after making changes
 # reload("HurdleDMR")
@@ -132,6 +132,32 @@ cvstats14 = HurdleDMR.cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=ML
 @fact isequal(cvstats13,cvstats14) --> false
 
 cvstatsSerialKfold = HurdleDMR.cross_validate_dmr_srproj(covars,counts,1; k=5, gentype=HurdleDMR.SerialKfold, γ=γ)
+
+#########################################################################3
+# degenerate cases
+#########################################################################3
+
+# always one (zero var) counts columns
+zcounts = deepcopy(counts)
+zcounts[:,2] = zeros(n)
+zcounts[:,3] = ones(n)
+find(var(zcounts,1) .== 0)
+
+# make sure we are not adding all zero obseravtions
+m = sum(counts,2)
+@fact sum(m .== 0) --> 0
+
+m = sum(zcounts,2)
+@fact sum(m .== 0) --> 0
+
+# this one should warn on dimension 2
+@time zcoefs = HurdleDMR.dmr(covars, zcounts; γ=γ, λminratio=0.01, showwarnings=true)
+@fact size(zcoefs) --> (p+1, d)
+@fact zcoefs2[:,2] --> roughly(zeros(p+1))
+
+@time zcoefs2 = HurdleDMR.dmr(covars, zcounts; local_cluster=false, γ=γ, λminratio=0.01)
+@fact zcoefs2 --> roughly(zcoefs2)
+
 
 #########################################################################3
 # profile cv
