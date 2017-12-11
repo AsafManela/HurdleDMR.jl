@@ -35,13 +35,38 @@ function StatsBase.fit{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{Hurdle},::Ty
 
   # build positive indicators vector
   Iy = zeros(y)
-  Iy[ixpos] = 1
+  Iy[ixpos] = one(T)
 
   # fit zero model to entire sample
-  # @bp M == GammaLassoPath
-  verbose && info("fitting zero model: $dzero, $lzero")
-  mzero = fit(M, X, Iy, dzero, lzero; dofit=dofit, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
-  fittedzero = true
+  mzero = nothing
+  fittedzero = false
+  if var(Iy) > zero(T)
+    try
+      verbose && info("fitting zero model: $dzero, $lzero")
+      mzero = fit(M, X, Iy, dzero, lzero; dofit=dofit, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
+      fittedzero = dofit
+    catch e
+      verbose && warn("failed to fit zero counts model, possibly not enough variation in I(y):")
+      verbose && warn("countmap(Iy)=$(countmap(Iy))")
+      if typeof(e) <: ErrorException && (contains(e.msg,"step-halving") || contains(e.msg,"failure to converge") || contains(e.msg,"failed to converge")) ||
+          typeof(e) == Base.LinAlg.PosDefException || typeof(e) == DomainError
+        fittedzero = false
+      else
+        verbose && warn("countmap(Iy)=$(countmap(Iy))")
+        verbose && warn("X'=$(X')")
+        verbose && warn("Iy=$Iy)")
+        rethrow(e)
+      end
+    end
+  else
+    if verbose
+      if all(iszero,Iy)
+        warn("I(y) is all zeros. There is nothing to explain.")
+      else
+        warn("I(y) is all ones. Data may be fully described by a poisson model.")
+      end
+    end
+  end
 
   if length(offset) != 0
     if length(offsetpos) == 0
@@ -76,8 +101,7 @@ function StatsBase.fit{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{Hurdle},::Ty
       mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=dofit, wts=wts[ixpos], offset=offpos, verbose=verbose, fitargs...)
       fittedpos = dofit
     catch e
-      verbose && warn("failed to fit truncated counts model to positive subsample.")
-      verbose && warn("possibly not enough variation in ypos:")
+      verbose && warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos:")
       verbose && warn("countmap(y)=$(countmap(y))")
       if typeof(e) <: ErrorException && (contains(e.msg,"step-halving") || contains(e.msg,"failure to converge") || contains(e.msg,"failed to converge")) ||
           typeof(e) == Base.LinAlg.PosDefException || typeof(e) == DomainError
@@ -90,11 +114,20 @@ function StatsBase.fit{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{Hurdle},::Ty
       end
     end
   else
-    verbose && warn("ypos has no elements larger than 1! the data is fully described by a probability model")
+    verbose && warn("ypos has no elements larger than 1! Data may be fully described by a probability model.")
+  end
+
+  if !fittedzero
+    # create blank zeros model without fitting
+    if M <: RegularizationPath
+      mzero = fit(M, X, Iy, dzero, lzero; dofit=false, λ=[0.0], wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
+    else
+      mzero = fit(M, X, Iy, dzero, lzero; dofit=false, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
+    end
   end
 
   if !fittedpos
-    # create blank model without fitting
+    # create blank positives model without fitting
     if M <: RegularizationPath
       mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=false, λ=[0.0], wts=wts[ixpos], offset=offpos, verbose=verbose, fitargs...)
     else
@@ -149,8 +182,26 @@ function StatsBase.fit{M<:RegressionModel}(::Type{Hurdle},::Type{M},
   # fit zero model to entire sample
   # TODO: should be wrapped in DataFrameRegressionModel but can't figure out right now why it complains it is not defined
   # mzero = DataFrameRegressionModel(fit(GeneralizedLinearModel, mmzero.m, Iy, dzero, lzero; wts=wts, offset=offsetzero, fitargs...), mfzero, mmzer)
-  mzero = fit(M, mmzero.m, Iy, dzero, lzero; wts=wts, offset=offsetzero, fitargs...)
-  fittedzero = true
+  mzero=nothing
+  fittedzero = false
+  try
+    # TODO: should be wrapped in DataFrameRegressionModel but can't figure out right now why it complains it is not defined
+    # mpos = DataFrameRegressionModel(fit(GeneralizedLinearModel, mmpos.m, y[ixpos], dpos, lpos; wts=wts[ixpos], offset=offpos, fitargs...), mfpos, mmpos)
+    mzero = fit(M, mmzero.m, Iy, dzero, lzero; wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
+    fittedzero = true
+  catch e
+    if typeof(e) <: ErrorException && (contains(e.msg,"step-halving") || contains(e.msg,"failure to converge") || contains(e.msg,"failed to converge")) ||
+      typeof(e) == Base.LinAlg.PosDefException || typeof(e) == DomainError
+      verbose && warn("failed to fit zero counts model, possibly not enough variation in Iy:")
+      verbose && warn("countmap(Iy)=$(countmap(Iy))")
+      verbose && warn("X'=$(X')")
+      verbose && warn("Iy=$Iy)")
+      mzero = fit(M, mmzero.m, Iy, dzero, lzero; dofit=false, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
+      fittedzero = false
+    else
+      rethrow(e)
+    end
+  end
 
   mfpos = (f===fpos) ? mfzero : ModelFrame(fpos, df)
   mmpos = (f===fpos) ? mmzero : ModelMatrix(mfpos)
@@ -167,8 +218,7 @@ function StatsBase.fit{M<:RegressionModel}(::Type{Hurdle},::Type{M},
   catch e
     if typeof(e) <: ErrorException && (contains(e.msg,"step-halving") || contains(e.msg,"failure to converge") || contains(e.msg,"failed to converge")) ||
       typeof(e) == Base.LinAlg.PosDefException || typeof(e) == DomainError
-      verbose && warn("failed to fit truncated counts model to positive subsample.")
-      verbose && warn("possibly not enough variation in ypos:")
+      verbose && warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos:")
       verbose && warn("countmap(y)=$(countmap(y))")
       verbose && warn("X'=$(X')")
       verbose && warn("y=$y)")

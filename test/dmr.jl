@@ -42,6 +42,12 @@ covarspos = we8thereRatings[:,inpos]
 
 T = Float64
 counts=sparse(convert(Matrix{Float64},we8thereCounts))
+
+# use smaller counts matrix when not comparing with distrom
+smalld = 100
+srand(13)
+smallcounts = round.(10*sprand(n,smalld,0.3))
+
 covars=convert(Array{T,2},covars)
 covarspos=convert(Array{T,2},covarspos)
 
@@ -124,40 +130,42 @@ X2, X2_nocounts = HurdleDMR.srprojX(coefs,counts,covars,1; includem=false)
 @fact X2_nocounts --> X1_nocounts
 @fact X2 --> X1[:,1:end-1]
 
-@time cvstats13 = HurdleDMR.cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
-@time cvstats13b = HurdleDMR.cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+@time cvstats13 = HurdleDMR.cross_validate_dmr_srproj(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+@time cvstats13b = HurdleDMR.cross_validate_dmr_srproj(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
 @fact isequal(cvstats13,cvstats13b) --> true
 
-cvstats14 = HurdleDMR.cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
+cvstats14 = HurdleDMR.cross_validate_dmr_srproj(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
 @fact isequal(cvstats13,cvstats14) --> false
 
-cvstatsSerialKfold = HurdleDMR.cross_validate_dmr_srproj(covars,counts,1; k=5, gentype=HurdleDMR.SerialKfold, γ=γ)
+cvstatsSerialKfold = HurdleDMR.cross_validate_dmr_srproj(covars,smallcounts,1; k=5, gentype=HurdleDMR.SerialKfold, γ=γ)
+
+end
 
 #########################################################################3
 # degenerate cases
 #########################################################################3
 
+facts("dmr degenerate cases") do
+
 # always one (zero var) counts columns
-zcounts = deepcopy(counts)
+zcounts = deepcopy(smallcounts)
 zcounts[:,2] = zeros(n)
 zcounts[:,3] = ones(n)
 find(var(zcounts,1) .== 0)
 
 # make sure we are not adding all zero obseravtions
-m = sum(counts,2)
-@fact sum(m .== 0) --> 0
-
 m = sum(zcounts,2)
 @fact sum(m .== 0) --> 0
 
 # this one should warn on dimension 2
 @time zcoefs = HurdleDMR.dmr(covars, zcounts; γ=γ, λminratio=0.01, showwarnings=true)
-@fact size(zcoefs) --> (p+1, d)
-@fact zcoefs2[:,2] --> roughly(zeros(p+1))
+@fact size(zcoefs) --> (p+1, smalld)
+@fact zcoefs[:,2] --> roughly(zeros(p+1))
 
 @time zcoefs2 = HurdleDMR.dmr(covars, zcounts; local_cluster=false, γ=γ, λminratio=0.01)
 @fact zcoefs2 --> roughly(zcoefs2)
 
+end
 
 #########################################################################3
 # profile cv
@@ -231,6 +239,5 @@ m = sum(zcounts,2)
 # meltedplotdf = melt(plotdf,[:code,:λ,:seg,:logλ])
 # plot(meltedplotdf,x=:logλ,y=:value,xgroup=:variable,color=:code,
 #      Geom.subplot_grid(Geom.line),free_y_axis=true)
-end
 
 rmprocs(workers())

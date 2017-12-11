@@ -44,7 +44,12 @@ T = Float64
 d = size(we8thereCounts,2)
 
 # to make sure m>0 in all of these, we sum the base test counts at different horizons
-counts1 = sparse(convert(Matrix{T},we8thereCounts[:,:]))
+# counts1 = sparse(convert(Matrix{T},we8thereCounts[:,:]))
+d = 100
+# counts=sparse(convert(Matrix{Float64},we8thereCounts[:,end-d+1:end]))
+srand(13)
+counts1 = round.(10*sprand(n,d,0.3))
+
 counts2 = counts1[:,:]
 counts2[2:end,:] += counts1[1:end-1,:]
 counts3 = counts2[:,:]

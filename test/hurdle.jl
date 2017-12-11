@@ -40,7 +40,7 @@ coefsJ=vcat(coef(hurdlefit)...)
 @fact coefsJ --> roughly(coefsR1;rtol=1e-6)
 
 # same simple hurdle with through UNREGULATED lasso path
-hurdleglrfit = fit(Hurdle,GammaLassoPath,X,y;λ=[0.0],verbose=true)
+hurdleglrfit = fit(Hurdle,GammaLassoPath,X,y;λ=[0.0])
 @time coefsJ=vcat(coef(hurdleglrfit;select=:AICc)...)
 @fact coefsJ --> roughly(coefsR1;rtol=1e-4)
 # rdist(coefsJ,coefsR1)
@@ -163,7 +163,7 @@ coefsJpos, coefsJzero = coef(hurdle;select=:all)
 @fact size(coefsJzero,1) --> 2
 
 # degenerate positive counts data case 1 without >1
-y0or1=y
+y0or1=deepcopy(y)
 y0or1[y.>1]=1
 hurdle = fit(Hurdle,GammaLassoPath,X,y0or1)
 coefs0or1=vcat(coef(hurdle;select=:AICc)...)
@@ -171,6 +171,20 @@ coefs0or1=vcat(coef(hurdle;select=:AICc)...)
 coefs0or1pos, coefs0or1zero = coef(hurdle;select=:all)
 @fact coefs0or1pos --> coefsJpos
 @fact coefs0or1zero --> coefsJzero
+
+# degenerate positive counts data case 1 without zeros
+y0or1 = deepcopy(y)
+y0or1[y.==0]=1
+hurdle = fit(Hurdle,GammaLassoPath,X,y0or1)
+coef(hurdle;select=:AICc)
+coefs0or1=vcat(coef(hurdle;select=:AICc)...)
+@fact vec(coefs0or1) --> roughly([-7.34062, 0.0, 0.0, 0.0],1e-4)
+coefs0or1pos, coefs0or1zero = coef(hurdle;select=:all)
+@fact all(iszero,coefs0or1zero) --> true
+
+# degenerate positive counts data case 1 without only zeros
+y0or1 = zeros(y)
+@fact_throws fit(Hurdle,GammaLassoPath,X,y0or1)
 
 # degenerate positive counts data case 2
 include(joinpath(testfolder,"data","degenerate_hurdle_2.jl"))

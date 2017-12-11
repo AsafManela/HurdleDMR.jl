@@ -10,7 +10,7 @@ include("addworkers.jl")
 
 using GLM, DataFrames, LassoPlot
 
-@everywhere using HurdleDMR
+import HurdleDMR; @everywhere using HurdleDMR
 
 # reload("HurdleDMR")
 
@@ -40,12 +40,14 @@ inpos = [1,3]
 covarspos = we8thereRatings[:,inpos]
 
 T = Float64
-counts=sparse(convert(Matrix{Float64},we8thereCounts))
+d = 100
+# counts=sparse(convert(Matrix{Float64},we8thereCounts[:,end-d+1:end]))
+srand(13)
+counts = round.(10*sprand(n,d,0.3))
 covars=convert(Array{T,2},covars)
 covarspos=convert(Array{T,2},covarspos)
 
 npos,ppos = size(covarspos)
-d = size(counts,2)
 
 γ=1.0
 
@@ -57,7 +59,7 @@ facts("hurdle-dmr with covarspos == covarszero") do
 # reload("HurdleDMR")
 
 # hurdle dmr parallel local cluster
-@time coefsHppos, coefsHpzero = HurdleDMR.hdmr(covars, counts; parallel=true)
+@time coefsHppos, coefsHpzero = HurdleDMR.hdmr(covars, counts; parallel=true, verbose=true)
 @fact size(coefsHppos) --> (p+1, d)
 @fact size(coefsHpzero) --> (p+1, d)
 
@@ -284,8 +286,6 @@ X3, X3_nocounts, includezpos = HurdleDMR.srprojX(coefsHppos,coefsHpzero,counts,c
 
 end
 
-rmprocs(workers())
-
 #########################################################################3
 # degenerate cases
 #########################################################################3
@@ -298,9 +298,6 @@ zcounts[:,3] = ones(n)
 # find(var(zcounts,1) .== 0)
 
 # make sure we are not adding all zero obseravtions
-m = sum(counts,2)
-@fact sum(m .== 0) --> 0
-
 m = sum(zcounts,2)
 @fact sum(m .== 0) --> 0
 
@@ -311,6 +308,36 @@ m = sum(zcounts,2)
 @fact coefsHppos[:,2] --> zeros(p+1)
 @fact coefsHpzero[:,2] --> zeros(p+1)
 @fact coefsHppos[:,3] --> zeros(p+1)
+@fact coefsHpzero[:,3] --> zeros(p+1)
+
+# hurdle dmr parallel remote cluster
+@time coefsHppos2, coefsHpzero2 = HurdleDMR.hdmr(covars, zcounts; parallel=true, local_cluster=false)
+@fact coefsHppos --> roughly(coefsHppos2)
+@fact coefsHpzero --> roughly(coefsHpzero)
+
+#########################################################################3
+# degenerate case of no hurdle variation (all counts > 0)
+#########################################################################3
+
+zcounts = full(deepcopy(counts))
+srand(13)
+for I = eachindex(zcounts)
+    if iszero(zcounts[I])
+        zcounts[I] = rand(1:10)
+    end
+end
+
+# make sure we are not adding all zero obseravtions
+m = sum(zcounts,2)
+@fact sum(m .== 0) --> 0
+
+# hurdle dmr parallel local cluster
+@time coefsHppos, coefsHpzero = HurdleDMR.hdmr(covars, zcounts; parallel=true)
+@fact size(coefsHppos) --> (p+1, d)
+@fact size(coefsHpzero) --> (p+1, d)
+@fact coefsHppos[:,2] --> not(zeros(p+1))
+@fact coefsHpzero[:,2] --> zeros(p+1)
+@fact coefsHppos[:,3] --> not(zeros(p+1))
 @fact coefsHpzero[:,3] --> zeros(p+1)
 
 # hurdle dmr parallel remote cluster
@@ -373,3 +400,4 @@ m = sum(zcounts,2)
 
 
 #
+rmprocs(workers())

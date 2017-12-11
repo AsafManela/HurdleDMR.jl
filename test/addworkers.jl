@@ -7,3 +7,4 @@ if nworkers() > 1
 end
 info("Starting $nw parallel workers for tests...")
 addprocs(nw)
+info("$(nworkers()) parallel workers started")

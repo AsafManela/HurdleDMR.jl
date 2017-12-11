@@ -36,7 +36,7 @@ function hdmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstrac
   μ = vec(log.(m))
   # display(μ)
 
-  function tryfith(countsj::SparseVector{V,Int64})
+  function tryfith(countsj::AbstractVector{V})
     try
       # we make it dense remotely to reduce communication costs
       # we use the same offsets for pos and zeros
