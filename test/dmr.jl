@@ -1,5 +1,8 @@
 # eventually, these path lines should only occur in runtests.jl
-# testfolder = dirname(@__FILE__)
+rtol=0.05
+rdist(x::Number,y::Number) = abs(x-y)/max(abs(x),abs(y))
+rdist{T<:Number,S<:Number}(x::AbstractArray{T}, y::AbstractArray{S}; norm::Function=vecnorm) = norm(x - y) / max(norm(x), norm(y))
+testfolder = dirname(@__FILE__)
 # srcfolder = joinpath(testfolder,"..","src")
 # # push!(LOAD_PATH, joinpath(testfolder,".."))
 # push!(LOAD_PATH, srcfolder)
@@ -15,30 +18,46 @@ import HurdleDMR; @everywhere using HurdleDMR
 # uncomment following for debugging and comment the previous @everywhere line. then use reload after making changes
 # reload("HurdleDMR")
 
+γ = 1.0
+
 # # uncomment to generate R benchmark
 # using RCall
-# import Rdistrom
 # R"library(textir)"
 # R"library(Matrix)"
 # R"data(we8there)"
+# R"we8thereCounts <- we8thereCounts[,1:100]" # comment this line to use entire dataset
 # we8thereCounts = DataFrame(rcopy(R"as.matrix(we8thereCounts)"))
-# we8thereRatings = rcopy("we8thereRatings")
+# we8thereRatings = rcopy(R"we8thereRatings")
 # we8thereTerms = rcopy(R"we8thereCounts@Dimnames$Terms")
 # names!(we8thereCounts,map(Symbol,we8thereTerms))
+#
+# R"cl <- makeCluster(2,type=\"FORK\")"
+# R"fits <- dmr(cl, we8thereRatings, we8thereCounts, gamma=$γ, verb=0)"
+# R"stopCluster(cl)"
+# coefsRdistrom = rcopy(R"as.matrix(coef(fits))")
+# zRdistrom = rcopy(R"as.matrix(srproj(fits,we8thereCounts))")
+# z1Rdistrom = rcopy(R"as.matrix(srproj(fits,we8thereCounts,1))")
+#
 # writetable(joinpath(testfolder,"data","dmr_we8thereCounts.csv.gz"),we8thereCounts)
 # writetable(joinpath(testfolder,"data","dmr_we8thereRatings.csv.gz"),we8thereRatings)
+# writetable(joinpath(testfolder,"data","dmr_coefsRdistrom.csv.gz"),DataFrame(full(coefsRdistrom)))
+# writetable(joinpath(testfolder,"data","dmr_zRdistrom.csv.gz"),DataFrame(zRdistrom))
+# writetable(joinpath(testfolder,"data","dmr_z1Rdistrom.csv.gz"),DataFrame(z1Rdistrom))
 
 we8thereCounts = readtable(joinpath(testfolder,"data","dmr_we8thereCounts.csv.gz"))
 we8thereRatings = readtable(joinpath(testfolder,"data","dmr_we8thereRatings.csv.gz"))
 we8thereTerms = map(string,names(we8thereCounts))
+coefsRdistrom = sparse(convert(Matrix{Float64},readtable(joinpath(testfolder,"data","dmr_coefsRdistrom.csv.gz"))))
+zRdistrom = convert(Matrix{Float64},readtable(joinpath(testfolder,"data","dmr_zRdistrom.csv.gz")))
+z1Rdistrom = convert(Matrix{Float64},readtable(joinpath(testfolder,"data","dmr_z1Rdistrom.csv.gz")))
 
 # covars = we8thereRatings[:,[:Overall]]
 covars = we8thereRatings[:,:]
 n,p = size(covars)
-inzero = 1:p
-
-inpos = [1,3]
-covarspos = we8thereRatings[:,inpos]
+# inzero = 1:p
+#
+# inpos = [1,3]
+# covarspos = we8thereRatings[:,inpos]
 
 T = Float64
 counts=sparse(convert(Matrix{Float64},we8thereCounts))
@@ -49,12 +68,10 @@ srand(13)
 smallcounts = round.(10*sprand(n,smalld,0.3))
 
 covars=convert(Array{T,2},covars)
-covarspos=convert(Array{T,2},covarspos)
-
-npos,ppos = size(covarspos)
+# covarspos=convert(Array{T,2},covarspos)
+#
+# npos,ppos = size(covarspos)
 d = size(counts,2)
-
-γ=1.0
 
 facts("dmr") do
 
@@ -70,7 +87,9 @@ facts("dmr") do
 paths = dmrPaths.nlpaths
 @fact dmrPaths.p --> p
 
-plotterms=["first_date","chicken_wing","ate_here", "good_food","food_fabul","terribl_servic"]
+# these terms require the full counts data, but we use only first 100 for quick testing
+# plotterms=["first_date","chicken_wing","ate_here", "good_food","food_fabul","terribl_servic"]
+plotterms=we8thereTerms[1:6]
 plotix=[find(we8thereTerms.==term)[1]::Int64 for term=plotterms]
 plotterms==we8thereTerms[plotix]
 
@@ -88,16 +107,9 @@ regdata = DataFrame(y=covars[:,1], z=z[:,1], m=z[:,2])
 lm1 = lm(@formula(y ~ z+m), regdata)
 r21 = adjr2(lm1)
 
-# @time fits = Rdistrom.dmr(covars, counts; nlocal_workers=nworkers(), gamma=γ, verb=0)
-# coefsRdistrom = Rdistrom.coef(fits)
-# writetable(joinpath(testfolder,"data","dmr_coefsRdistrom.csv.gz"),DataFrame(full(coefsRdistrom)))
-coefsRdistrom = sparse(convert(Matrix{Float64},readtable(joinpath(testfolder,"data","dmr_coefsRdistrom.csv.gz"))))
-@fact coefs --> roughly(full(coefsRdistrom);rtol=2rtol)
+@fact coefs --> roughly(full(coefsRdistrom);rtol=rtol)
 # println("rdist(coefs,coefsRdistrom)=$(rdist(coefs,coefsRdistrom))")
 
-# zRdistrom = Rdistrom.srproj(fits,counts)
-# writetable(joinpath(testfolder,"data","dmr_zRdistrom.csv.gz"),DataFrame(zRdistrom))
-zRdistrom = convert(Matrix{Float64},readtable(joinpath(testfolder,"data","dmr_zRdistrom.csv.gz")))
 @fact z --> roughly(zRdistrom;rtol=rtol)
 # println("rdist(z,zRdistrom)=$(rdist(z,zRdistrom))")
 
@@ -117,9 +129,6 @@ r23 = adjr2(lm3)
 @time z1dense = HurdleDMR.srproj(coefs, full(counts), 1)
 @fact z1dense --> roughly(z1)
 
-# z1Rdistrom = Rdistrom.srproj(fits,counts,1)
-# writetable(joinpath(testfolder,"data","dmr_z1Rdistrom.csv.gz"),DataFrame(z1Rdistrom))
-z1Rdistrom = convert(Matrix{Float64},readtable(joinpath(testfolder,"data","dmr_z1Rdistrom.csv.gz")))
 @fact z1 --> roughly(z1Rdistrom;rtol=rtol)
 
 X1, X1_nocounts = HurdleDMR.srprojX(coefs,counts,covars,1; includem=true)

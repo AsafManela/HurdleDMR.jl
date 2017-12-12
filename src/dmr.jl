@@ -29,10 +29,7 @@ function dmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstract
   @assert n==n1 "counts and covars should have the same number of observations"
   verbose && info("fitting $n observations on $d categories, $p covariates ")
 
-  # shifters
-  m = sum(counts,2)
-  μ = vec(log.(m))
-  # display(μ)
+  covars, counts, μ, n = shifters(covars, counts, showwarnings)
 
   function tryfitgl(countsj::AbstractVector{V})
     try
@@ -100,6 +97,27 @@ function Base.convert(::Type{SharedArray}, A::SparseMatrixCSC)
   S
 end
 
+# shifters
+function shifters{T<:AbstractFloat,V}(covars::AbstractMatrix{T}, counts::AbstractMatrix{V}, showwarnings::Bool)
+    m = vec(sum(counts,2))
+
+    if any(iszero,m)
+        # omit observations with no counts
+        ixposm = find(m)
+        showwarnings && warn("omitting $(length(m)-length(ixposm)) observations with no counts")
+        m = m[ixposm]
+        counts = counts[ixposm,:]
+        covars = covars[ixposm,:]
+    end
+
+    μ = log.(m)
+    # display(μ)
+
+    n = length(m)
+
+    covars, counts, μ, n
+end
+
 """
 This version is built for local clusters and shares memory used by both inputs and outputs if run in parallel mode.
 """
@@ -116,10 +134,7 @@ function dmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts:
     p += 1
   end
 
-  # shifters
-  m = sum(counts,2)
-  μ = vec(log.(m))
-  # display(μ)
+  covars, counts, μ, n = shifters(covars, counts, showwarnings)
 
   function tryfitgl!(coefs::AbstractMatrix{T}, j::Int64, covars::AbstractMatrix{T},counts::AbstractMatrix{V}; kwargs...)
     try

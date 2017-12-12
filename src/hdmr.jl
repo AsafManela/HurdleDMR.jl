@@ -31,10 +31,7 @@ function hdmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstrac
     verbose && info("for both zeros and positive counts")
   end
 
-  # shifters
-  m = sum(counts,2)
-  μ = vec(log.(m))
-  # display(μ)
+  covars, counts, μ, n = shifters(covars, counts, showwarnings)
 
   function tryfith(countsj::AbstractVector{V})
     try
@@ -121,10 +118,7 @@ function hdmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},covars
     verbose && info("for both zeros and positive counts")
   end
 
-  # shifters
-  m = sum(counts,2)
-  μ = vec(log.(m))
-  # display(μ)
+  covars, counts, μ, n = shifters(covars, counts, showwarnings)
 
   function tryfith!(coefszero::AbstractMatrix{T}, coefspos::AbstractMatrix{T}, j::Int64, covars::AbstractMatrix{T},counts::AbstractMatrix{V};
     covarspos::@compat(Union{AbstractMatrix{T},Void}) = nothing, kwargs...)

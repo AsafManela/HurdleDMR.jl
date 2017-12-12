@@ -1,10 +1,14 @@
-# testfolder = dirname(@__FILE__)
+rtol=0.05
+rdist(x::Number,y::Number) = abs(x-y)/max(abs(x),abs(y))
+rdist{T<:Number,S<:Number}(x::AbstractArray{T}, y::AbstractArray{S}; norm::Function=vecnorm) = norm(x - y) / max(norm(x), norm(y))
+
+testfolder = dirname(@__FILE__)
 # push!(LOAD_PATH, joinpath(testfolder,".."))
 # push!(LOAD_PATH, joinpath(testfolder,"..","src"))
 
 using FactCheck, Lasso, DataFrames
 
-using HurdleDMR
+# using HurdleDMR
 
 # code to generate R benchmark
 # using RCall
@@ -17,6 +21,7 @@ using HurdleDMR
 bioChemists=readtable(joinpath(testfolder,"data","bioChemists.csv"))
 bioChemists[:marMarried]=bioChemists[:mar] .== "Married"
 bioChemists[:femWomen]=bioChemists[:fem] .== "Women"
+bioChemists[:art] = convert(DataVector{Float64}, bioChemists[:art])
 
 X=convert(Array{Float64,2},bioChemists[:,[:femWomen,:marMarried,:kid5,:phd,:ment]])
 Xwconst=[ones(size(X,1)) X]
