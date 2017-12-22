@@ -256,3 +256,68 @@ function StatsBase.coef(hurdle::Hurdle; kwargs...)
   # end
   cpos,czero
 end
+
+## Prediction function for GLMs
+function StatsBase.predict{T<:AbstractFloat}(hurdle::Hurdle, X::AbstractMatrix{T};
+  Xpos::AbstractMatrix{T} = X,
+  offsetzero::AbstractVector = Array{T}(0),
+  offsetpos::AbstractVector = Array{T}(0),
+  offset::AbstractVector=Array{T}(0),
+  select=:all)
+
+  offsetzero, offsetpos = setoffsets(y, ixpos, offset, offsetzero, offsetpos)
+
+  # add an interecept to new X if the fitted model has one
+  if hasintercept(hurdle.mzero)
+      X = [ones(T,size(X,1),1) X]
+  end
+  if hasintercept(hurdle.mpos)
+      Xpos = [ones(T,size(Xpos,1),1) Xpos]
+  end
+
+  # calculate etas for each obs x segment
+  etazero = X * coef(hurdle.mzero;select=select)
+  etapos = Xpos * coef(hurdle.mpos;select=select)
+
+  # get model
+  mmzero = hurdle.mzero.m
+  mmpos = hurdle.mpos.m
+
+  # adjust for any offset
+  if length(mmzero.rr.offset) > 0
+      length(offsetzero) == size(X, 1) ||
+          throw(ArgumentError("fit with offsetzero, so `offset` kw arg must be an offset of length `size(X, 1)`"))
+      broadcast!(+, etazero, etazero, offsetzero)
+  else
+      length(offsetzero) > 0 && throw(ArgumentError("fit without offsetzero, so value of `offset` kw arg does not make sense"))
+  end
+
+  # adjust for any offset
+  if length(mmpos.rr.offset) > 0
+      length(offsetpos) == size(X, 1) ||
+          throw(ArgumentError("fit with offsetpos, so `offset` kw arg must be an offset of length `size(X, 1)`"))
+      broadcast!(+, etapos, etapos, offsetpos)
+  else
+      length(offsetpos) > 0 && throw(ArgumentError("fit without offsetpos, so value of `offset` kw arg does not make sense"))
+  end
+
+  if typeof(mmzero) <: LinearModel
+    muzero = etazero
+  else
+    # invert all etas to mus
+    μzero(η) = linkinv(linkfun(hurdle.mzero), η)
+    muzero = map(μzero, etazero)
+  end
+
+  if typeof(mmpos) <: LinearModel
+    mupos = etapos
+  else
+    # invert all etas to mus
+    μpos(η) = linkinv(linkfun(hurdle.mpos), η)
+    mupos = map(μpos, etapos)
+  end
+
+  # TODO: verify this is right:
+  # TODO: test
+  muzero .* mupos
+end
