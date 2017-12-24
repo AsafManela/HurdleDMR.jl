@@ -8,7 +8,7 @@ testfolder = dirname(@__FILE__)
 
 using FactCheck, Lasso, DataFrames
 
-# using HurdleDMR
+using HurdleDMR
 
 # code to generate R benchmark
 # using RCall
@@ -104,7 +104,7 @@ yhatJpartial=vcat(predict(hurdleglrfitShared, X[50:60,:]; select=:AICc)...)
 @fact yhatJpartial --> roughly(yhatR1partial;rtol=0.05)
 
 # regulated gamma lasso path
-@time hurdleglrfit = fit(Hurdle,GammaLassoPath,X,y; γ=10.0)
+hurdleglrfit = fit(Hurdle,GammaLassoPath,X,y; γ=10.0)
 coefsJ=vcat(coef(hurdleglrfit;select=:AICc)...)
 @fact coefsJ --> roughly(coefsR1;rtol=0.11)
 # rdist(coefsJ,coefsR1)
@@ -261,30 +261,29 @@ coefsJ=vcat(coef(hurdlefit)...)
 @fact coefsJ --> roughly(coefsR3;rtol=1e-5)
 yhatJ=vcat(predict(hurdlefit, Xzerowconst; Xpos=Xposwconst, offsetzero=offzero, offsetpos=offpos)...)
 @fact yhatJ --> roughly(yhatR3;rtol=1e-5)
-#TODO: this is a bug!
-yhatJpartial=vcat(predict(hurdlefit, Xzerowconst[50:60,:]; Xpos=Xposwconst[50:60,:], offsetzero=offzero, offsetpos=offpos)...)
+yhatJpartial=vcat(predict(hurdlefit, Xzerowconst[50:60,:]; Xpos=Xposwconst[50:60,:], offsetzero=offzero[50:60], offsetpos=offpos[50:60])...)
 @fact yhatJpartial --> roughly(yhatR3partial;rtol=1e-6)
 
 # same simple hurdle through UNREGULATED lasso path
-hurdleglrfit = fit(Hurdle,GammaLassoPath,Xzero,y; Xpos=Xpos, λ=[0.0,0.0001])
+hurdleglrfit = fit(Hurdle,GammaLassoPath,Xzero,y; Xpos=Xpos, offsetzero=offzero, offsetpos=offpos, λ=[0.0,0.0001])
 coefsJ=vcat(coef(hurdleglrfit;select=:AICc)...)
 @fact coefsJ --> roughly(coefsR3;rtol=1e-4)
 # rdist(coefsJ,coefsR3)
-yhatJ=vcat(predict(hurdleglrfit, Xzero; Xpos=Xpos, select=:AICc)...)
+yhatJ=vcat(predict(hurdleglrfit, Xzero; Xpos=Xpos, offsetzero=offzero, offsetpos=offpos, select=:AICc)...)
 @fact yhatJ --> roughly(yhatR3;rtol=1e-4)
-yhatJpartial=vcat(predict(hurdleglrfit, Xzero[50:60,:]; Xpos=Xpos[50:60,:], select=:AICc)...)
+yhatJpartial=vcat(predict(hurdleglrfit, Xzero[50:60,:]; Xpos=Xpos[50:60,:], offsetzero=offzero[50:60], offsetpos=offpos[50:60], select=:AICc)...)
 @fact yhatJpartial --> roughly(yhatR3partial;rtol=1e-4)
-yhatJ = predict(hurdleglrfit, Xzero; Xpos=Xpos, select=:all)
+yhatJ = predict(hurdleglrfit, Xzero; Xpos=Xpos, offsetzero=offzero, offsetpos=offpos, select=:all)
 @fact size(yhatJ) --> (size(X,1),2)
 
 # regulated lasso path
-hurdleglrfit = fit(Hurdle,GammaLassoPath,Xzero,y; Xpos=Xpos, γ=0.0)
+hurdleglrfit = fit(Hurdle,GammaLassoPath,Xzero,y; Xpos=Xpos, offsetzero=offzero, offsetpos=offpos, γ=0.0)
 coefsJ=vcat(coef(hurdleglrfit;select=:AICc)...)
 @fact coefsJ --> roughly(coefsR3;rtol=0.10)
 # rdist(coefsJ,coefsR3)
-yhatJ = vcat(predict(hurdleglrfit, Xzero; Xpos=Xpos, select=:AICc)...)
+yhatJ = vcat(predict(hurdleglrfit, Xzero; Xpos=Xpos, offsetzero=offzero, offsetpos=offpos, select=:AICc)...)
 @fact yhatJ --> roughly(yhatR3;rtol=0.05)
-yhatJpartial=vcat(predict(hurdleglrfit, Xzero[50:60,:]; Xpos=Xpos[50:60,:], select=:AICc)...)
+yhatJpartial=vcat(predict(hurdleglrfit, Xzero[50:60,:]; Xpos=Xpos[50:60,:], offsetzero=offzero[50:60], offsetpos=offpos[50:60], select=:AICc)...)
 @fact yhatJpartial --> roughly(yhatR3partial;rtol=0.05)
 
 coefsJpos, coefsJzero = coef(hurdleglrfit;select=:all)
@@ -294,33 +293,35 @@ coefsJpos, coefsJzero = coef(hurdleglrfit;select=:all)
 # try with SharedArray
 Xzeros = convert(SharedArray,Xzero)
 Xposs = convert(SharedArray,Xpos)
-hurdleglrfitShared = fit(Hurdle,GammaLassoPath,Xzeros,y; Xpos=Xposs, γ=0.0)
+offzeros = convert(SharedArray,offzero)
+offposs = convert(SharedArray,offpos)
+hurdleglrfitShared = fit(Hurdle,GammaLassoPath,Xzeros,y; Xpos=Xposs, offsetzero=offzeros, offsetpos=offposs, γ=0.0)
 coefsJShared=vcat(coef(hurdleglrfitShared;select=:AICc)...)
 @fact coefsJShared --> roughly(coefsJ)
-yhatJ = vcat(predict(hurdleglrfitShared, Xzeros; Xpos=Xposs, select=:AICc)...)
+yhatJ = vcat(predict(hurdleglrfitShared, Xzeros; Xpos=Xposs, offsetzero=offzeros, offsetpos=offposs, select=:AICc)...)
 @fact yhatJ --> roughly(yhatR3;rtol=0.05)
-yhatJpartial=vcat(predict(hurdleglrfitShared, Xzeros[50:60,:]; Xpos=Xposs[50:60,:], select=:AICc)...)
+yhatJpartial=vcat(predict(hurdleglrfitShared, Xzeros[50:60,:]; Xpos=Xposs[50:60,:], offsetzero=offzeros[50:60], offsetpos=offposs[50:60], select=:AICc)...)
 @fact yhatJpartial --> roughly(yhatR3partial;rtol=0.05)
 
 # regulated gamma lasso path
-hurdleglrfit = fit(Hurdle,GammaLassoPath,Xzero,y; Xpos=Xpos, γ=10.0)
+hurdleglrfit = fit(Hurdle,GammaLassoPath,Xzero,y; Xpos=Xpos, offsetzero=offzero, offsetpos=offpos, γ=10.0)
 coefsJ=vcat(coef(hurdleglrfit;select=:AICc)...)
 @fact coefsJ --> roughly(coefsR3;rtol=0.15)
 # rdist(coefsJ,coefsR3)
-yhatJ = vcat(predict(hurdleglrfit, Xzero; Xpos=Xpos, select=:AICc)...)
+yhatJ = vcat(predict(hurdleglrfit, Xzero; Xpos=Xpos, offsetzero=offzero, offsetpos=offpos, select=:AICc)...)
 @fact yhatJ --> roughly(yhatR3;rtol=0.05)
-yhatJpartial=vcat(predict(hurdleglrfit, Xzero[50:60,:]; Xpos=Xpos[50:60,:], select=:AICc)...)
+yhatJpartial=vcat(predict(hurdleglrfit, Xzero[50:60,:]; Xpos=Xpos[50:60,:], offsetzero=offzero[50:60], offsetpos=offpos[50:60], select=:AICc)...)
 @fact yhatJpartial --> roughly(yhatR3partial;rtol=0.05)
 
 # using DataFrames formula interface
-hurdlefit = fit(Hurdle,GeneralizedLinearModel,@formula(art ~ phd + ment), bioChemists; fpos = @formula(art ~ femWomen + marMarried + kid5))
+hurdlefit = fit(Hurdle,GeneralizedLinearModel,@formula(art ~ phd + ment), bioChemists; fpos = @formula(art ~ femWomen + marMarried + kid5), offsetzero=offzero, offsetpos=offpos)
 coefsJ=vcat(coef(hurdlefit)...)
 @fact coefsJ --> roughly(coefsR3;rtol=1e-5)
 # rdist(coefsJ,coefsR3)
-yhatJ=vcat(predict(hurdlefit, Xzerowconst; Xpos=Xposwconst)...)
-@fact yhatJ --> roughly(yhatR3;rtol=1e-6)
-yhatJpartial=vcat(predict(hurdlefit, Xzerowconst[50:60,:]; Xpos=Xposwconst[50:60,:])...)
-@fact yhatJpartial --> roughly(yhatR3partial;rtol=1e-6)
+yhatJ=vcat(predict(hurdlefit, Xzerowconst; Xpos=Xposwconst, offsetzero=offzero, offsetpos=offpos)...)
+@fact yhatJ --> roughly(yhatR3;rtol=1e-5)
+yhatJpartial=vcat(predict(hurdlefit, Xzerowconst[50:60,:]; Xpos=Xposwconst[50:60,:], offsetzero=offzero[50:60], offsetpos=offpos[50:60])...)
+@fact yhatJpartial --> roughly(yhatR3partial;rtol=1e-5)
 
 end
 
