@@ -113,12 +113,22 @@ GLM.canonicallink(::PositivePoisson) = LogProductLogLink()
 GLM.glmvar(::PositivePoisson, μ) = μ * (1.0 - μ*exp(-λfn(μ)))
 GLM.mustart(::PositivePoisson, y, wt) = y + oftype(y, 0.1)
 
+"Evaluates log(exp(x)-1.0) even when exp(x) blows up and answer is simply x"
+function logexpm1(x::T) where {T}
+  expx = exp(x)
+  if isinf(expx)
+    x
+  else
+    log(expx-one(T))
+  end
+end
+
 function GLM.devresid(::PositivePoisson, y, μ)
   if y>1
     if μ>1
       λμ = λfn(μ)
       λy = λfn(y)
-      2 * (y*(log(λy)-log(λμ)) - log(exp(λy)-1.0) + log(exp(λμ)-1.0))
+      2 * (y*(log(λy)-log(λμ)) - logexpm1(λy) + logexpm1(λμ))
     else
       typemax(μ) # +∞
     end

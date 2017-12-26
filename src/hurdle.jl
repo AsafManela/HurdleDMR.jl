@@ -72,7 +72,6 @@ function fitzero{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{M},
           typeof(e) == Base.LinAlg.PosDefException || typeof(e) == DomainError
         fittedzero = false
       else
-        verbose && warn("countmap(Iy)=$(countmap(Iy))")
         verbose && warn("X'=$(X')")
         verbose && warn("Iy=$Iy)")
         rethrow(e)
@@ -119,14 +118,13 @@ function fitpos{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{M},
       fittedpos = dofit
     catch e
       verbose && warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos:")
-      verbose && warn("countmap(y)=$(countmap(y))")
+      verbose && warn("countmap(ypos)=$(countmap(ypos))")
       if typeof(e) <: ErrorException && (contains(e.msg,"step-halving") || contains(e.msg,"failure to converge") || contains(e.msg,"failed to converge")) ||
           typeof(e) == Base.LinAlg.PosDefException || typeof(e) == DomainError
         fittedpos = false
       else
-        verbose && warn("countmap(y)=$(countmap(y))")
-        verbose && warn("X'=$(X')")
-        verbose && warn("y=$y)")
+        verbose && warn("Xpos'=$(Xpos')")
+        verbose && warn("ypos=$ypos)")
         rethrow(e)
       end
     end

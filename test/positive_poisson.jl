@@ -16,15 +16,34 @@ xs = 1:10000
 @time ηscheck=map(μ->linkfun(LogProductLogLink(),μ),μs)
 @fact ηs --> roughly(ηscheck)
 
-μs=1.01:0.01:1000
+μs=1.01:0.1:1000
 @time ηs=map(μ->linkfun(LogProductLogLink(),μ),μs)
 @time μscheck=map(η->linkinv(LogProductLogLink(),η),ηs)
 @fact μs --> roughly(μscheck)
+#verify works for large μ
+ys = μs + 0.01
+devresids = devresid.(PositivePoisson(λ0), ys, μs)
+@fact all(isfinite,devresids) --> true
 
+μs = big.(μs)
+@time ηs=map(μ->linkfun(LogProductLogLink(),μ),μs)
+@time μscheck=map(η->linkinv(LogProductLogLink(),η),ηs)
+@fact μs --> roughly(μscheck)
+#verify works for large μ
+ys = μs + 0.01
+devresidsbig = devresid.(PositivePoisson(λ0), ys, μs)
+@fact all(isfinite,devresidsbig) --> true
+@fact devresids --> roughly(Float64.(devresidsbig))
+
+# μs close to 1.0
 μs=big.(collect(1.0+1e-10:1e-10:1.0+1000*1e-10))
 @time ηs=map(μ->linkfun(LogProductLogLink(),μ),μs)
 @time μscheck=map(η->linkinv(LogProductLogLink(),η),ηs)
 @fact μs --> roughly(μscheck)
+#verify works for large μ
+ys = μs + 0.01
+devresidsbig = devresid.(PositivePoisson(λ0), ys, μs)
+@fact all(isfinite,devresidsbig) --> true
 
 # R benchmark
 seed=12
