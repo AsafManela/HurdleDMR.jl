@@ -63,12 +63,22 @@ function logfactorial(n::Int)
   x
 end
 
+"Evaluates log(exp(x)-1.0) even when exp(x) blows up and the answer is simply x"
+function logexpm1(x::T) where {T}
+  expx = exp(x)
+  if isinf(expx)
+    x
+  else
+    log(expx-one(T))
+  end
+end
+
 # Note that the factorial will blow up with moderately large x
 Distributions.pdf(d::PositivePoisson, x::Int) = d.λ^x / ((exp(d.λ)-1.0) * factorial(x))
 
 # calculating the log factorial is too expensive, we use an approximation
 # given here: http://www.johndcook.com/blog/2010/08/16/how-to-compute-log-factorial/
-Distributions.logpdf(d::PositivePoisson, x::Int) = x*log(d.λ) - log(exp(d.λ)-1.0) - logfactorialapprox(x)
+Distributions.logpdf(d::PositivePoisson, x::Int) = x*log(d.λ) - logexpm1(d.λ) - logfactorialapprox(x)
 
 # for comparison we define the exact logpdf for the positive poisson
 logpdf_exact(d::PositivePoisson, x::Int) = x*log(d.λ) - log(exp(d.λ)-1.0) - logfactorial(x)
@@ -113,17 +123,7 @@ GLM.canonicallink(::PositivePoisson) = LogProductLogLink()
 GLM.glmvar(::PositivePoisson, μ) = μ * (1.0 - μ*exp(-λfn(μ)))
 GLM.mustart(::PositivePoisson, y, wt) = y + oftype(y, 0.1)
 
-"Evaluates log(exp(x)-1.0) even when exp(x) blows up and answer is simply x"
-function logexpm1(x::T) where {T}
-  expx = exp(x)
-  if isinf(expx)
-    x
-  else
-    log(expx-one(T))
-  end
-end
-
-function GLM.devresid(::PositivePoisson, y, μ)
+function GLM.devresid(::PositivePoisson, y::T, μ::T) where {T}
   if y>1
     if μ>1
       λμ = λfn(μ)
@@ -134,9 +134,9 @@ function GLM.devresid(::PositivePoisson, y, μ)
     end
   else
     if μ>1
-      -2 * log(-lambertw(-exp(-μ)*μ))
+      2 * (λfn(μ) - log(μ))
     else
-      zero(μ)
+      zero(T)
     end
   end
 end

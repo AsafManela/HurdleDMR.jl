@@ -12,38 +12,104 @@ xs = 1:10000
 @fact lp1 --> roughly(lp2)
 
 ηs=-10:0.1:10
-@time μs=map(η->linkinv(LogProductLogLink(),η),ηs)
-@time ηscheck=map(μ->linkfun(LogProductLogLink(),μ),μs)
+@time μs=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
+@time ηscheck=broadcast(μ->linkfun(LogProductLogLink(),μ),μs)
 @fact ηs --> roughly(ηscheck)
 
+loglik(y, μ) = GLM.loglik_obs(PositivePoisson(λ0), y, μ, one(y), 0)
+
 μs=1.01:0.1:1000
-@time ηs=map(μ->linkfun(LogProductLogLink(),μ),μs)
-@time μscheck=map(η->linkinv(LogProductLogLink(),η),ηs)
+@time ηs=broadcast(μ->linkfun(LogProductLogLink(),μ),μs)
+@time μscheck=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
 @fact μs --> roughly(μscheck)
 #verify works for large μ
-ys = μs + 0.01
+ys = round.(Int,μs) + 1.0
 devresids = devresid.(PositivePoisson(λ0), ys, μs)
 @fact all(isfinite,devresids) --> true
+logliks = loglik.(ys, μs)
+@fact all(isfinite,logliks) --> true
+# i = findfirst(isinf,logliks)
+# @enter GLM.loglik_obs(PositivePoisson(λ0), ys[i], μs[i], one(ys[i]), 0)
 
-μs = big.(μs)
-@time ηs=map(μ->linkfun(LogProductLogLink(),μ),μs)
-@time μscheck=map(η->linkinv(LogProductLogLink(),η),ηs)
-@fact μs --> roughly(μscheck)
+ys = ones(μs)
+devresids1 = devresid.(PositivePoisson(λ0), ys, μs)
+@fact all(isfinite,devresids1) --> true
+logliks1 = loglik.(ys, μs)
+@fact all(isfinite,logliks1) --> true
+
+μsbig = big.(μs)
+@time ηs=broadcast(μ->linkfun(LogProductLogLink(),μ),μsbig)
+@time μscheck=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
+@fact μsbig --> roughly(μscheck)
 #verify works for large μ
-ys = μs + 0.01
-devresidsbig = devresid.(PositivePoisson(λ0), ys, μs)
+ysbig = round.(BigInt,μsbig) + 1.0
+devresidsbig = devresid.(PositivePoisson(λ0), ysbig, μsbig)
 @fact all(isfinite,devresidsbig) --> true
 @fact devresids --> roughly(Float64.(devresidsbig))
 
+logliksbig = loglik.(ysbig, μsbig)
+@fact all(isfinite,logliksbig) --> true
+@fact logliks --> roughly(Float64.(logliksbig))
+
+ysbig = ones(μsbig)
+devresidsbig1 = devresid.(PositivePoisson(λ0), ysbig, μsbig)
+@fact all(isfinite,devresidsbig1) --> true
+@fact devresids1 --> roughly(Float64.(devresidsbig1))
+logliksbig1 = loglik.(ysbig, μsbig)
+@fact all(isfinite,logliksbig1) --> true
+
 # μs close to 1.0
 μs=big.(collect(1.0+1e-10:1e-10:1.0+1000*1e-10))
-@time ηs=map(μ->linkfun(LogProductLogLink(),μ),μs)
-@time μscheck=map(η->linkinv(LogProductLogLink(),η),ηs)
+@time ηs=broadcast(μ->linkfun(LogProductLogLink(),μ),μs)
+@time μscheck=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
 @fact μs --> roughly(μscheck)
 #verify works for large μ
-ys = μs + 0.01
+ys = round.(BigInt,μs) + 1.0
 devresidsbig = devresid.(PositivePoisson(λ0), ys, μs)
 @fact all(isfinite,devresidsbig) --> true
+logliksbig = loglik.(ys, μs)
+@fact all(isfinite,logliksbig) --> true
+
+ys = ones(μs)
+devresidsbig = devresid.(PositivePoisson(λ0), ys, μs)
+@fact all(isfinite,devresidsbig) --> true
+logliks1 = loglik.(ys, μs)
+@fact all(isfinite,logliks1) --> true
+
+# using JLD
+# @load joinpath(Pkg.dir("HurdleDMR"),"test","data","degenerate_hurdle5_debug.jld")
+# μs = broadcast(ηi -> inverselink(LogProductLogLink(), ηi)[1], η)
+# dμdη = broadcast(ηi -> inverselink(LogProductLogLink(), ηi)[2], η)
+# find(isinf,μs)
+# find(isinf,dμdη)
+# glmvar.(PositivePoisson(λ0),μ)
+# j = findfirst(isinf,devresid.(PositivePoisson(λ0), y, μs))
+# yi, μi = y[j], μs[j]
+# yi, μi = big(yi), big(μi)
+# devresid(Poisson(),yi,μi)
+# devresid(PositivePoisson(),yi,μi)
+# devresid(PositivePoisson(),yi,μi)
+#
+# using LambertW
+# -2 * log(-lambertw(-exp(-μi)*μi))
+# -2 * μi
+# fun(μi) = log(-lambertw(-exp(-μi)*μi))
+# fun2(μi) = -μi
+# using Gadfly
+# μs = big.(linspace(1.0,100.0,100))
+# plot(layer(x=μs, y=fun.(μs), Geom.line, Theme(default_color="orange")),
+#      layer(x=μs, y=fun2.(μs), Geom.line, Theme(default_color="blue")))
+#
+# λμ = HurdleDMR.λfn(μi)
+# -2 * (log(μi) - λμ)
+# -2 * (log(λμ/(1.0-exp(-λμ))) - λμ)
+# -2 * log(λμ/(exp(λμ)-1.0))
+# λy = HurdleDMR.λfn(yi)
+# 2 * (y*(log(λy)-log(λμ)) - HurdleDMR.logexpm1(λy) + HurdleDMR.logexpm1(λμ))
+# HurdleDMR.logexpm1(λy)
+# log(λy)
+# HurdleDMR.logexpm1(λμ)
+# log(λμ)
 
 # R benchmark
 seed=12
