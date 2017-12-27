@@ -6,7 +6,7 @@ testfolder = dirname(@__FILE__)
 # push!(LOAD_PATH, joinpath(testfolder,".."))
 # push!(LOAD_PATH, joinpath(testfolder,"..","src"))
 
-using FactCheck, Lasso, DataFrames, JLD
+using FactCheck, Lasso, DataFrames
 
 using HurdleDMR
 
@@ -386,10 +386,12 @@ coefsJpos, coefsJzero = coef(hurdle;select=:all)
 @fact size(coefsJzero,1) --> 2
 
 # this test case used to give numerical headaches to devresid(PositivePoisson(),...)
-X = load(joinpath(testfolder,"data","degenerate_hurdle5.jld"),"X")
-Xpos = load(joinpath(testfolder,"data","degenerate_hurdle5.jld"),"Xpos")
-y = load(joinpath(testfolder,"data","degenerate_hurdle5.jld"),"y")
-offset = load(joinpath(testfolder,"data","degenerate_hurdle5.jld"),"offset")
+include(joinpath(testfolder,"data","degenerate_hurdle_5.jl"))
+# X = load(joinpath(testfolder,"data","degenerate_hurdle5.jld"),"X")
+# Xpos = load(joinpath(testfolder,"data","degenerate_hurdle5.jld"),"Xpos")
+# y = load(joinpath(testfolder,"data","degenerate_hurdle5.jld"),"y")
+# offset = load(joinpath(testfolder,"data","degenerate_hurdle5.jld"),"offset")
+# show(offset)
 hurdle = fit(Hurdle,GammaLassoPath,X,y; Xpos=Xpos, offset=offset)
 @fact isnull(hurdle.mpos) --> false
 @fact isnull(hurdle.mzero) --> false
