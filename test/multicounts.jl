@@ -1,8 +1,4 @@
-# eventually, these path lines should only occur in runtests.jl
-testfolder = dirname(@__FILE__)
-srcfolder = joinpath(testfolder,"..","src")
-# push!(LOAD_PATH, joinpath(testfolder,".."))
-push!(LOAD_PATH, srcfolder)
+include("testutils.jl")
 
 using FactCheck, Gadfly, Distributions
 
@@ -10,7 +6,7 @@ include("addworkers.jl")
 
 using GLM, DataFrames, LassoPlot
 
-@everywhere using HurdleDMR
+import HurdleDMR; @everywhere using HurdleDMR
 # uncomment following for debugging and comment the previous @everywhere line. then use reload after making changes
 # reload("HurdleDMR")
 
@@ -24,11 +20,11 @@ using GLM, DataFrames, LassoPlot
 # we8thereRatings = rcopy("we8thereRatings")
 # we8thereTerms = rcopy(R"we8thereCounts@Dimnames$Terms")
 # names!(we8thereCounts,map(Symbol,we8thereTerms))
-# writetable(joinpath(testfolder,"data","dmr_we8thereCounts.csv.gz"),we8thereCounts)
-# writetable(joinpath(testfolder,"data","dmr_we8thereRatings.csv.gz"),we8thereRatings)
+# writetable(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"),we8thereCounts)
+# writetable(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"),we8thereRatings)
 
-we8thereCounts = readtable(joinpath(testfolder,"data","dmr_we8thereCounts.csv.gz"))
-we8thereRatings = readtable(joinpath(testfolder,"data","dmr_we8thereRatings.csv.gz"))
+we8thereCounts = readtable(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"))
+we8thereRatings = readtable(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"))
 we8thereTerms = map(string,names(we8thereCounts))
 
 # covars = we8thereRatings[:,[:Overall]]
@@ -94,7 +90,7 @@ facts("mcdmr") do
 # plots=permutedims(convert(Matrix{Gadfly.Plot},reshape([plot(paths[plotix[i]].value,Guide.title(plotterms[i]);select=:AICc,x=:logλ) for i=1:length(plotterms)],2,3)), [2,1])
 # plots=permutedims(convert(Matrix{Gadfly.Plot},reshape([plot(paths[plotix[i]].value,Guide.title(plotterms[i]);select=:AICc,x=:logλ) for i=1:length(plotterms)],2,3)), [2,1])
 #
-# filename = joinpath(testfolder,"plots","we8there.svg")
+# filename = joinpath(testdir,"plots","we8there.svg")
 # # # TODO: uncomment after Gadfly get's its get_stroke_vector bug fixed
 # # draw(SVG(filename,9inch,11inch),Gadfly.gridstack(plots))
 # # @fact isfile(filename) --> true
@@ -109,14 +105,14 @@ facts("mcdmr") do
 #
 # # @time fits = Rdistrom.dmr(covars, counts; nlocal_workers=nworkers(), gamma=γ, verb=0)
 # # coefsRdistrom = Rdistrom.coef(fits)
-# # writetable(joinpath(testfolder,"data","dmr_coefsRdistrom.csv.gz"),DataFrame(full(coefsRdistrom)))
-# coefsRdistrom = sparse(convert(Matrix{Float64},readtable(joinpath(testfolder,"data","dmr_coefsRdistrom.csv.gz"))))
+# # writetable(joinpath(testdir,"data","dmr_coefsRdistrom.csv.gz"),DataFrame(full(coefsRdistrom)))
+# coefsRdistrom = sparse(convert(Matrix{Float64},readtable(joinpath(testdir,"data","dmr_coefsRdistrom.csv.gz"))))
 # @fact coefs --> roughly(full(coefsRdistrom);rtol=2rtol)
 # # println("rdist(coefs,coefsRdistrom)=$(rdist(coefs,coefsRdistrom))")
 #
 # # zRdistrom = Rdistrom.srproj(fits,counts)
-# # writetable(joinpath(testfolder,"data","dmr_zRdistrom.csv.gz"),DataFrame(zRdistrom))
-# zRdistrom = convert(Matrix{Float64},readtable(joinpath(testfolder,"data","dmr_zRdistrom.csv.gz")))
+# # writetable(joinpath(testdir,"data","dmr_zRdistrom.csv.gz"),DataFrame(zRdistrom))
+# zRdistrom = convert(Matrix{Float64},readtable(joinpath(testdir,"data","dmr_zRdistrom.csv.gz")))
 # @fact z --> roughly(zRdistrom;rtol=rtol)
 # # println("rdist(z,zRdistrom)=$(rdist(z,zRdistrom))")
 #
@@ -137,8 +133,8 @@ facts("mcdmr") do
 # @fact z1dense --> roughly(z1)
 #
 # # z1Rdistrom = Rdistrom.srproj(fits,counts,1)
-# # writetable(joinpath(testfolder,"data","dmr_z1Rdistrom.csv.gz"),DataFrame(z1Rdistrom))
-# z1Rdistrom = convert(Matrix{Float64},readtable(joinpath(testfolder,"data","dmr_z1Rdistrom.csv.gz")))
+# # writetable(joinpath(testdir,"data","dmr_z1Rdistrom.csv.gz"),DataFrame(z1Rdistrom))
+# z1Rdistrom = convert(Matrix{Float64},readtable(joinpath(testdir,"data","dmr_z1Rdistrom.csv.gz")))
 # @fact z1 --> roughly(z1Rdistrom;rtol=rtol)
 #
 # X1, X1_nocounts = HurdleDMR.srprojX(coefs,counts,covars,1; includem=true)

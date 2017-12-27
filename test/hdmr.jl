@@ -1,8 +1,4 @@
-# eventually, these path lines should only occur in runtests.jl
-# testfolder = dirname(@__FILE__)
-# srcfolder = joinpath(testfolder,"..","src")
-# # push!(LOAD_PATH, joinpath(testfolder,".."))
-# push!(LOAD_PATH, srcfolder)
+include("testutils.jl")
 
 using FactCheck, Gadfly, Distributions
 
@@ -24,11 +20,11 @@ import HurdleDMR; @everywhere using HurdleDMR
 # we8thereRatings = rcopy("we8thereRatings")
 # we8thereTerms = rcopy(R"we8thereCounts@Dimnames$Terms")
 # names!(we8thereCounts,map(Symbol,we8thereTerms))
-# writetable(joinpath(testfolder,"data","dmr_we8thereCounts.csv.gz"),we8thereCounts)
-# writetable(joinpath(testfolder,"data","dmr_we8thereRatings.csv.gz"),we8thereRatings)
+# writetable(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"),we8thereCounts)
+# writetable(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"),we8thereRatings)
 
-we8thereCounts = readtable(joinpath(testfolder,"data","dmr_we8thereCounts.csv.gz"))
-we8thereRatings = readtable(joinpath(testfolder,"data","dmr_we8thereRatings.csv.gz"))
+we8thereCounts = readtable(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"))
+we8thereRatings = readtable(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"))
 we8thereTerms = map(string,names(we8thereCounts))
 
 # covars = we8thereRatings[:,[:Overall]]
@@ -286,9 +282,7 @@ X3, X3_nocounts, includezpos = HurdleDMR.srprojX(coefsHppos,coefsHpzero,counts,c
 
 end
 
-#########################################################################3
-# degenerate cases
-#########################################################################3
+facts("degenerate cases") do
 
 # column j is never zero, so hj=1 for all observations
 zcounts = deepcopy(counts)
@@ -301,8 +295,13 @@ zcounts[:,3] = ones(n)
 m = sum(zcounts,2)
 @fact sum(m .== 0) --> 0
 
+# rows,cols = 40000,30000
+# @time S = SharedMatrix{Float64}(rows,cols; init=nothing)
+# @time A = convert(SharedMatrix{Float64},Matrix{Float64}(rows,cols))
+
 # hurdle dmr parallel local cluster
-@time coefsHppos, coefsHpzero = HurdleDMR.hdmr(covars, zcounts; parallel=true)
+# HurdleDMR.hdmr(covars, zcounts[:,2:3]; parallel=false, showwarnings=true, verbose=true)
+@time coefsHppos, coefsHpzero = HurdleDMR.hdmr(covars, zcounts; parallel=false, showwarnings=true, verbose=false)
 @fact size(coefsHppos) --> (p+1, d)
 @fact size(coefsHpzero) --> (p+1, d)
 @fact coefsHppos[:,2] --> zeros(p+1)
@@ -315,9 +314,9 @@ m = sum(zcounts,2)
 @fact coefsHppos --> roughly(coefsHppos2)
 @fact coefsHpzero --> roughly(coefsHpzero)
 
-#########################################################################3
-# degenerate case of no hurdle variation (all counts > 0)
-#########################################################################3
+end
+
+facts("degenerate case of no hurdle variation (all counts > 0)") do
 
 zcounts = full(deepcopy(counts))
 srand(13)
@@ -344,6 +343,8 @@ m = sum(zcounts,2)
 @time coefsHppos2, coefsHpzero2 = HurdleDMR.hdmr(covars, zcounts; parallel=true, local_cluster=false)
 @fact coefsHppos --> roughly(coefsHppos2)
 @fact coefsHpzero --> roughly(coefsHpzero)
+
+end
 
 ###########################################################
 # Development

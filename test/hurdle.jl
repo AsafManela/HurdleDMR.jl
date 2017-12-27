@@ -1,10 +1,4 @@
-rtol=0.05
-rdist(x::Number,y::Number) = abs(x-y)/max(abs(x),abs(y))
-rdist{T<:Number,S<:Number}(x::AbstractArray{T}, y::AbstractArray{S}; norm::Function=vecnorm) = norm(x - y) / max(norm(x), norm(y))
-
-testfolder = dirname(@__FILE__)
-# push!(LOAD_PATH, joinpath(testfolder,".."))
-# push!(LOAD_PATH, joinpath(testfolder,"..","src"))
+include("testutils.jl")
 
 using FactCheck, Lasso, DataFrames
 
@@ -20,9 +14,9 @@ using HurdleDMR
 # R"bioChemists$offpos = runif(n, min=0, max=3)"
 # R"bioChemists$offzero = runif(n, min=0, max=3)"
 # bioChemists=rcopy(R"bioChemists")
-# writetable(joinpath(testfolder,"data","bioChemists.csv"),bioChemists)
+# writetable(joinpath(testdir,"data","bioChemists.csv"),bioChemists)
 
-bioChemists=readtable(joinpath(testfolder,"data","bioChemists.csv"))
+bioChemists=readtable(joinpath(testdir,"data","bioChemists.csv"))
 bioChemists[:marMarried]=bioChemists[:mar] .== "Married"
 bioChemists[:femWomen]=bioChemists[:fem] .== "Women"
 bioChemists[:art] = convert(DataVector{Float64}, bioChemists[:art])
@@ -43,13 +37,13 @@ facts("hurdle with Xpos == Xzero") do
 # coefsR1=vec(rcopy(R"coef(fm_hp1, matrix = TRUE)"))
 # yhatR1=vec(rcopy(R"predict(fm_hp1)"))
 # yhatR1partial=vec(rcopy(R"predict(fm_hp1, newdata = bioChemists[ixpartial,])"))
-# writetable(joinpath(testfolder,"data","hurdle_coefsR1.csv"),DataFrame(coefsR=coefsR1))
-# writetable(joinpath(testfolder,"data","hurdle_yhatR1.csv"),DataFrame(yhatR1=yhatR1))
-# writetable(joinpath(testfolder,"data","hurdle_yhatR1partial.csv"),DataFrame(yhatR1partial=yhatR1partial))
+# writetable(joinpath(testdir,"data","hurdle_coefsR1.csv"),DataFrame(coefsR=coefsR1))
+# writetable(joinpath(testdir,"data","hurdle_yhatR1.csv"),DataFrame(yhatR1=yhatR1))
+# writetable(joinpath(testdir,"data","hurdle_yhatR1partial.csv"),DataFrame(yhatR1partial=yhatR1partial))
 
-coefsR1=vec(convert(Matrix{Float64},readtable(joinpath(testfolder,"data","hurdle_coefsR1.csv"))))
-yhatR1=vec(convert(Matrix{Float64},readtable(joinpath(testfolder,"data","hurdle_yhatR1.csv"))))
-yhatR1partial=vec(convert(Matrix{Float64},readtable(joinpath(testfolder,"data","hurdle_yhatR1partial.csv"))))
+coefsR1=vec(convert(Matrix{Float64},readtable(joinpath(testdir,"data","hurdle_coefsR1.csv"))))
+yhatR1=vec(convert(Matrix{Float64},readtable(joinpath(testdir,"data","hurdle_yhatR1.csv"))))
+yhatR1partial=vec(convert(Matrix{Float64},readtable(joinpath(testdir,"data","hurdle_yhatR1partial.csv"))))
 
 # simple hurdle with GLM underlying
 hurdlefit = fit(Hurdle,GeneralizedLinearModel,Xwconst,y)
@@ -143,13 +137,13 @@ facts("hurdle with Xpos ≠ Xzero") do
 # coefsR2=vec(rcopy(R"coef(fm_hp2, matrix = TRUE)"))
 # yhatR2=vec(rcopy(R"predict(fm_hp2)"))
 # yhatR2partial=vec(rcopy(R"predict(fm_hp2, newdata = bioChemists[ixpartial,])"))
-# writetable(joinpath(testfolder,"data","hurdle_coefsR2.csv"),DataFrame(coefsR=coefsR2))
-# writetable(joinpath(testfolder,"data","hurdle_yhatR2.csv"),DataFrame(yhatR2=yhatR2))
-# writetable(joinpath(testfolder,"data","hurdle_yhatR2partial.csv"),DataFrame(yhatR2partial=yhatR2partial))
+# writetable(joinpath(testdir,"data","hurdle_coefsR2.csv"),DataFrame(coefsR=coefsR2))
+# writetable(joinpath(testdir,"data","hurdle_yhatR2.csv"),DataFrame(yhatR2=yhatR2))
+# writetable(joinpath(testdir,"data","hurdle_yhatR2partial.csv"),DataFrame(yhatR2partial=yhatR2partial))
 
-coefsR2=vec(convert(Matrix{Float64},readtable(joinpath(testfolder,"data","hurdle_coefsR2.csv"))))
-yhatR2=vec(convert(Matrix{Float64},readtable(joinpath(testfolder,"data","hurdle_yhatR2.csv"))))
-yhatR2partial=vec(convert(Matrix{Float64},readtable(joinpath(testfolder,"data","hurdle_yhatR2partial.csv"))))
+coefsR2=vec(convert(Matrix{Float64},readtable(joinpath(testdir,"data","hurdle_coefsR2.csv"))))
+yhatR2=vec(convert(Matrix{Float64},readtable(joinpath(testdir,"data","hurdle_yhatR2.csv"))))
+yhatR2partial=vec(convert(Matrix{Float64},readtable(joinpath(testdir,"data","hurdle_yhatR2partial.csv"))))
 
 Xpos = X[:,1:3]
 Xzero = X[:,4:5]
@@ -238,13 +232,13 @@ facts("hurdle with Xpos ≠ Xzero AND offset specified") do
 # coefsR3=vec(rcopy(R"coef(fm_hp3, matrix = TRUE)"))
 # yhatR3=vec(rcopy(R"predict(fm_hp3)"))
 # yhatR3partial=vec(rcopy(R"predict(fm_hp3, newdata = bioChemists[ixpartial,])"))
-# writetable(joinpath(testfolder,"data","hurdle_coefsR3.csv"),DataFrame(coefsR=coefsR3))
-# writetable(joinpath(testfolder,"data","hurdle_yhatR3.csv"),DataFrame(yhatR3=yhatR3))
-# writetable(joinpath(testfolder,"data","hurdle_yhatR3partial.csv"),DataFrame(yhatR3partial=yhatR3partial))
+# writetable(joinpath(testdir,"data","hurdle_coefsR3.csv"),DataFrame(coefsR=coefsR3))
+# writetable(joinpath(testdir,"data","hurdle_yhatR3.csv"),DataFrame(yhatR3=yhatR3))
+# writetable(joinpath(testdir,"data","hurdle_yhatR3partial.csv"),DataFrame(yhatR3partial=yhatR3partial))
 
-coefsR3=vec(convert(Matrix{Float64},readtable(joinpath(testfolder,"data","hurdle_coefsR3.csv"))))
-yhatR3=vec(convert(Matrix{Float64},readtable(joinpath(testfolder,"data","hurdle_yhatR3.csv"))))
-yhatR3partial=vec(convert(Matrix{Float64},readtable(joinpath(testfolder,"data","hurdle_yhatR3partial.csv"))))
+coefsR3=vec(convert(Matrix{Float64},readtable(joinpath(testdir,"data","hurdle_coefsR3.csv"))))
+yhatR3=vec(convert(Matrix{Float64},readtable(joinpath(testdir,"data","hurdle_yhatR3.csv"))))
+yhatR3partial=vec(convert(Matrix{Float64},readtable(joinpath(testdir,"data","hurdle_yhatR3partial.csv"))))
 
 offpos = convert(Vector{Float64},bioChemists[:offpos])
 offzero = convert(Vector{Float64},bioChemists[:offzero])
@@ -332,7 +326,7 @@ end
 facts("hurdle degenerate cases") do
 
 # degenerate positive counts data case 1
-include(joinpath(testfolder,"data","degenerate_hurdle_1.jl"))
+include(joinpath(testdir,"data","degenerate_hurdle_1.jl"))
 hurdle = fit(Hurdle,GammaLassoPath,X,y)
 coefsJ=vcat(coef(hurdle;select=:AICc)...)
 @fact vec(coefsJ) --> roughly([0.0, 0.0, -6.04112, 0.675767],1e-4)
@@ -366,7 +360,7 @@ y0or1 = zeros(y)
 @fact_throws fit(Hurdle,GammaLassoPath,X,y0or1)
 
 # degenerate positive counts data case 2
-include(joinpath(testfolder,"data","degenerate_hurdle_2.jl"))
+include(joinpath(testdir,"data","degenerate_hurdle_2.jl"))
 hurdle = fit(Hurdle,GammaLassoPath,X,y)
 coefsJ=vcat(coef(hurdle;select=:AICc)...)
 @fact vec(coefsJ) --> roughly([0.0,0.0,-5.30128195796556,0.1854148891565171]'',1e-4)
@@ -376,7 +370,7 @@ coefsJpos, coefsJzero = coef(hurdle;select=:all)
 @fact size(coefsJzero,1) --> 2
 
 # degenerate positive counts data case 3
-include(joinpath(testfolder,"data","degenerate_hurdle_3.jl"))
+include(joinpath(testdir,"data","degenerate_hurdle_3.jl"))
 hurdle = fit(Hurdle,GammaLassoPath,X,y)
 coefsJ=vcat(coef(hurdle;select=:AICc)...)
 @fact vec(coefsJ) --> roughly([0.0,0.0,-4.541820686620407,0.0]'',1e-4)
@@ -386,11 +380,11 @@ coefsJpos, coefsJzero = coef(hurdle;select=:all)
 @fact size(coefsJzero,1) --> 2
 
 # this test case used to give numerical headaches to devresid(PositivePoisson(),...)
-include(joinpath(testfolder,"data","degenerate_hurdle_5.jl"))
-# X = load(joinpath(testfolder,"data","degenerate_hurdle5.jld"),"X")
-# Xpos = load(joinpath(testfolder,"data","degenerate_hurdle5.jld"),"Xpos")
-# y = load(joinpath(testfolder,"data","degenerate_hurdle5.jld"),"y")
-# offset = load(joinpath(testfolder,"data","degenerate_hurdle5.jld"),"offset")
+include(joinpath(testdir,"data","degenerate_hurdle_5.jl"))
+# X = load(joinpath(testdir,"data","degenerate_hurdle5.jld"),"X")
+# Xpos = load(joinpath(testdir,"data","degenerate_hurdle5.jld"),"Xpos")
+# y = load(joinpath(testdir,"data","degenerate_hurdle5.jld"),"y")
+# offset = load(joinpath(testdir,"data","degenerate_hurdle5.jld"),"offset")
 # show(offset)
 hurdle = fit(Hurdle,GammaLassoPath,X,y; Xpos=Xpos, offset=offset)
 @fact isnull(hurdle.mpos) --> false

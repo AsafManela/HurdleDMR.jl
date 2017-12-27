@@ -1,3 +1,3 @@
-X = readcsv(joinpath(testfolder,"degenerate_hurdle_4.X.csv"))
-y = readcsv(joinpath(testfolder,"degenerate_hurdle_4.y.csv"))
-μ = readcsv(joinpath(testfolder,"degenerate_hurdle_4.offset.csv"))
+X = readcsv(joinpath(testdir,"degenerate_hurdle_4.X.csv"))
+y = readcsv(joinpath(testdir,"degenerate_hurdle_4.y.csv"))
+μ = readcsv(joinpath(testdir,"degenerate_hurdle_4.offset.csv"))

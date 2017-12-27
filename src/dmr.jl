@@ -36,7 +36,7 @@ function dmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstract
       # we make it dense remotely to reduce communication costs
       Nullable{GammaLassoPath}(fit(GammaLassoPath,covars,full(countsj),Poisson(),LogLink(); offset=μ, verbose=false, kwargs...))
     catch e
-      showwarnings && warn("fitgl failed for countsj=$countsj and will return null path ($e)")
+      showwarnings && warn("fitgl failed for countsj with frequencies $(sort(countmap(countsj))) and will return null path ($e)")
       Nullable{GammaLassoPath}()
     end
   end
@@ -140,11 +140,11 @@ function dmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts:
     try
       poisson_regression!(coefs, j, covars, counts; kwargs...)
     catch e
-      showwarnings && warn("fitgl! failed on count dimension $j and will return zero coefs ($e)")
-      # redudant ASSUMING COEFS ARRAY INTIAILLY FILLED WITH ZEROS
-      # for i=1:size(coefs,1)
-      #   coefs[i,j] = zero(T)
-      # end
+      showwarnings && warn("fitgl! failed on count dimension $j with frequencies $(sort(countmap(counts[:,j]))) and will return zero coefs ($e)")
+      # redudant ASSUMING COEFS ARRAY INTIAILLY FILLED WITH ZEROS, but can be uninitialized in serial case
+      for i=1:size(coefs,1)
+        coefs[i,j] = zero(T)
+      end
     end
   end
 
@@ -152,7 +152,7 @@ function dmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts:
   if parallel
     verbose && info("distributed poisson run on local cluster with $(nworkers()) nodes")
     counts = convert(SharedArray,counts)
-    coefs = SharedArray{T}(p,d)
+    coefs = SharedMatrix{T}(p,d)
     covars = convert(SharedArray,covars)
     # μ = convert(SharedArray,μ) incompatible with GLM
 
@@ -161,7 +161,7 @@ function dmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts:
     end
   else
     verbose && info("serial poisson run on a single node")
-    coefs = Array(T,p,d)
+    coefs = Matrix{T}(p,d)
     for j=1:d
       tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false, intercept=intercept, kwargs...)
     end

@@ -1,5 +1,9 @@
+include("testutils.jl")
+
 using HurdleDMR
+
 using FactCheck, GLM, Lasso, DataFrames
+
 facts("PositivePoisson") do
 λ0=3.4
 xs = 1:10000
@@ -132,12 +136,12 @@ coefs0=[b0,b1]
 # pdata=rcopy("pdata")
 # coefsR=vec(rcopy(R"coef(fit, matrix = TRUE)"))
 # coefsRdf = DataFrame(intercept=[coefsR[1]],x2=[coefsR[2]])
-# writetable(joinpath(testfolder,"data","positive_poisson_pdata.csv"),pdata)
-# writetable(joinpath(testfolder,"data","positive_poisson_coefsR.csv"),coefsRdf)
+# writetable(joinpath(testdir,"data","positive_poisson_pdata.csv"),pdata)
+# writetable(joinpath(testdir,"data","positive_poisson_coefsR.csv"),coefsRdf)
 
 # load saved R benchmark
-pdata=readtable(joinpath(testfolder,"data","positive_poisson_pdata.csv"))
-coefsR=vec(convert(Matrix{Float64},readtable(joinpath(testfolder,"data","positive_poisson_coefsR.csv"))))
+pdata=readtable(joinpath(testdir,"data","positive_poisson_pdata.csv"))
+coefsR=vec(convert(Matrix{Float64},readtable(joinpath(testdir,"data","positive_poisson_coefsR.csv"))))
 
 X=convert(Array{Float64,2},pdata[:,[:x2]])
 Xwconst=[ones(size(X,1)) X]

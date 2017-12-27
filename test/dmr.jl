@@ -1,11 +1,4 @@
-# eventually, these path lines should only occur in runtests.jl
-rtol=0.05
-rdist(x::Number,y::Number) = abs(x-y)/max(abs(x),abs(y))
-rdist{T<:Number,S<:Number}(x::AbstractArray{T}, y::AbstractArray{S}; norm::Function=vecnorm) = norm(x - y) / max(norm(x), norm(y))
-testfolder = dirname(@__FILE__)
-# srcfolder = joinpath(testfolder,"..","src")
-# # push!(LOAD_PATH, joinpath(testfolder,".."))
-# push!(LOAD_PATH, srcfolder)
+include("testutils.jl")
 
 using FactCheck, Gadfly, Distributions
 
@@ -38,18 +31,18 @@ import HurdleDMR; @everywhere using HurdleDMR
 # zRdistrom = rcopy(R"as.matrix(srproj(fits,we8thereCounts))")
 # z1Rdistrom = rcopy(R"as.matrix(srproj(fits,we8thereCounts,1))")
 #
-# writetable(joinpath(testfolder,"data","dmr_we8thereCounts.csv.gz"),we8thereCounts)
-# writetable(joinpath(testfolder,"data","dmr_we8thereRatings.csv.gz"),we8thereRatings)
-# writetable(joinpath(testfolder,"data","dmr_coefsRdistrom.csv.gz"),DataFrame(full(coefsRdistrom)))
-# writetable(joinpath(testfolder,"data","dmr_zRdistrom.csv.gz"),DataFrame(zRdistrom))
-# writetable(joinpath(testfolder,"data","dmr_z1Rdistrom.csv.gz"),DataFrame(z1Rdistrom))
+# writetable(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"),we8thereCounts)
+# writetable(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"),we8thereRatings)
+# writetable(joinpath(testdir,"data","dmr_coefsRdistrom.csv.gz"),DataFrame(full(coefsRdistrom)))
+# writetable(joinpath(testdir,"data","dmr_zRdistrom.csv.gz"),DataFrame(zRdistrom))
+# writetable(joinpath(testdir,"data","dmr_z1Rdistrom.csv.gz"),DataFrame(z1Rdistrom))
 
-we8thereCounts = readtable(joinpath(testfolder,"data","dmr_we8thereCounts.csv.gz"))
-we8thereRatings = readtable(joinpath(testfolder,"data","dmr_we8thereRatings.csv.gz"))
+we8thereCounts = readtable(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"))
+we8thereRatings = readtable(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"))
 we8thereTerms = map(string,names(we8thereCounts))
-coefsRdistrom = sparse(convert(Matrix{Float64},readtable(joinpath(testfolder,"data","dmr_coefsRdistrom.csv.gz"))))
-zRdistrom = convert(Matrix{Float64},readtable(joinpath(testfolder,"data","dmr_zRdistrom.csv.gz")))
-z1Rdistrom = convert(Matrix{Float64},readtable(joinpath(testfolder,"data","dmr_z1Rdistrom.csv.gz")))
+coefsRdistrom = sparse(convert(Matrix{Float64},readtable(joinpath(testdir,"data","dmr_coefsRdistrom.csv.gz"))))
+zRdistrom = convert(Matrix{Float64},readtable(joinpath(testdir,"data","dmr_zRdistrom.csv.gz")))
+z1Rdistrom = convert(Matrix{Float64},readtable(joinpath(testdir,"data","dmr_z1Rdistrom.csv.gz")))
 
 # covars = we8thereRatings[:,[:Overall]]
 covars = we8thereRatings[:,:]
@@ -94,7 +87,7 @@ plotix=[find(we8thereTerms.==term)[1]::Int64 for term=plotterms]
 plotterms==we8thereTerms[plotix]
 
 plots=permutedims(convert(Matrix{Gadfly.Plot},reshape([plot(paths[plotix[i]].value,Guide.title(plotterms[i]);select=:AICc,x=:logλ) for i=1:length(plotterms)],2,3)), [2,1])
-filename = joinpath(testfolder,"plots","we8there.svg")
+filename = joinpath(testdir,"plots","we8there.svg")
 # # TODO: uncomment after Gadfly get's its get_stroke_vector bug fixed
 # draw(SVG(filename,9inch,11inch),Gadfly.gridstack(plots))
 # @fact isfile(filename) --> true

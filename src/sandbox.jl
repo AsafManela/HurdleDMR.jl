@@ -1,20 +1,13 @@
-testfolder = dirname(@__FILE__)
-srcfolder = joinpath(testfolder,"..","src")
-# push!(LOAD_PATH, joinpath(testfolder,".."))
-push!(LOAD_PATH, srcfolder)
+include("testutils.jl")
 
-using FactCheck, Gadfly
+using FactCheck, Gadfly, Distributions
 
-if nworkers() > 1
-  rmprocs(workers())
-end
-info("Starting $(Sys.CPU_CORES) parallel workers for dmr tests...")
-addprocs(Sys.CPU_CORES)
+include("addworkers.jl")
 
 using GLM, DataFrames, LassoPlot
-@everywhere using HurdleDMR
-# uncomment following for debugging and comment the previous @everywhere line. then use reload after making changes
-# import HurdleDMR
+
+import HurdleDMR; @everywhere using HurdleDMR
+# reload("HurdleDMR")
 
 using Coverage
 # defaults to src/; alternatively, supply the folder name as argument

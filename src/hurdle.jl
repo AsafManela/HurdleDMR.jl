@@ -45,16 +45,12 @@ end
 function fitzero{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{M},
   X::AbstractMatrix{T}, Iy::V,
   dzero::UnivariateDistribution,
-  # dpos::UnivariateDistribution = PositivePoisson(),
   lzero::Link,
-  # lpos::Link = canonicallink(dpos);
-  # Xpos::@compat(Union{AbstractMatrix{T},Void}) = nothing,
   dofit::Bool,
   wts::V,
   offsetzero::AbstractVector,
-  # offsetpos::AbstractVector = similar(y, 0),
-  # offset::AbstractVector = similar(y, 0),
   verbose::Bool,
+  showwarnings::Bool,
   fitargs...)
 
   # fit zero model to entire sample
@@ -62,27 +58,26 @@ function fitzero{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{M},
   fittedzero = false
   if var(Iy) > zero(T)
     try
-      verbose && info("fitting zero model: $dzero, $lzero")
       mzero = fit(M, X, Iy, dzero, lzero; dofit=dofit, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
       fittedzero = dofit
     catch e
-      verbose && warn("failed to fit zero counts model, possibly not enough variation in I(y):")
-      verbose && warn("countmap(Iy)=$(countmap(Iy))")
+      showwarnings && warn("failed to fit zero counts model, possibly not enough variation in I(y):")
+      showwarnings && warn("countmap(Iy)=$(countmap(Iy))")
       if typeof(e) <: ErrorException && (contains(e.msg,"step-halving") || contains(e.msg,"failure to converge") || contains(e.msg,"failed to converge")) ||
           typeof(e) == Base.LinAlg.PosDefException || typeof(e) == DomainError
         fittedzero = false
       else
-        verbose && warn("X'=$(X')")
-        verbose && warn("Iy=$Iy)")
+        showwarnings && warn("X'=$(X')")
+        showwarnings && warn("Iy=$Iy)")
         rethrow(e)
       end
     end
   else
     if verbose
       if all(iszero,Iy)
-        warn("I(y) is all zeros. There is nothing to explain.")
+        showwarnings && warn("I(y) is all zeros. There is nothing to explain.")
       else
-        warn("I(y) is all ones. Data may be fully described by a poisson model.")
+        showwarnings && warn("I(y) is all ones. Data may be fully described by a poisson model.")
       end
     end
   end
@@ -107,29 +102,34 @@ function fitpos{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{M},
   wtspos::V,
   offsetpos::AbstractVector,
   verbose::Bool,
+  showwarnings::Bool,
   fitargs...)
 
   # fit truncated counts model to positive subsample
   mpos=nothing
   fittedpos = false
-  if sum(ypos.>1) > 1
+  if any(x->x>1, ypos)
     try
       mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=dofit, wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
       fittedpos = dofit
     catch e
-      verbose && warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos:")
-      verbose && warn("countmap(ypos)=$(countmap(ypos))")
+      showwarnings && warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos:")
+      showwarnings && warn("countmap(ypos)=$(sort(countmap(ypos)))")
       if typeof(e) <: ErrorException && (contains(e.msg,"step-halving") || contains(e.msg,"failure to converge") || contains(e.msg,"failed to converge")) ||
           typeof(e) == Base.LinAlg.PosDefException || typeof(e) == DomainError
         fittedpos = false
       else
-        verbose && warn("Xpos'=$(Xpos')")
-        verbose && warn("ypos=$ypos)")
+        showwarnings && warn("Xpos'=$(Xpos')")
+        showwarnings && warn("ypos=$ypos)")
         rethrow(e)
       end
     end
   else
-    verbose && warn("ypos has no elements larger than 1! Data may be fully described by a probability model.")
+    if length(ypos) == 0
+      error("y is all zeros! There is nothing to explain.")
+    else
+      showwarnings && warn("ypos has no elements larger than 1! Data may be fully described by a probability model.")
+    end
   end
 
   if !fittedpos
@@ -157,13 +157,14 @@ function StatsBase.fit{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{Hurdle},::Ty
   offsetpos::AbstractVector = similar(y, 0),
   offset::AbstractVector = similar(y, 0),
   verbose::Bool = false,
+  showwarnings::Bool = false,
   fitargs...)
 
   ixpos, Iy = setIy(y)
 
   offsetzero, offsetpos = setoffsets(y, ixpos, offset, offsetzero, offsetpos)
 
-  mzero, fittedzero = fitzero(M, X, Iy, dzero, lzero, dofit, wts, offsetzero, verbose, fitargs...)
+  mzero, fittedzero = fitzero(M, X, Iy, dzero, lzero, dofit, wts, offsetzero, verbose, showwarnings, fitargs...)
 
   # Xpos optional argument allows to specify a data matrix only for positive counts
   if Xpos == nothing
@@ -174,7 +175,7 @@ function StatsBase.fit{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{Hurdle},::Ty
     Xpos = Xpos[ixpos,:]
   end
 
-  mpos, fittedpos = fitpos(M, Xpos, y[ixpos], dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, fitargs...)
+  mpos, fittedpos = fitpos(M, Xpos, y[ixpos], dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, showwarnings, fitargs...)
 
   Hurdle(mzero,mpos,fittedzero,fittedpos)
 end
@@ -193,6 +194,7 @@ function StatsBase.fit{M<:RegressionModel}(::Type{Hurdle},::Type{M},
                                       offsetpos = Float64[],
                                       offset = Float64[],
                                       verbose::Bool = false,
+                                      showwarnings::Bool = false,
                                       fitargs...)
 
   mfzero = ModelFrame(f, df)
@@ -206,13 +208,13 @@ function StatsBase.fit{M<:RegressionModel}(::Type{Hurdle},::Type{M},
   # fit zero model to entire sample
   # TODO: should be wrapped in DataFrameRegressionModel but can't figure out right now why it complains it is not defined
   # mzero = DataFrameRegressionModel(fit(GeneralizedLinearModel, mmzero.m, Iy, dzero, lzero; wts=wts, offset=offsetzero, fitargs...), mfzero, mmzer)
-  mzero, fittedzero = fitzero(M, mmzero.m, Iy, dzero, lzero, dofit, wts, offsetzero, verbose, fitargs...)
+  mzero, fittedzero = fitzero(M, mmzero.m, Iy, dzero, lzero, dofit, wts, offsetzero, verbose, showwarnings, fitargs...)
 
   mfpos = (f===fpos) ? mfzero : ModelFrame(fpos, df)
   mmpos = (f===fpos) ? mmzero : ModelMatrix(mfpos)
   mmpos.m = mmpos.m[ixpos,:]
 
-  mpos, fittedpos = fitpos(M, mmpos.m, y[ixpos], dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, fitargs...)
+  mpos, fittedpos = fitpos(M, mmpos.m, y[ixpos], dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, showwarnings, fitargs...)
 
   Hurdle(mzero,mpos,fittedzero,fittedpos)
 end
