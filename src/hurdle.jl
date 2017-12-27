@@ -61,8 +61,7 @@ function fitzero{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{M},
       mzero = fit(M, X, Iy, dzero, lzero; dofit=dofit, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
       fittedzero = dofit
     catch e
-      showwarnings && warn("failed to fit zero counts model, possibly not enough variation in I(y):")
-      showwarnings && warn("countmap(Iy)=$(countmap(Iy))")
+      showwarnings && warn("failed to fit zero counts model, possibly not enough variation in I(y). countmap(Iy)=$(countmap(Iy))")
       if typeof(e) <: ErrorException && (contains(e.msg,"step-halving") || contains(e.msg,"failure to converge") || contains(e.msg,"failed to converge")) ||
           typeof(e) == Base.LinAlg.PosDefException || typeof(e) == DomainError
         fittedzero = false
@@ -113,8 +112,7 @@ function fitpos{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{M},
       mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=dofit, wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
       fittedpos = dofit
     catch e
-      showwarnings && warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos:")
-      showwarnings && warn("countmap(ypos)=$(sort(countmap(ypos)))")
+      showwarnings && warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos. countmap(ypos)=$(sort(countmap(ypos)))")
       if typeof(e) <: ErrorException && (contains(e.msg,"step-halving") || contains(e.msg,"failure to converge") || contains(e.msg,"failed to converge")) ||
           typeof(e) == Base.LinAlg.PosDefException || typeof(e) == DomainError
         fittedpos = false
