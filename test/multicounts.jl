@@ -1,6 +1,6 @@
 include("testutils.jl")
 
-using FactCheck, Gadfly, Distributions
+using Base.Test, Gadfly, Distributions
 
 include("addworkers.jl")
 
@@ -65,21 +65,21 @@ npos,ppos = size(covarspos)
 
 γ=1.0
 
-facts("mcdmr") do
+@testset "mcdmr" begin
 
 @time coefs = HurdleDMR.dmr(covars, multicounts[1]; γ=γ, λminratio=0.01)
 
 @time Z, multicoefs = HurdleDMR.mcdmr(covars, multicounts, 1; γ=γ, λminratio=0.01)
 
-@fact size(coefs) --> (p+1, d)
-@fact multicoefs[1] --> coefs
-@fact size(multicoefs[2],2) --> size(coefs,2)
-@fact size(multicoefs[2],1) --> size(coefs,1) + 2
-@fact size(multicoefs[3],2) --> size(coefs,2)
-@fact size(multicoefs[3],1) --> size(coefs,1) + 4
+@test size(coefs) == (p+1, d)
+@test multicoefs[1] == coefs
+@test size(multicoefs[2],2) == size(coefs,2)
+@test size(multicoefs[2],1) == size(coefs,1) + 2
+@test size(multicoefs[3],2) == size(coefs,2)
+@test size(multicoefs[3],1) == size(coefs,1) + 4
 
 # @time coefs2 = HurdleDMR.dmr(covars, counts; local_cluster=false, γ=γ, λminratio=0.01)
-# @fact coefs --> roughly(coefs2)
+# @test coefs ≈ coefs2
 #
 # @time paths = HurdleDMR.dmrpaths(covars, counts; γ=γ, λminratio=0.01, verbose=false)
 #
@@ -93,11 +93,11 @@ facts("mcdmr") do
 # filename = joinpath(testdir,"plots","we8there.svg")
 # # # TODO: uncomment after Gadfly get's its get_stroke_vector bug fixed
 # # draw(SVG(filename,9inch,11inch),Gadfly.gridstack(plots))
-# # @fact isfile(filename) --> true
+# # @test isfile(filename)
 #
 # #reload("HurdleDMR")
 # @time z = HurdleDMR.srproj(coefs, counts)
-# @fact size(z) --> (size(covars,1),p+1)
+# @test size(z) == (size(covars,1),p+1)
 #
 # regdata = DataFrame(y=covars[:,1], z=z[:,1], m=z[:,2])
 # lm1 = lm(@formula(y ~ z+m), regdata)
@@ -107,50 +107,50 @@ facts("mcdmr") do
 # # coefsRdistrom = Rdistrom.coef(fits)
 # # writetable(joinpath(testdir,"data","dmr_coefsRdistrom.csv.gz"),DataFrame(full(coefsRdistrom)))
 # coefsRdistrom = sparse(convert(Matrix{Float64},readtable(joinpath(testdir,"data","dmr_coefsRdistrom.csv.gz"))))
-# @fact coefs --> roughly(full(coefsRdistrom);rtol=2rtol)
+# @test coefs ≈ full(coefsRdistrom) rtol=2rtol
 # # println("rdist(coefs,coefsRdistrom)=$(rdist(coefs,coefsRdistrom))")
 #
 # # zRdistrom = Rdistrom.srproj(fits,counts)
 # # writetable(joinpath(testdir,"data","dmr_zRdistrom.csv.gz"),DataFrame(zRdistrom))
 # zRdistrom = convert(Matrix{Float64},readtable(joinpath(testdir,"data","dmr_zRdistrom.csv.gz")))
-# @fact z --> roughly(zRdistrom;rtol=rtol)
+# @test z ≈ zRdistrom rtol=rtol
 # # println("rdist(z,zRdistrom)=$(rdist(z,zRdistrom))")
 #
 # regdata3 = DataFrame(y=covars[:,1], z=zRdistrom[:,1], m=zRdistrom[:,2])
 # lm3 = lm(@formula(y ~ z+m), regdata3)
 # r23 = adjr2(lm3)
 #
-# @fact r21 --> roughly(r23;rtol=rtol)
+# @test r21 ≈ r23 rtol=rtol
 # # println("rdist(r21,r23)=$(rdist(r21,r23))")
 #
 # # Rdistrom.dmrplots(fits.gamlrs[plotix],we8thereTerms[plotix])
 #
 # # project in a single direction
 # @time z1 = HurdleDMR.srproj(coefs, counts, 1)
-# @fact z1 --> roughly(z[:,[1,end]])
+# @test z1 ≈ z[:,[1,end]]
 #
 # @time z1dense = HurdleDMR.srproj(coefs, full(counts), 1)
-# @fact z1dense --> roughly(z1)
+# @test z1dense ≈ z1
 #
 # # z1Rdistrom = Rdistrom.srproj(fits,counts,1)
 # # writetable(joinpath(testdir,"data","dmr_z1Rdistrom.csv.gz"),DataFrame(z1Rdistrom))
 # z1Rdistrom = convert(Matrix{Float64},readtable(joinpath(testdir,"data","dmr_z1Rdistrom.csv.gz")))
-# @fact z1 --> roughly(z1Rdistrom;rtol=rtol)
+# @test z1 ≈ z1Rdistrom rtol=rtol
 #
 # X1, X1_nocounts = HurdleDMR.srprojX(coefs,counts,covars,1; includem=true)
-# @fact X1_nocounts --> [ones(n,1) covars[:,2:end]]
-# @fact X1 --> [X1_nocounts z1]
+# @test X1_nocounts == [ones(n,1) covars[:,2:end]]
+# @test X1 == [X1_nocounts z1]
 #
 # X2, X2_nocounts = HurdleDMR.srprojX(coefs,counts,covars,1; includem=false)
-# @fact X2_nocounts --> X1_nocounts
-# @fact X2 --> X1[:,1:end-1]
+# @test X2_nocounts == X1_nocounts
+# @test X2 == X1[:,1:end-1]
 #
 # @time cvstats13 = HurdleDMR.cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
 # @time cvstats13b = HurdleDMR.cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
-# @fact isequal(cvstats13,cvstats13b) --> true
+# @test isequal(cvstats13,cvstats13b)
 #
 # cvstats14 = HurdleDMR.cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
-# @fact isequal(cvstats13,cvstats14) --> false
+# @test !(isequal(cvstats13,cvstats14))
 #
 # cvstatsSerialKfold = HurdleDMR.cross_validate_dmr_srproj(covars,counts,1; k=5, gentype=HurdleDMR.SerialKfold, γ=γ)
 #

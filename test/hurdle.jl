@@ -1,6 +1,6 @@
 include("testutils.jl")
 
-using FactCheck, Lasso, DataFrames
+using Base.Test, Lasso, DataFrames
 
 using HurdleDMR
 
@@ -29,7 +29,7 @@ const ixpartial = 50:60
 ###########################################################
 # Xpos == Xzero
 ###########################################################
-facts("hurdle with Xpos == Xzero") do
+@testset "hurdle with Xpos == Xzero" begin
 
 ## logit-poisson
 # R"fm_hp1 <- hurdle(art ~ fem + mar + kid5 + phd + ment, data = bioChemists)"
@@ -49,64 +49,64 @@ yhatR1partial=vec(convert(Matrix{Float64},readtable(joinpath(testdir,"data","hur
 hurdlefit = fit(Hurdle,GeneralizedLinearModel,Xwconst,y)
 
 coefsJ=vcat(coef(hurdlefit)...)
-@fact coefsJ --> roughly(coefsR1;rtol=1e-6)
+@test coefsJ ≈ coefsR1 rtol=1e-6
 yhatJ=predict(hurdlefit, Xwconst)
-@fact yhatJ --> roughly(yhatR1;rtol=1e-6)
+@test yhatJ ≈ yhatR1 rtol=1e-6
 yhatJpartial=predict(hurdlefit, Xwconst[ixpartial,:])
-@fact yhatJpartial --> roughly(yhatR1partial;rtol=1e-6)
+@test yhatJpartial ≈ yhatR1partial rtol=1e-6
 
 # same simple hurdle through UNREGULATED lasso path
 hurdleglrfit = fit(Hurdle,GammaLassoPath,X,y;λ=[0.0, 0.01])
 coefsJ=vcat(coef(hurdleglrfit;select=:AICc)...)
-@fact coefsJ --> roughly(coefsR1;rtol=1e-4)
+@test coefsJ ≈ coefsR1 rtol=1e-4
 # rdist(coefsJ,coefsR1)
 yhatJ = predict(hurdleglrfit, X; select=:AICc)
-@fact yhatJ --> roughly(yhatR1;rtol=1e-4)
+@test yhatJ ≈ yhatR1 rtol=1e-4
 yhatJpartial=predict(hurdleglrfit, X[ixpartial,:]; select=:AICc)
-@fact yhatJpartial --> roughly(yhatR1partial;rtol=1e-4)
+@test yhatJpartial ≈ yhatR1partial rtol=1e-4
 yhatJ = predict(hurdleglrfit, X; select=:all)
-@fact size(yhatJ) --> (size(X,1),2)
+@test size(yhatJ) == (size(X,1),2)
 
 # regulated lasso path
 hurdleglrfit = fit(Hurdle,GammaLassoPath,X,y; γ=0.0)
 coefsJ=vcat(coef(hurdleglrfit;select=:AICc)...)
-@fact coefsJ --> roughly(coefsR1;rtol=0.25)
+@test coefsJ ≈ coefsR1 rtol=0.25
 # rdist(coefsJ,coefsR1)
 yhatJ = predict(hurdleglrfit, X; select=:AICc)
-@fact yhatJ --> roughly(yhatR1;rtol=0.05)
+@test yhatJ ≈ yhatR1 rtol=0.05
 yhatJpartial=predict(hurdleglrfit, X[ixpartial,:]; select=:AICc)
-@fact yhatJpartial --> roughly(yhatR1partial;rtol=0.05)
+@test yhatJpartial ≈ yhatR1partial rtol=0.05
 
 coefsJpos, coefsJzero = coef(hurdleglrfit;select=:all)
-@fact size(coefsJpos,1) --> 6
-@fact size(coefsJzero,1) --> 6
+@test size(coefsJpos,1) == 6
+@test size(coefsJzero,1) == 6
 
 # this one throws an error because we did not specify the same λ vector for both submodels so they have different lengths
-@fact_throws predict(hurdleglrfit, X; select=:all)
+@test_throws AssertionError predict(hurdleglrfit, X; select=:all)
 
 coefsJCVmin=vcat(coef(hurdleglrfit;select=:CVmin)...)
-@fact coefsJCVmin --> roughly(coefsR1;rtol=0.30)
+@test coefsJCVmin ≈ coefsR1 rtol=0.30
 # rdist(coefsJCVmin,coefsR1)
 
 # try with SharedArray
 Xs = convert(SharedArray,X)
 hurdleglrfitShared = fit(Hurdle,GammaLassoPath,Xs,y; γ=0.0)
 coefsJShared=vcat(coef(hurdleglrfitShared;select=:AICc)...)
-@fact coefsJShared --> roughly(coefsJ)
+@test coefsJShared ≈ coefsJ
 yhatJ = predict(hurdleglrfitShared, X; select=:AICc)
-@fact yhatJ --> roughly(yhatR1;rtol=0.05)
+@test yhatJ ≈ yhatR1 rtol=0.05
 yhatJpartial=predict(hurdleglrfitShared, X[ixpartial,:]; select=:AICc)
-@fact yhatJpartial --> roughly(yhatR1partial;rtol=0.05)
+@test yhatJpartial ≈ yhatR1partial rtol=0.05
 
 # regulated gamma lasso path
 hurdleglrfit = fit(Hurdle,GammaLassoPath,X,y; γ=10.0)
 coefsJ=vcat(coef(hurdleglrfit;select=:AICc)...)
-@fact coefsJ --> roughly(coefsR1;rtol=0.11)
+@test coefsJ ≈ coefsR1 rtol=0.11
 # rdist(coefsJ,coefsR1)
 yhatJ = predict(hurdleglrfit, X; select=:AICc)
-@fact yhatJ --> roughly(yhatR1;rtol=0.05)
+@test yhatJ ≈ yhatR1 rtol=0.05
 yhatJpartial=predict(hurdleglrfit, X[ixpartial,:]; select=:AICc)
-@fact yhatJpartial --> roughly(yhatR1partial;rtol=0.05)
+@test yhatJpartial ≈ yhatR1partial rtol=0.05
 
 # using ProfileView
 # Profile.init(delay=0.001)
@@ -118,18 +118,18 @@ yhatJpartial=predict(hurdleglrfit, X[ixpartial,:]; select=:AICc)
 # using DataFrames formula interface
 hurdlefit = fit(Hurdle,GeneralizedLinearModel,@formula(art ~ femWomen + marMarried + kid5 + phd + ment), bioChemists)
 coefsJ=vcat(coef(hurdlefit)...)
-@fact coefsJ --> roughly(coefsR1;rtol=1e-6)
+@test coefsJ ≈ coefsR1 rtol=1e-6
 yhatJ=predict(hurdlefit, Xwconst)
-@fact yhatJ --> roughly(yhatR1;rtol=1e-6)
+@test yhatJ ≈ yhatR1 rtol=1e-6
 yhatJpartial=predict(hurdlefit, Xwconst[ixpartial,:])
-@fact yhatJpartial --> roughly(yhatR1partial;rtol=1e-6)
+@test yhatJpartial ≈ yhatR1partial rtol=1e-6
 
 end
 
 ###########################################################
 # Xpos ≠ Xzero
 ###########################################################
-facts("hurdle with Xpos ≠ Xzero") do
+@testset "hurdle with Xpos ≠ Xzero" begin
 
 # regulated gamma lasso path with different Xpos and Xzero
 # R"fm_hp2 <- hurdle(art ~ fem + mar + kid5 | phd + ment, data = bioChemists)"
@@ -156,75 +156,75 @@ Xposwconst=[ones(size(X,1)) Xpos]
 # simple hurdle with GLM underlying
 hurdlefit = fit(Hurdle,GeneralizedLinearModel,Xzerowconst,y; Xpos=Xposwconst)
 coefsJ=vcat(coef(hurdlefit)...)
-@fact coefsJ --> roughly(coefsR2;rtol=1e-5)
+@test coefsJ ≈ coefsR2 rtol=1e-5
 yhatJ=predict(hurdlefit, Xzerowconst; Xpos=Xposwconst)
-@fact yhatJ --> roughly(yhatR2;rtol=1e-6)
+@test yhatJ ≈ yhatR2 rtol=1e-6
 yhatJpartial=predict(hurdlefit, Xzerowconst[ixpartial,:]; Xpos=Xposwconst[ixpartial,:])
-@fact yhatJpartial --> roughly(yhatR2partial;rtol=1e-6)
+@test yhatJpartial ≈ yhatR2partial rtol=1e-6
 
 # same simple hurdle through UNREGULATED lasso path
 hurdleglrfit = fit(Hurdle,GammaLassoPath,Xzero,y; Xpos=Xpos, λ=[0.0,0.0001])
 coefsJ=vcat(coef(hurdleglrfit;select=:AICc)...)
-@fact coefsJ --> roughly(coefsR2;rtol=1e-4)
+@test coefsJ ≈ coefsR2 rtol=1e-4
 # rdist(coefsJ,coefsR2)
 yhatJ=predict(hurdleglrfit, Xzero; Xpos=Xpos, select=:AICc)
-@fact yhatJ --> roughly(yhatR2;rtol=1e-4)
+@test yhatJ ≈ yhatR2 rtol=1e-4
 yhatJpartial=predict(hurdleglrfit, Xzero[ixpartial,:]; Xpos=Xpos[ixpartial,:], select=:AICc)
-@fact yhatJpartial --> roughly(yhatR2partial;rtol=1e-4)
+@test yhatJpartial ≈ yhatR2partial rtol=1e-4
 yhatJ = predict(hurdleglrfit, Xzero; Xpos=Xpos, select=:all)
-@fact size(yhatJ) --> (size(X,1),2)
+@test size(yhatJ) == (size(X,1),2)
 
 # regulated lasso path
 hurdleglrfit = fit(Hurdle,GammaLassoPath,Xzero,y; Xpos=Xpos, γ=0.0)
 coefsJ=vcat(coef(hurdleglrfit;select=:AICc)...)
-@fact coefsJ --> roughly(coefsR2;rtol=0.10)
+@test coefsJ ≈ coefsR2 rtol=0.10
 # rdist(coefsJ,coefsR2)
 yhatJ = predict(hurdleglrfit, Xzero; Xpos=Xpos, select=:AICc)
-@fact yhatJ --> roughly(yhatR2;rtol=0.05)
+@test yhatJ ≈ yhatR2 rtol=0.05
 yhatJpartial=predict(hurdleglrfit, Xzero[ixpartial,:]; Xpos=Xpos[ixpartial,:], select=:AICc)
-@fact yhatJpartial --> roughly(yhatR2partial;rtol=0.05)
+@test yhatJpartial ≈ yhatR2partial rtol=0.05
 
 coefsJpos, coefsJzero = coef(hurdleglrfit;select=:all)
-@fact size(coefsJpos,1) --> 4
-@fact size(coefsJzero,1) --> 3
+@test size(coefsJpos,1) == 4
+@test size(coefsJzero,1) == 3
 
 # try with SharedArray
 Xzeros = convert(SharedArray,Xzero)
 Xposs = convert(SharedArray,Xpos)
 hurdleglrfitShared = fit(Hurdle,GammaLassoPath,Xzeros,y; Xpos=Xposs, γ=0.0)
 coefsJShared=vcat(coef(hurdleglrfitShared;select=:AICc)...)
-@fact coefsJShared --> roughly(coefsJ)
+@test coefsJShared ≈ coefsJ
 yhatJ = predict(hurdleglrfitShared, Xzeros; Xpos=Xposs, select=:AICc)
-@fact yhatJ --> roughly(yhatR2;rtol=0.05)
+@test yhatJ ≈ yhatR2 rtol=0.05
 yhatJpartial=predict(hurdleglrfitShared, Xzeros[ixpartial,:]; Xpos=Xposs[ixpartial,:], select=:AICc)
-@fact yhatJpartial --> roughly(yhatR2partial;rtol=0.05)
+@test yhatJpartial ≈ yhatR2partial rtol=0.05
 
 # regulated gamma lasso path
 hurdleglrfit = fit(Hurdle,GammaLassoPath,Xzero,y; Xpos=Xpos, γ=10.0)
 coefsJ=vcat(coef(hurdleglrfit;select=:AICc)...)
-@fact coefsJ --> roughly(coefsR2;rtol=0.15)
+@test coefsJ ≈ coefsR2 rtol=0.15
 # rdist(coefsJ,coefsR2)
 yhatJ = predict(hurdleglrfit, Xzero; Xpos=Xpos, select=:AICc)
-@fact yhatJ --> roughly(yhatR2;rtol=0.05)
+@test yhatJ ≈ yhatR2 rtol=0.05
 yhatJpartial=predict(hurdleglrfit, Xzero[ixpartial,:]; Xpos=Xpos[ixpartial,:], select=:AICc)
-@fact yhatJpartial --> roughly(yhatR2partial;rtol=0.05)
+@test yhatJpartial ≈ yhatR2partial rtol=0.05
 
 # using DataFrames formula interface
 hurdlefit = fit(Hurdle,GeneralizedLinearModel,@formula(art ~ phd + ment), bioChemists; fpos = @formula(art ~ femWomen + marMarried + kid5))
 coefsJ=vcat(coef(hurdlefit)...)
-@fact coefsJ --> roughly(coefsR2;rtol=1e-5)
+@test coefsJ ≈ coefsR2 rtol=1e-5
 # rdist(coefsJ,coefsR2)
 yhatJ=predict(hurdlefit, Xzerowconst; Xpos=Xposwconst)
-@fact yhatJ --> roughly(yhatR2;rtol=1e-6)
+@test yhatJ ≈ yhatR2 rtol=1e-6
 yhatJpartial=predict(hurdlefit, Xzerowconst[ixpartial,:]; Xpos=Xposwconst[ixpartial,:])
-@fact yhatJpartial --> roughly(yhatR2partial;rtol=1e-6)
+@test yhatJpartial ≈ yhatR2partial rtol=1e-6
 
 end
 
 ###########################################################
 # Xpos ≠ Xzero
 ###########################################################
-facts("hurdle with Xpos ≠ Xzero AND offset specified") do
+@testset "hurdle with Xpos ≠ Xzero AND offset specified" begin
 
 # regulated gamma lasso path with different Xpos and Xzero and an offset
 # R"fm_hp3 <- hurdle(art ~ fem + mar + kid5 + offset(offpos) | phd + ment + offset(offzero), data = bioChemists)"
@@ -253,37 +253,37 @@ Xposwconst=[ones(size(X,1)) Xpos]
 # simple hurdle with GLM underlying
 hurdlefit = fit(Hurdle,GeneralizedLinearModel,Xzerowconst,y; Xpos=Xposwconst, offsetzero=offzero, offsetpos=offpos)
 coefsJ=vcat(coef(hurdlefit)...)
-@fact coefsJ --> roughly(coefsR3;rtol=1e-5)
+@test coefsJ ≈ coefsR3 rtol=1e-5
 yhatJ=predict(hurdlefit, Xzerowconst; Xpos=Xposwconst, offsetzero=offzero, offsetpos=offpos)
-@fact yhatJ --> roughly(yhatR3;rtol=1e-5)
+@test yhatJ ≈ yhatR3 rtol=1e-5
 yhatJpartial=predict(hurdlefit, Xzerowconst[ixpartial,:]; Xpos=Xposwconst[ixpartial,:], offsetzero=offzero[ixpartial], offsetpos=offpos[ixpartial])
-@fact yhatJpartial --> roughly(yhatR3partial;rtol=1e-6)
+@test yhatJpartial ≈ yhatR3partial rtol=1e-6
 
 # same simple hurdle through UNREGULATED lasso path
 hurdleglrfit = fit(Hurdle,GammaLassoPath,Xzero,y; Xpos=Xpos, offsetzero=offzero, offsetpos=offpos, λ=[0.0,0.0001])
 coefsJ=vcat(coef(hurdleglrfit;select=:AICc)...)
-@fact coefsJ --> roughly(coefsR3;rtol=1e-4)
+@test coefsJ ≈ coefsR3 rtol=1e-4
 # rdist(coefsJ,coefsR3)
 yhatJ=predict(hurdleglrfit, Xzero; Xpos=Xpos, offsetzero=offzero, offsetpos=offpos, select=:AICc)
-@fact yhatJ --> roughly(yhatR3;rtol=1e-4)
+@test yhatJ ≈ yhatR3 rtol=1e-4
 yhatJpartial=predict(hurdleglrfit, Xzero[ixpartial,:]; Xpos=Xpos[ixpartial,:], offsetzero=offzero[ixpartial], offsetpos=offpos[ixpartial], select=:AICc)
-@fact yhatJpartial --> roughly(yhatR3partial;rtol=1e-4)
+@test yhatJpartial ≈ yhatR3partial rtol=1e-4
 yhatJ = predict(hurdleglrfit, Xzero; Xpos=Xpos, offsetzero=offzero, offsetpos=offpos, select=:all)
-@fact size(yhatJ) --> (size(X,1),2)
+@test size(yhatJ) == (size(X,1),2)
 
 # regulated lasso path
 hurdleglrfit = fit(Hurdle,GammaLassoPath,Xzero,y; Xpos=Xpos, offsetzero=offzero, offsetpos=offpos, γ=0.0)
 coefsJ=vcat(coef(hurdleglrfit;select=:AICc)...)
-@fact coefsJ --> roughly(coefsR3;rtol=0.10)
+@test coefsJ ≈ coefsR3 rtol=0.10
 # rdist(coefsJ,coefsR3)
 yhatJ = predict(hurdleglrfit, Xzero; Xpos=Xpos, offsetzero=offzero, offsetpos=offpos, select=:AICc)
-@fact yhatJ --> roughly(yhatR3;rtol=0.05)
+@test yhatJ ≈ yhatR3 rtol=0.05
 yhatJpartial=predict(hurdleglrfit, Xzero[ixpartial,:]; Xpos=Xpos[ixpartial,:], offsetzero=offzero[ixpartial], offsetpos=offpos[ixpartial], select=:AICc)
-@fact yhatJpartial --> roughly(yhatR3partial;rtol=0.05)
+@test yhatJpartial ≈ yhatR3partial rtol=0.05
 
 coefsJpos, coefsJzero = coef(hurdleglrfit;select=:all)
-@fact size(coefsJpos,1) --> 4
-@fact size(coefsJzero,1) --> 3
+@test size(coefsJpos,1) == 4
+@test size(coefsJzero,1) == 3
 
 # try with SharedArray
 Xzeros = convert(SharedArray,Xzero)
@@ -292,58 +292,58 @@ offzeros = convert(SharedArray,offzero)
 offposs = convert(SharedArray,offpos)
 hurdleglrfitShared = fit(Hurdle,GammaLassoPath,Xzeros,y; Xpos=Xposs, offsetzero=offzeros, offsetpos=offposs, γ=0.0)
 coefsJShared=vcat(coef(hurdleglrfitShared;select=:AICc)...)
-@fact coefsJShared --> roughly(coefsJ)
+@test coefsJShared ≈ coefsJ
 yhatJ = predict(hurdleglrfitShared, Xzeros; Xpos=Xposs, offsetzero=offzeros, offsetpos=offposs, select=:AICc)
-@fact yhatJ --> roughly(yhatR3;rtol=0.05)
+@test yhatJ ≈ yhatR3 rtol=0.05
 yhatJpartial=predict(hurdleglrfitShared, Xzeros[ixpartial,:]; Xpos=Xposs[ixpartial,:], offsetzero=offzeros[ixpartial], offsetpos=offposs[ixpartial], select=:AICc)
-@fact yhatJpartial --> roughly(yhatR3partial;rtol=0.05)
+@test yhatJpartial ≈ yhatR3partial rtol=0.05
 
 # regulated gamma lasso path
 hurdleglrfit = fit(Hurdle,GammaLassoPath,Xzero,y; Xpos=Xpos, offsetzero=offzero, offsetpos=offpos, γ=10.0)
 coefsJ=vcat(coef(hurdleglrfit;select=:AICc)...)
-@fact coefsJ --> roughly(coefsR3;rtol=0.15)
+@test coefsJ ≈ coefsR3 rtol=0.15
 # rdist(coefsJ,coefsR3)
 yhatJ = predict(hurdleglrfit, Xzero; Xpos=Xpos, offsetzero=offzero, offsetpos=offpos, select=:AICc)
-@fact yhatJ --> roughly(yhatR3;rtol=0.05)
+@test yhatJ ≈ yhatR3 rtol=0.05
 yhatJpartial=predict(hurdleglrfit, Xzero[ixpartial,:]; Xpos=Xpos[ixpartial,:], offsetzero=offzero[ixpartial], offsetpos=offpos[ixpartial], select=:AICc)
-@fact yhatJpartial --> roughly(yhatR3partial;rtol=0.05)
+@test yhatJpartial ≈ yhatR3partial rtol=0.05
 
 # using DataFrames formula interface
 hurdlefit = fit(Hurdle,GeneralizedLinearModel,@formula(art ~ phd + ment), bioChemists; fpos = @formula(art ~ femWomen + marMarried + kid5), offsetzero=offzero, offsetpos=offpos)
 coefsJ=vcat(coef(hurdlefit)...)
-@fact coefsJ --> roughly(coefsR3;rtol=1e-5)
+@test coefsJ ≈ coefsR3 rtol=1e-5
 # rdist(coefsJ,coefsR3)
 yhatJ=predict(hurdlefit, Xzerowconst; Xpos=Xposwconst, offsetzero=offzero, offsetpos=offpos)
-@fact yhatJ --> roughly(yhatR3;rtol=1e-5)
+@test yhatJ ≈ yhatR3 rtol=1e-5
 yhatJpartial=predict(hurdlefit, Xzerowconst[ixpartial,:]; Xpos=Xposwconst[ixpartial,:], offsetzero=offzero[ixpartial], offsetpos=offpos[ixpartial])
-@fact yhatJpartial --> roughly(yhatR3partial;rtol=1e-5)
+@test yhatJpartial ≈ yhatR3partial rtol=1e-5
 
 end
 
 ###########################################################
 # degenrate cases
 ###########################################################
-facts("hurdle degenerate cases") do
+@testset "hurdle degenerate cases" begin
 
 # degenerate positive counts data case 1
 include(joinpath(testdir,"data","degenerate_hurdle_1.jl"))
 hurdle = fit(Hurdle,GammaLassoPath,X,y)
 coefsJ=vcat(coef(hurdle;select=:AICc)...)
-@fact vec(coefsJ) --> roughly([0.0, 0.0, -6.04112, 0.675767],1e-4)
+@test vec(coefsJ) ≈ [0.0, 0.0, -6.04112, 0.675767] rtol=1e-4
 coefsJpos, coefsJzero = coef(hurdle;select=:all)
-@fact size(coefsJpos,1) --> 2
-@fact coefsJpos --> zeros(coefsJpos)
-@fact size(coefsJzero,1) --> 2
+@test size(coefsJpos,1) == 2
+@test coefsJpos == zeros(coefsJpos)
+@test size(coefsJzero,1) == 2
 
 # degenerate positive counts data case 1 without >1
 y0or1=deepcopy(y)
 y0or1[y.>1]=1
 hurdle = fit(Hurdle,GammaLassoPath,X,y0or1)
 coefs0or1=vcat(coef(hurdle;select=:AICc)...)
-@fact coefs0or1 --> coefsJ
+@test coefs0or1 == coefsJ
 coefs0or1pos, coefs0or1zero = coef(hurdle;select=:all)
-@fact coefs0or1pos --> coefsJpos
-@fact coefs0or1zero --> coefsJzero
+@test coefs0or1pos == coefsJpos
+@test coefs0or1zero == coefsJzero
 
 # degenerate positive counts data case 1 without zeros
 y0or1 = deepcopy(y)
@@ -351,33 +351,33 @@ y0or1[y.==0]=1
 hurdle = fit(Hurdle,GammaLassoPath,X,y0or1)
 coef(hurdle;select=:AICc)
 coefs0or1=vcat(coef(hurdle;select=:AICc)...)
-@fact vec(coefs0or1) --> roughly([-7.34062, 0.0, 0.0, 0.0],1e-4)
+@test vec(coefs0or1) ≈ [-7.34062, 0.0, 0.0, 0.0] rtol=1e-4
 coefs0or1pos, coefs0or1zero = coef(hurdle;select=:all)
-@fact all(iszero,coefs0or1zero) --> true
+@test all(iszero,coefs0or1zero)
 
 # degenerate positive counts data case 1 without only zeros
 y0or1 = zeros(y)
-@fact_throws fit(Hurdle,GammaLassoPath,X,y0or1)
+@test_throws ErrorException fit(Hurdle,GammaLassoPath,X,y0or1)
 
 # degenerate positive counts data case 2
 include(joinpath(testdir,"data","degenerate_hurdle_2.jl"))
 hurdle = fit(Hurdle,GammaLassoPath,X,y)
 coefsJ=vcat(coef(hurdle;select=:AICc)...)
-@fact vec(coefsJ) --> roughly([0.0,0.0,-5.30128195796556,0.1854148891565171]'',1e-4)
+@test vec(coefsJ) ≈ [0.0,0.0,-5.30128195796556,0.1854148891565171]'' rtol=1e-4
 coefsJpos, coefsJzero = coef(hurdle;select=:all)
-@fact size(coefsJpos,1) --> 2
-@fact coefsJpos --> zeros(coefsJpos)
-@fact size(coefsJzero,1) --> 2
+@test size(coefsJpos,1) == 2
+@test coefsJpos == zeros(coefsJpos)
+@test size(coefsJzero,1) == 2
 
 # degenerate positive counts data case 3
 include(joinpath(testdir,"data","degenerate_hurdle_3.jl"))
 hurdle = fit(Hurdle,GammaLassoPath,X,y)
 coefsJ=vcat(coef(hurdle;select=:AICc)...)
-@fact vec(coefsJ) --> roughly([0.0,0.0,-4.541820686620407,0.0]'',1e-4)
+@test vec(coefsJ) ≈ [0.0,0.0,-4.541820686620407,0.0]'' rtol=1e-4
 coefsJpos, coefsJzero = coef(hurdle;select=:all)
-@fact size(coefsJpos,1) --> 2
-@fact coefsJpos --> zeros(coefsJpos)
-@fact size(coefsJzero,1) --> 2
+@test size(coefsJpos,1) == 2
+@test coefsJpos == zeros(coefsJpos)
+@test size(coefsJzero,1) == 2
 
 # this test case used to give numerical headaches to devresid(PositivePoisson(),...)
 include(joinpath(testdir,"data","degenerate_hurdle_5.jl"))
@@ -387,10 +387,10 @@ include(joinpath(testdir,"data","degenerate_hurdle_5.jl"))
 # offset = load(joinpath(testdir,"data","degenerate_hurdle5.jld"),"offset")
 # show(offset)
 hurdle = fit(Hurdle,GammaLassoPath,X,y; Xpos=Xpos, offset=offset)
-@fact isnull(hurdle.mpos) --> false
-@fact isnull(hurdle.mzero) --> false
-@fact typeof(hurdle.mpos) <: GammaLassoPath --> true
-@fact typeof(hurdle.mzero) <: GammaLassoPath --> true
+@test !(isnull(hurdle.mpos))
+@test !(isnull(hurdle.mzero))
+@test typeof(hurdle.mpos) <: GammaLassoPath
+@test typeof(hurdle.mzero) <: GammaLassoPath
 
 # M = GammaLassoPath
 # dzero = Binomial()
@@ -439,5 +439,5 @@ end
 # bioChemists[:art]=convert(Vector{Float64},bioChemists[:art])
 # hurdlefit = fit(Hurdle,GammaLassoPath,@formula(art ~ fem + mar + kid5 + phd + ment), bioChemists;intercept=false)
 # coefsJ=coef(hurdlefit)
-# @fact coefsJ --> roughly(coefsR1;rtol=1e-6)
+# @test coefsJ ≈ coefsR1 rtol=1e-6
 # rdist(coefsR1,coefsJ)

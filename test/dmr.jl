@@ -1,6 +1,6 @@
 include("testutils.jl")
 
-using FactCheck, Gadfly, Distributions
+using Base.Test, Gadfly, Distributions
 
 include("addworkers.jl")
 
@@ -66,19 +66,19 @@ covars=convert(Array{T,2},covars)
 # npos,ppos = size(covarspos)
 d = size(counts,2)
 
-facts("dmr") do
+@testset "dmr" begin
 
 # to get exactly Rdistrom's run use λminratio=0.01 because our gamlr's have different defaults
 @time coefs = HurdleDMR.dmr(covars, counts; γ=γ, λminratio=0.01)
-@fact size(coefs) --> (p+1, d)
+@test size(coefs) == (p+1, d)
 
 @time coefs2 = HurdleDMR.dmr(covars, counts; local_cluster=false, γ=γ, λminratio=0.01)
-@fact coefs --> roughly(coefs2)
+@test coefs ≈ coefs2
 
 @time dmrPaths = HurdleDMR.dmrpaths(covars, counts; γ=γ, λminratio=0.01, verbose=false)
 
 paths = dmrPaths.nlpaths
-@fact dmrPaths.p --> p
+@test dmrPaths.p == p
 
 # these terms require the full counts data, but we use only first 100 for quick testing
 # plotterms=["first_date","chicken_wing","ate_here", "good_food","food_fabul","terribl_servic"]
@@ -90,54 +90,54 @@ plots=permutedims(convert(Matrix{Gadfly.Plot},reshape([plot(paths[plotix[i]].val
 filename = joinpath(testdir,"plots","we8there.svg")
 # # TODO: uncomment after Gadfly get's its get_stroke_vector bug fixed
 # draw(SVG(filename,9inch,11inch),Gadfly.gridstack(plots))
-# @fact isfile(filename) --> true
+# @test isfile(filename)
 
 #reload("HurdleDMR")
 @time z = HurdleDMR.srproj(coefs, counts)
-@fact size(z) --> (size(covars,1),p+1)
+@test size(z) == (size(covars,1),p+1)
 
 regdata = DataFrame(y=covars[:,1], z=z[:,1], m=z[:,2])
 lm1 = lm(@formula(y ~ z+m), regdata)
 r21 = adjr2(lm1)
 
-@fact coefs --> roughly(full(coefsRdistrom);rtol=rtol)
+@test coefs ≈ full(coefsRdistrom) rtol=rtol
 # println("rdist(coefs,coefsRdistrom)=$(rdist(coefs,coefsRdistrom))")
 
-@fact z --> roughly(zRdistrom;rtol=rtol)
+@test z ≈ zRdistrom rtol=rtol
 # println("rdist(z,zRdistrom)=$(rdist(z,zRdistrom))")
 
 regdata3 = DataFrame(y=covars[:,1], z=zRdistrom[:,1], m=zRdistrom[:,2])
 lm3 = lm(@formula(y ~ z+m), regdata3)
 r23 = adjr2(lm3)
 
-@fact r21 --> roughly(r23;rtol=rtol)
+@test r21 ≈ r23 rtol=rtol
 # println("rdist(r21,r23)=$(rdist(r21,r23))")
 
 # Rdistrom.dmrplots(fits.gamlrs[plotix],we8thereTerms[plotix])
 
 # project in a single direction
 @time z1 = HurdleDMR.srproj(coefs, counts, 1)
-@fact z1 --> roughly(z[:,[1,end]])
+@test z1 ≈ z[:,[1,end]]
 
 @time z1dense = HurdleDMR.srproj(coefs, full(counts), 1)
-@fact z1dense --> roughly(z1)
+@test z1dense ≈ z1
 
-@fact z1 --> roughly(z1Rdistrom;rtol=rtol)
+@test z1 ≈ z1Rdistrom rtol=rtol
 
 X1, X1_nocounts = HurdleDMR.srprojX(coefs,counts,covars,1; includem=true)
-@fact X1_nocounts --> [ones(n,1) covars[:,2:end]]
-@fact X1 --> [X1_nocounts z1]
+@test X1_nocounts == [ones(n,1) covars[:,2:end]]
+@test X1 == [X1_nocounts z1]
 
 X2, X2_nocounts = HurdleDMR.srprojX(coefs,counts,covars,1; includem=false)
-@fact X2_nocounts --> X1_nocounts
-@fact X2 --> X1[:,1:end-1]
+@test X2_nocounts == X1_nocounts
+@test X2 == X1[:,1:end-1]
 
 @time cvstats13 = HurdleDMR.cross_validate_dmr_srproj(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
 @time cvstats13b = HurdleDMR.cross_validate_dmr_srproj(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
-@fact isequal(cvstats13,cvstats13b) --> true
+@test isequal(cvstats13,cvstats13b)
 
 cvstats14 = HurdleDMR.cross_validate_dmr_srproj(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
-@fact isequal(cvstats13,cvstats14) --> false
+@test !(isequal(cvstats13,cvstats14))
 
 cvstatsSerialKfold = HurdleDMR.cross_validate_dmr_srproj(covars,smallcounts,1; k=5, gentype=HurdleDMR.SerialKfold, γ=γ)
 
@@ -147,7 +147,7 @@ end
 # degenerate cases
 #########################################################################3
 
-facts("dmr degenerate cases") do
+@testset "dmr degenerate cases" begin
 
 # always one (zero var) counts columns
 zcounts = deepcopy(smallcounts)
@@ -157,15 +157,15 @@ find(var(zcounts,1) .== 0)
 
 # make sure we are not adding all zero obseravtions
 m = sum(zcounts,2)
-@fact sum(m .== 0) --> 0
+@test sum(m .== 0) == 0
 
 # this one should warn on dimension 2
 @time zcoefs = HurdleDMR.dmr(covars, zcounts; γ=γ, λminratio=0.01, showwarnings=true)
-@fact size(zcoefs) --> (p+1, smalld)
-@fact zcoefs[:,2] --> roughly(zeros(p+1))
+@test size(zcoefs) == (p+1, smalld)
+@test zcoefs[:,2] ≈ zeros(p+1)
 
 @time zcoefs2 = HurdleDMR.dmr(covars, zcounts; local_cluster=false, γ=γ, λminratio=0.01)
-@fact zcoefs2 --> roughly(zcoefs2)
+@test zcoefs2 ≈ zcoefs2
 
 end
 

@@ -1,6 +1,6 @@
 include("testutils.jl")
 
-using FactCheck, Gadfly, Distributions
+using Base.Test, Gadfly, Distributions
 
 include("addworkers.jl")
 
@@ -18,6 +18,12 @@ covered_lines, total_lines = get_summary(coverage)
 @show get_summary(process_file("src/HurdleDMR.jl"))
 
 # clean_folder("/home/amanela/.julia/v0.4")
+
+A = spzeros(Float64,4,5)
+convert(SharedArray, A)
+A = zeros(Float64,4,5)
+@time convert(SharedArray{Float64}, A)
+@time convert(SharedArray, A)
 
 function fun(x; kwargs...)
   kwargs

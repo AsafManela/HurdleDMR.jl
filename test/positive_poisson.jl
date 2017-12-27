@@ -2,83 +2,83 @@ include("testutils.jl")
 
 using HurdleDMR
 
-using FactCheck, GLM, Lasso, DataFrames
+using Base.Test, GLM, Lasso, DataFrames
 
-facts("PositivePoisson") do
+@testset "PositivePoisson" begin
 λ0=3.4
 xs = 1:10000
 @time lp1=[logpdf(Poisson(λ0),x)::Float64 for x=xs]
 @time lp2=[HurdleDMR.logpdf_approx(Poisson(λ0),x)::Float64 for x=xs]
-@fact lp1 --> roughly(lp2)
+@test lp1 ≈ lp2
 
 @time lp1=[logpdf(PositivePoisson(λ0),x)::Float64 for x=xs]
 @time lp2=[logpdf_exact(PositivePoisson(λ0),x)::Float64 for x=xs]
-@fact lp1 --> roughly(lp2)
+@test lp1 ≈ lp2
 
 ηs=-10:0.1:10
 @time μs=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
 @time ηscheck=broadcast(μ->linkfun(LogProductLogLink(),μ),μs)
-@fact ηs --> roughly(ηscheck)
+@test ηs ≈ ηscheck
 
 loglik(y, μ) = GLM.loglik_obs(PositivePoisson(λ0), y, μ, one(y), 0)
 
 μs=1.01:0.1:1000
 @time ηs=broadcast(μ->linkfun(LogProductLogLink(),μ),μs)
 @time μscheck=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
-@fact μs --> roughly(μscheck)
+@test μs ≈ μscheck
 #verify works for large μ
 ys = round.(Int,μs) + 1.0
 devresids = devresid.(PositivePoisson(λ0), ys, μs)
-@fact all(isfinite,devresids) --> true
+@test all(isfinite,devresids)
 logliks = loglik.(ys, μs)
-@fact all(isfinite,logliks) --> true
+@test all(isfinite,logliks)
 # i = findfirst(isinf,logliks)
 # @enter GLM.loglik_obs(PositivePoisson(λ0), ys[i], μs[i], one(ys[i]), 0)
 
 ys = ones(μs)
 devresids1 = devresid.(PositivePoisson(λ0), ys, μs)
-@fact all(isfinite,devresids1) --> true
+@test all(isfinite,devresids1)
 logliks1 = loglik.(ys, μs)
-@fact all(isfinite,logliks1) --> true
+@test all(isfinite,logliks1)
 
 μsbig = big.(μs)
 @time ηs=broadcast(μ->linkfun(LogProductLogLink(),μ),μsbig)
 @time μscheck=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
-@fact μsbig --> roughly(μscheck)
+@test μsbig ≈ μscheck
 #verify works for large μ
 ysbig = round.(BigInt,μsbig) + 1.0
 devresidsbig = devresid.(PositivePoisson(λ0), ysbig, μsbig)
-@fact all(isfinite,devresidsbig) --> true
-@fact devresids --> roughly(Float64.(devresidsbig))
+@test all(isfinite,devresidsbig)
+@test devresids ≈ Float64.(devresidsbig)
 
 logliksbig = loglik.(ysbig, μsbig)
-@fact all(isfinite,logliksbig) --> true
-@fact logliks --> roughly(Float64.(logliksbig))
+@test all(isfinite,logliksbig)
+@test logliks ≈ Float64.(logliksbig)
 
 ysbig = ones(μsbig)
 devresidsbig1 = devresid.(PositivePoisson(λ0), ysbig, μsbig)
-@fact all(isfinite,devresidsbig1) --> true
-@fact devresids1 --> roughly(Float64.(devresidsbig1))
+@test all(isfinite,devresidsbig1)
+@test devresids1 ≈ Float64.(devresidsbig1)
 logliksbig1 = loglik.(ysbig, μsbig)
-@fact all(isfinite,logliksbig1) --> true
+@test all(isfinite,logliksbig1)
 
 # μs close to 1.0
 μs=big.(collect(1.0+1e-10:1e-10:1.0+1000*1e-10))
 @time ηs=broadcast(μ->linkfun(LogProductLogLink(),μ),μs)
 @time μscheck=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
-@fact μs --> roughly(μscheck)
+@test μs ≈ μscheck
 #verify works for large μ
 ys = round.(BigInt,μs) + 1.0
 devresidsbig = devresid.(PositivePoisson(λ0), ys, μs)
-@fact all(isfinite,devresidsbig) --> true
+@test all(isfinite,devresidsbig)
 logliksbig = loglik.(ys, μs)
-@fact all(isfinite,logliksbig) --> true
+@test all(isfinite,logliksbig)
 
 ys = ones(μs)
 devresidsbig = devresid.(PositivePoisson(λ0), ys, μs)
-@fact all(isfinite,devresidsbig) --> true
+@test all(isfinite,devresidsbig)
 logliks1 = loglik.(ys, μs)
-@fact all(isfinite,logliks1) --> true
+@test all(isfinite,logliks1)
 
 # using JLD
 # @load joinpath(Pkg.dir("HurdleDMR"),"test","data","degenerate_hurdle5_debug.jld")
@@ -151,29 +151,29 @@ y=convert(Array{Float64,1},pdata[:y1])
 
 # @time glmfit = fit(GeneralizedLinearModel,Xwconst,y,PositivePoisson(),LogProductLogLink();convTol=1e-2)
 coefsGLM = coef(glmfit)
-@fact coefsGLM --> roughly(coefsR;rtol=1e-7)
-@fact coefsGLM --> roughly(coefs0;rtol=0.05)
+@test coefsGLM ≈ coefsR rtol=1e-7
+@test coefsGLM ≈ coefs0 rtol=0.05
 # rdist(coefsGLM,coefsR)
 # rdist(coefsGLM,coefs0)
 
 # GammaLassoPath without actualy regularization
 @time glpfit = fit(GammaLassoPath,X,y,PositivePoisson(),LogProductLogLink(); λ=[0.0])
 coefsGLP = vec(coef(glpfit))
-@fact coefsGLP --> roughly(coefsGLM)
+@test coefsGLP ≈ coefsGLM
 
 # GammaLassoPath doing Lasso
 @time lassofit = fit(GammaLassoPath,X,y,PositivePoisson(),LogProductLogLink(); γ=0.0)
 coefsLasso = vec(coef(lassofit;select=:AICc))
-@fact coefsLasso --> roughly(coefsGLM;rtol=0.02)
-@fact coefsLasso --> roughly(coefs0;rtol=0.05)
+@test coefsLasso ≈ coefsGLM rtol=0.02
+@test coefsLasso ≈ coefs0 rtol=0.05
 # rdist(coefsLasso,coefsGLM)
 # rdist(coefsLasso,coefs0)
 
 # GammaLassoPath doing concave regularization
 @time glpfit = fit(GammaLassoPath,X,y,PositivePoisson(),LogProductLogLink(); γ=10.0)
 coefsGLP = vec(coef(glpfit;select=:AICc))
-@fact coefsGLP --> roughly(coefsLasso;rtol=0.0002)
-@fact coefsGLP --> roughly(coefs0;rtol=0.05)
+@test coefsGLP ≈ coefsLasso rtol=0.0002
+@test coefsGLP ≈ coefs0 rtol=0.05
 # rdist(coefsGLP,coefsLasso)
 # rdist(coefsGLP,coefs0)
 

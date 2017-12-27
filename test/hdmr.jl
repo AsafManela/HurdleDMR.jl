@@ -1,6 +1,6 @@
 include("testutils.jl")
 
-using FactCheck, Gadfly, Distributions
+using Base.Test, Gadfly, Distributions
 
 include("addworkers.jl")
 
@@ -50,53 +50,53 @@ npos,ppos = size(covarspos)
 ###########################################################
 # hurdle with covarspos == covarszero
 ###########################################################
-facts("hurdle-dmr with covarspos == covarszero") do
+@testset "hurdle-dmr with covarspos == covarszero" begin
 
 # reload("HurdleDMR")
 
 # hurdle dmr parallel local cluster
 @time coefsHppos, coefsHpzero = HurdleDMR.hdmr(covars, counts; parallel=true, verbose=true)
-@fact size(coefsHppos) --> (p+1, d)
-@fact size(coefsHpzero) --> (p+1, d)
+@test size(coefsHppos) == (p+1, d)
+@test size(coefsHpzero) == (p+1, d)
 
 # hurdle dmr parallel remote cluster
 @time coefsHppos2, coefsHpzero2 = HurdleDMR.hdmr(covars, counts; parallel=true, local_cluster=false)
-@fact coefsHppos --> roughly(coefsHppos2)
-@fact coefsHpzero --> roughly(coefsHpzero)
+@test coefsHppos ≈ coefsHppos2
+@test coefsHpzero ≈ coefsHpzero
 
 # # # hurdle dmr serial
 # @time coefsHspos, coefsHszero = HurdleDMR.hdmr(covars, counts; parallel=false)
-# @fact coefsHppos --> roughly(coefsHspos)
-# @fact coefsHpzero --> roughly(coefsHszero)
+# @test coefsHppos ≈ coefsHspos
+# @test coefsHpzero ≈ coefsHszero
 
 # test posindic used by srproj
 m = rand(Poisson(0.1),30,500)
 ms = sparse(m)
 Im = HurdleDMR.posindic(m)
 Ims = HurdleDMR.posindic(ms)
-@fact Im --> Ims
+@test Im == Ims
 
 zHpos = HurdleDMR.srproj(coefsHppos, counts)
-@fact size(zHpos) --> (n,p+1)
+@test size(zHpos) == (n,p+1)
 
 zHzero = HurdleDMR.srproj(coefsHpzero, HurdleDMR.posindic(counts))
-@fact size(zHzero) --> (n,p+1)
+@test size(zHzero) == (n,p+1)
 
 # first half of coefs belongs to covarspos
 z1pos = HurdleDMR.srproj(coefsHppos, counts, 1)
-@fact z1pos --> roughly(zHpos[:,[1,p+1]])
+@test z1pos ≈ zHpos[:,[1,p+1]]
 
 # second half of coefs belongs to covarszero
 z1zero = HurdleDMR.srproj(coefsHpzero, HurdleDMR.posindic(counts), 1)
-@fact z1zero --> roughly(zHzero[:,[1,p+1]])
+@test z1zero ≈ zHzero[:,[1,p+1]]
 
 Z1 = HurdleDMR.srproj(coefsHppos, coefsHpzero, counts, 1, 1; intercept=true)
-@fact Z1 --> [z1pos[:,1] z1zero[:,1] z1pos[:,2]]
+@test Z1 == [z1pos[:,1] z1zero[:,1] z1pos[:,2]]
 
 Z3 = HurdleDMR.srproj(coefsHppos, coefsHpzero, counts, 3, 3; intercept=true)
 z3pos = HurdleDMR.srproj(coefsHppos, counts, 3)
 z3zero = HurdleDMR.srproj(coefsHpzero, HurdleDMR.posindic(counts), 3)
-@fact Z3 --> [z3pos[:,1] z3zero[:,1] z3pos[:,2]]
+@test Z3 == [z3pos[:,1] z3zero[:,1] z3pos[:,2]]
 
 regdata = DataFrame(y=covars[:,1], zw1=z1zero[:,1], zv1=z1pos[:,1], m=z1pos[:,2])
 lmw1 = lm(@formula(y ~ zw1+m), regdata)
@@ -109,70 +109,70 @@ lmw1v1 = lm(@formula(y ~ zw1+zv1+m), regdata)
 r2w1v1 = adjr2(lmw1v1)
 
 X1, X1_nocounts, includezpos = HurdleDMR.srprojX(coefsHppos,coefsHpzero,counts,covars,1; includem=true)
-@fact X1_nocounts --> [ones(n) covars[:,2:end]]
-@fact X1 --> [X1_nocounts Z1]
+@test X1_nocounts == [ones(n) covars[:,2:end]]
+@test X1 == [X1_nocounts Z1]
 
 X2, X2_nocounts, includezpos = HurdleDMR.srprojX(coefsHppos,coefsHpzero,counts,covars,1; includem=false)
-@fact X2_nocounts --> X1_nocounts
-@fact X2 --> X1[:,1:end-1]
+@test X2_nocounts == X1_nocounts
+@test X2 == X1[:,1:end-1]
 
 X3, X3_nocounts, includezpos = HurdleDMR.srprojX(coefsHppos,coefsHpzero,counts,covars,3; includem=true)
-@fact X3_nocounts --> [ones(n) covars[:,[1,2,4,5]]]
-@fact X3 --> [X3_nocounts Z3]
+@test X3_nocounts == [ones(n) covars[:,[1,2,4,5]]]
+@test X3 == [X3_nocounts Z3]
 
 @time cvstats13 = HurdleDMR.cross_validate_hdmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
 cvstats13b = HurdleDMR.cross_validate_hdmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
-@fact isequal(cvstats13,cvstats13b) --> true
+@test isequal(cvstats13,cvstats13b)
 
 @time cvstats14 = HurdleDMR.cross_validate_hdmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
-@fact isequal(cvstats13,cvstats14) --> false
+@test !(isequal(cvstats13,cvstats14))
 
 @time cvstatsSerialKfold = HurdleDMR.cross_validate_hdmr_srproj(covars,counts,1; k=3, gentype=HurdleDMR.SerialKfold, γ=γ)
-@fact isequal(cvstats13,cvstatsSerialKfold) --> false
+@test !(isequal(cvstats13,cvstatsSerialKfold))
 
 end
 
 ####################################################################
 # hurdle with covarspos ≠ covarszero, both models includes projdir
 ####################################################################
-facts("hurdle-dmr with covarspos ≠ covarszero, both models includes projdir") do
+@testset "hurdle-dmr with covarspos ≠ covarszero, both models includes projdir" begin
 
 # hurdle dmr parallel local cluster
 @time coefsHppos, coefsHpzero = HurdleDMR.hdmr(covars, counts; covarspos=covarspos, parallel=true)
-@fact size(coefsHppos) --> (ppos+1, d)
-@fact size(coefsHpzero) --> (p+1, d)
+@test size(coefsHppos) == (ppos+1, d)
+@test size(coefsHpzero) == (p+1, d)
 
 # hurdle dmr parallel remote cluster
 @time coefsHppos2, coefsHpzero2 = HurdleDMR.hdmr(covars, counts; covarspos=covarspos, parallel=true, local_cluster=false)
-@fact coefsHppos --> roughly(coefsHppos2)
-@fact coefsHpzero --> roughly(coefsHpzero2)
+@test coefsHppos ≈ coefsHppos2
+@test coefsHpzero ≈ coefsHpzero2
 
 # # # hurdle dmr serial
 # @time coefsHspos, coefsHszero = HurdleDMR.hdmr(covars, counts; covarspos=covarspos, parallel=false)
-# @fact coefsHppos --> roughly(coefsHspos)
-# @fact coefsHpzero --> roughly(coefsHszero)
+# @test coefsHppos ≈ coefsHspos
+# @test coefsHpzero ≈ coefsHszero
 
 zHpos = HurdleDMR.srproj(coefsHppos, counts)
-@fact size(zHpos) --> (n,ppos+1)
+@test size(zHpos) == (n,ppos+1)
 
 zHzero = HurdleDMR.srproj(coefsHpzero, HurdleDMR.posindic(counts))
-@fact size(zHzero) --> (n,p+1)
+@test size(zHzero) == (n,p+1)
 
 # first half of coefs belongs to covarspos
 z1pos = HurdleDMR.srproj(coefsHppos, counts, 1)
-@fact z1pos --> roughly(zHpos[:,[1,ppos+1]])
+@test z1pos ≈ zHpos[:,[1,ppos+1]]
 
 # second half of coefs belongs to covarszero
 z1zero = HurdleDMR.srproj(coefsHpzero, HurdleDMR.posindic(counts), 1)
-@fact z1zero --> roughly(zHzero[:,[1,p+1]])
+@test z1zero ≈ zHzero[:,[1,p+1]]
 
 Z1 = HurdleDMR.srproj(coefsHppos, coefsHpzero, counts, 1, 1; intercept=true)
-@fact Z1 --> [z1pos[:,1] z1zero[:,1] z1pos[:,2]]
+@test Z1 == [z1pos[:,1] z1zero[:,1] z1pos[:,2]]
 
 Z3 = HurdleDMR.srproj(coefsHppos, coefsHpzero, counts, 2, 3; intercept=true)
 z3pos = HurdleDMR.srproj(coefsHppos, counts, 2)
 z3zero = HurdleDMR.srproj(coefsHpzero, HurdleDMR.posindic(counts), 3)
-@fact Z3 --> [z3pos[:,1] z3zero[:,1] z3pos[:,2]]
+@test Z3 == [z3pos[:,1] z3zero[:,1] z3pos[:,2]]
 
 regdata = DataFrame(y=covars[:,1], zw1=z1zero[:,1], zv1=z1pos[:,1], m=z1pos[:,2], v1=covarspos[:,1], w1=covars[:,1])
 lmw1 = lm(@formula(y ~ zw1+m), regdata)
@@ -185,33 +185,33 @@ lmw1v1 = lm(@formula(y ~ zw1+zv1+m), regdata)
 r2w1v1 = adjr2(lmw1v1)
 
 @time X1, X1_nocounts, includezpos = HurdleDMR.srprojX(coefsHppos,coefsHpzero,counts,covars,1; inpos=inpos, includem=true)
-@fact X1_nocounts --> [ones(n) covars[:,2:end]]
-@fact X1 --> [X1_nocounts Z1]
+@test X1_nocounts == [ones(n) covars[:,2:end]]
+@test X1 == [X1_nocounts Z1]
 
 X2, X2_nocounts, includezpos = HurdleDMR.srprojX(coefsHppos,coefsHpzero,counts,covars,1; inpos=inpos, includem=false)
-@fact X2_nocounts --> X1_nocounts
-@fact X2 --> X1[:,1:end-1]
+@test X2_nocounts == X1_nocounts
+@test X2 == X1[:,1:end-1]
 
 X3, X3_nocounts, includezpos = HurdleDMR.srprojX(coefsHppos,coefsHpzero,counts,covars,3; inpos=inpos, includem=true)
-@fact X3_nocounts --> [ones(n) covars[:,[1,2,4,5]]]
-@fact X3 --> [X3_nocounts Z3]
+@test X3_nocounts == [ones(n) covars[:,[1,2,4,5]]]
+@test X3 == [X3_nocounts Z3]
 
 @time cvstats13 = HurdleDMR.cross_validate_hdmr_srproj(covars,counts,1; inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
 @time cvstats13b = HurdleDMR.cross_validate_hdmr_srproj(covars,counts,1; inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
-@fact isequal(cvstats13,cvstats13b) --> true
+@test isequal(cvstats13,cvstats13b)
 
 @time cvstats14 = HurdleDMR.cross_validate_hdmr_srproj(covars,counts,1; inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
-@fact isequal(cvstats13,cvstats14) --> false
+@test !(isequal(cvstats13,cvstats14))
 
 @time cvstatsSerialKfold = HurdleDMR.cross_validate_hdmr_srproj(covars,counts,1; inpos=inpos, k=3, gentype=HurdleDMR.SerialKfold, γ=γ)
-@fact isequal(cvstats13,cvstatsSerialKfold) --> false
+@test !(isequal(cvstats13,cvstatsSerialKfold))
 
 end
 
 ########################################################################
 # hurdle with covarspos ≠ covarszero, only pos model includes projdir
 ########################################################################
-facts("hurdle-dmr with covarspos ≠ covarszero, only pos model includes projdir") do
+@testset "hurdle-dmr with covarspos ≠ covarszero, only pos model includes projdir" begin
 
 covarszero = covars[:,2:end]
 nzero,pzero = size(covarszero)
@@ -219,39 +219,39 @@ inzero = 2:p
 
 # hurdle dmr parallel local cluster
 @time coefsHppos, coefsHpzero = HurdleDMR.hdmr(covarszero, counts; covarspos=covarspos, parallel=true)
-@fact size(coefsHppos) --> (ppos+1, d)
-@fact size(coefsHpzero) --> (pzero+1, d)
+@test size(coefsHppos) == (ppos+1, d)
+@test size(coefsHpzero) == (pzero+1, d)
 
 # hurdle dmr parallel remote cluster
 @time coefsHppos2, coefsHpzero2 = HurdleDMR.hdmr(covarszero, counts; covarspos=covarspos, parallel=true, local_cluster=false)
-@fact coefsHppos --> roughly(coefsHppos2)
-@fact coefsHpzero --> roughly(coefsHpzero2)
+@test coefsHppos ≈ coefsHppos2
+@test coefsHpzero ≈ coefsHpzero2
 
 # # hurdle dmr serial
 # @time coefsHspos, coefsHszero = HurdleDMR.hdmr(covarszero, counts; covarspos=covarspos, parallel=false)
-# @fact coefsHppos --> roughly(coefsHspos)
-# @fact coefsHpzero --> roughly(coefsHszero)
+# @test coefsHppos ≈ coefsHspos
+# @test coefsHpzero ≈ coefsHszero
 
 zHpos = HurdleDMR.srproj(coefsHppos, counts)
-@fact size(zHpos) --> (n,ppos+1)
+@test size(zHpos) == (n,ppos+1)
 
 zHzero = HurdleDMR.srproj(coefsHpzero, HurdleDMR.posindic(counts))
-@fact size(zHzero) --> (n,pzero+1)
+@test size(zHzero) == (n,pzero+1)
 
 z1pos = HurdleDMR.srproj(coefsHppos, counts, 1)
-@fact z1pos --> roughly(zHpos[:,[1,ppos+1]])
+@test z1pos ≈ zHpos[:,[1,ppos+1]]
 
 # projdir is not included in zero model
 # z1zero = HurdleDMR.srproj(coefsHpzero, HurdleDMR.posindic(counts), 1)
-# @fact z1zero --> roughly(zHzero[:,[1,p+1]])
+# @test z1zero ≈ zHzero[:,[1,p+1]]
 
 Z1 = HurdleDMR.srproj(coefsHppos, coefsHpzero, counts, 1, 0; intercept=true)
-@fact Z1 --> z1pos
+@test Z1 == z1pos
 
 Z3 = HurdleDMR.srproj(coefsHppos, coefsHpzero, counts, 2, 2; intercept=true)
 z3pos = HurdleDMR.srproj(coefsHppos, counts, 2)
 z3zero = HurdleDMR.srproj(coefsHpzero, HurdleDMR.posindic(counts), 2)
-@fact Z3 --> [z3pos[:,1] z3zero[:,1] z3pos[:,2]]
+@test Z3 == [z3pos[:,1] z3zero[:,1] z3pos[:,2]]
 
 regdata = DataFrame(y=covars[:,1], zv1=z1pos[:,1], m=z1pos[:,2], v1=covarspos[:,1], w1=covarszero[:,1])
 
@@ -259,30 +259,30 @@ lmv1 = lm(@formula(y ~ zv1+m), regdata)
 r2v1 = adjr2(lmv1)
 
 @time X1, X1_nocounts, includezpos = HurdleDMR.srprojX(coefsHppos,coefsHpzero,counts,covars,1; inzero=inzero, inpos=inpos, includem=true)
-@fact X1_nocounts --> [ones(n) covars[:,2:end]]
-@fact X1 --> [X1_nocounts Z1]
+@test X1_nocounts == [ones(n) covars[:,2:end]]
+@test X1 == [X1_nocounts Z1]
 
 X2, X2_nocounts, includezpos = HurdleDMR.srprojX(coefsHppos,coefsHpzero,counts,covars,1; inzero=inzero, inpos=inpos, includem=false)
-@fact X2_nocounts --> X1_nocounts
-@fact X2 --> X1[:,1:end-1]
+@test X2_nocounts == X1_nocounts
+@test X2 == X1[:,1:end-1]
 
 X3, X3_nocounts, includezpos = HurdleDMR.srprojX(coefsHppos,coefsHpzero,counts,covars,3; inzero=inzero, inpos=inpos, includem=true)
-@fact X3_nocounts --> [ones(n) covars[:,[2,4,5,1]]]
-@fact X3 --> [X3_nocounts Z3]
+@test X3_nocounts == [ones(n) covars[:,[2,4,5,1]]]
+@test X3 == [X3_nocounts Z3]
 
 @time cvstats13 = HurdleDMR.cross_validate_hdmr_srproj(covars,counts,1; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
 @time cvstats13b = HurdleDMR.cross_validate_hdmr_srproj(covars,counts,1; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
-@fact isequal(cvstats13,cvstats13b) --> true
+@test isequal(cvstats13,cvstats13b)
 
 @time cvstats14 = HurdleDMR.cross_validate_hdmr_srproj(covars,counts,1; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
-@fact isequal(cvstats13,cvstats14) --> false
+@test !(isequal(cvstats13,cvstats14))
 
 @time cvstatsSerialKfold = HurdleDMR.cross_validate_hdmr_srproj(covars,counts,1; inzero=inzero, inpos=inpos, k=3, gentype=HurdleDMR.SerialKfold, γ=γ)
-@fact isequal(cvstats13,cvstatsSerialKfold) --> false
+@test !(isequal(cvstats13,cvstatsSerialKfold))
 
 end
 
-facts("degenerate cases") do
+@testset "degenerate cases" begin
 
 # column j is never zero, so hj=1 for all observations
 zcounts = deepcopy(counts)
@@ -293,7 +293,7 @@ zcounts[:,3] = ones(n)
 
 # make sure we are not adding all zero obseravtions
 m = sum(zcounts,2)
-@fact sum(m .== 0) --> 0
+@test sum(m .== 0) == 0
 
 # rows,cols = 40000,30000
 # @time S = SharedMatrix{Float64}(rows,cols; init=nothing)
@@ -302,21 +302,21 @@ m = sum(zcounts,2)
 # hurdle dmr parallel local cluster
 # HurdleDMR.hdmr(covars, zcounts[:,2:3]; parallel=false, showwarnings=true, verbose=true)
 @time coefsHppos, coefsHpzero = HurdleDMR.hdmr(covars, zcounts; parallel=false, showwarnings=true, verbose=false)
-@fact size(coefsHppos) --> (p+1, d)
-@fact size(coefsHpzero) --> (p+1, d)
-@fact coefsHppos[:,2] --> zeros(p+1)
-@fact coefsHpzero[:,2] --> zeros(p+1)
-@fact coefsHppos[:,3] --> zeros(p+1)
-@fact coefsHpzero[:,3] --> zeros(p+1)
+@test size(coefsHppos) == (p+1, d)
+@test size(coefsHpzero) == (p+1, d)
+@test coefsHppos[:,2] == zeros(p+1)
+@test coefsHpzero[:,2] == zeros(p+1)
+@test coefsHppos[:,3] == zeros(p+1)
+@test coefsHpzero[:,3] == zeros(p+1)
 
 # hurdle dmr parallel remote cluster
 @time coefsHppos2, coefsHpzero2 = HurdleDMR.hdmr(covars, zcounts; parallel=true, local_cluster=false)
-@fact coefsHppos --> roughly(coefsHppos2)
-@fact coefsHpzero --> roughly(coefsHpzero)
+@test coefsHppos ≈ coefsHppos2
+@test coefsHpzero ≈ coefsHpzero
 
 end
 
-facts("degenerate case of no hurdle variation (all counts > 0)") do
+@testset "degenerate case of no hurdle variation (all counts > 0)" begin
 
 zcounts = full(deepcopy(counts))
 srand(13)
@@ -328,21 +328,21 @@ end
 
 # make sure we are not adding all zero obseravtions
 m = sum(zcounts,2)
-@fact sum(m .== 0) --> 0
+@test sum(m .== 0) == 0
 
 # hurdle dmr parallel local cluster
 @time coefsHppos, coefsHpzero = HurdleDMR.hdmr(covars, zcounts; parallel=true)
-@fact size(coefsHppos) --> (p+1, d)
-@fact size(coefsHpzero) --> (p+1, d)
-@fact coefsHppos[:,2] --> not(zeros(p+1))
-@fact coefsHpzero[:,2] --> zeros(p+1)
-@fact coefsHppos[:,3] --> not(zeros(p+1))
-@fact coefsHpzero[:,3] --> zeros(p+1)
+@test size(coefsHppos) == (p+1, d)
+@test size(coefsHpzero) == (p+1, d)
+@test coefsHppos[:,2] != zeros(p+1)
+@test coefsHpzero[:,2] == zeros(p+1)
+@test coefsHppos[:,3] != zeros(p+1)
+@test coefsHpzero[:,3] == zeros(p+1)
 
 # hurdle dmr parallel remote cluster
 @time coefsHppos2, coefsHpzero2 = HurdleDMR.hdmr(covars, zcounts; parallel=true, local_cluster=false)
-@fact coefsHppos --> roughly(coefsHppos2)
-@fact coefsHpzero --> roughly(coefsHpzero)
+@test coefsHppos ≈ coefsHppos2
+@test coefsHpzero ≈ coefsHpzero
 
 end
 
