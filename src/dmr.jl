@@ -238,19 +238,16 @@ j, z_j = C'φ_j/m is the SR projection in the direction of j.
 The MNIR paper explains how V=[v_1 ... v_K],
 your original covariates/attributes, are independent of text counts C given SR
 projections Z=[z_1 ... z_K].
-
-Note: for hurdle models, best to give only the relevant subset of the coefs
-matrix (including intercept if one is included)
 """
-function srproj(coefs, counts, dir=nothing; intercept=true)
+function srproj(coefs, counts, dir=nothing; intercept=true, focusj=indices(counts,2))
    ixoffset = intercept ? 1 : 0 # omitting the intercept
    if dir==nothing
-     Φ=coefs[ixoffset+1:end,:] # all directions
+     Φ=coefs[ixoffset+1:end,focusj]' # all directions
    else
-     Φ=coefs[ixoffset+dir:ixoffset+dir,:] # keep only desired directions
+     Φ=coefs[ixoffset+dir:ixoffset+dir,focusj]' # keep only desired directions
    end
    m = sum(counts,2) # total counts per observation
-   z = counts*Φ' ./ (m+(m.==0)) # scale to get frequencies
+   z = counts[:,focusj]*Φ ./ (m+(m.==0)) # scale to get frequencies
    [z m] # m is part of the sufficient reduction
 end
 
@@ -258,7 +255,7 @@ end
 Like srproj but efficiently interates over a sparse counts matrix, and
 only projects in a single direction (dir).
 """
-function srproj(coefs, counts::SparseMatrixCSC, dir::Int; intercept=true)
+function srproj(coefs, counts::SparseMatrixCSC, dir::Int; intercept=true, focusj=indices(counts,2))
    ixoffset = intercept ? 1 : 0 # omitting the intercept
    n,d = size(counts)
    zm = zeros(n,2)
@@ -269,7 +266,9 @@ function srproj(coefs, counts::SparseMatrixCSC, dir::Int; intercept=true)
       for i in nzrange(counts, j)
          row = rows[i]
          val = vals[i]
-         zm[row,1] += val*φ[j]  # projection part
+         if in(j,focusj)
+           zm[row,1] += val*φ[j]  # projection part
+         end
          zm[row,2] += val       # m = total count
       end
    end
@@ -287,7 +286,7 @@ end
   Builds the design matrix X for predicting covar in direction projdir
   dmr version
 """
-function srprojX(coefs,counts,covars,projdir; includem=true)
+function srprojX(coefs,counts,covars,projdir; includem=true, srprojargs...)
   # dims
   n,p = size(covars)
   # ixnotdir = 1:p .!= projdir
@@ -297,7 +296,7 @@ function srprojX(coefs,counts,covars,projdir; includem=true)
   X_nocounts = [ones(n) getindex(covars,:,ixnotdir)]
 
   # add srproj of counts data to X
-  Z = srproj(coefs,counts,projdir)
+  Z = srproj(coefs,counts,projdir; srprojargs...)
   X = [X_nocounts Z]
 
   if !includem

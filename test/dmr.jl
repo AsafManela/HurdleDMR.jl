@@ -132,6 +132,29 @@ X2, X2_nocounts = HurdleDMR.srprojX(coefs,counts,covars,1; includem=false)
 @test X2_nocounts == X1_nocounts
 @test X2 == X1[:,1:end-1]
 
+# project in a single direction, focusing only on cj
+focusj = 3
+@time z1j = HurdleDMR.srproj(coefs, counts, 1; focusj=focusj)
+@time z1jdense = HurdleDMR.srproj(coefs, full(counts), 1; focusj=focusj)
+@test z1jdense == z1j
+
+X1j, X1j_nocounts = HurdleDMR.srprojX(coefs,counts,covars,1; includem=true, focusj=focusj)
+@test X1j_nocounts == [ones(n,1) covars[:,2:end]]
+@test X1j == [X1_nocounts z1j]
+
+X2j, X2j_nocounts = HurdleDMR.srprojX(coefs,counts,covars,1; includem=false, focusj=focusj)
+@test X2j_nocounts == X1_nocounts
+@test X2j == X1j[:,1:end-1]
+
+X1jfull, X1jfull_nocounts = HurdleDMR.srprojX(coefs,full(counts),covars,1; includem=true, focusj=focusj)
+@test X1jfull ≈ X1j
+@test X1jfull_nocounts ≈ X1jfull_nocounts
+
+X2jfull, X2jfull_nocounts = HurdleDMR.srprojX(coefs,full(counts),covars,1; includem=false, focusj=focusj)
+@test X2jfull ≈ X2j
+@test X2jfull_nocounts ≈ X2jfull_nocounts
+
+
 @time cvstats13 = HurdleDMR.cross_validate_dmr_srproj(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
 @time cvstats13b = HurdleDMR.cross_validate_dmr_srproj(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
 @test isequal(cvstats13,cvstats13b)

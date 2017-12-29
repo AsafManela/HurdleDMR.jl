@@ -258,19 +258,19 @@ srproj for hurdle dmr takes two coefficent matrices
 coefspos, coefszero, and a specific direction
 and returns an n-by-3 matrix Z = [zpos zzero m]
 """
-function srproj(coefspos, coefszero, counts, dirpos::Int, dirzero::Int; intercept=true)
+function srproj(coefspos, coefszero, counts, dirpos::Int, dirzero::Int; kwargs...)
   if dirpos>0 && dirzero>0
-    zpos = srproj(coefspos, counts, dirpos; intercept=intercept)
-    zzero = srproj(coefszero, posindic(counts), dirzero; intercept=intercept)
+    zpos = srproj(coefspos, counts, dirpos; kwargs...)
+    zzero = srproj(coefszero, posindic(counts), dirzero; kwargs...)
     # second element should be same m in both, but because zero model
     # only sums indicators it generates smaller totals, so use the one
     # from the pos model
     # TODO: this needs to be fleshed out better in the theory to guide this choice
     [zpos[:,1] zzero[:,1] zpos[:,2]]
   elseif dirpos>0
-    srproj(coefspos, counts, dirpos; intercept=intercept)
+    srproj(coefspos, counts, dirpos; kwargs...)
   elseif dirzero>0
-    srproj(coefszero, posindic(counts), dirzero; intercept=intercept)
+    srproj(coefszero, posindic(counts), dirzero; kwargs...)
   else
     error("No direction to project to (dirpos=$dirpos,dirzero=$dirzero)")
   end
@@ -294,11 +294,11 @@ end
   Builds the design matrix X for predicting covar in direction projdir
   hdmr version
 """
-function srprojX(coefspos, coefszero, counts, covars, dir::Int; inpos=1:size(covars,2), inzero=1:size(covars,2), includem=true, includezpos=true)
+function srprojX(coefspos, coefszero, counts, covars, dir::Int; inpos=1:size(covars,2), inzero=1:size(covars,2), includem=true, includezpos=true, testrank=true, srprojargs...)
   # dims
   n,p = size(covars)
 
-  # get pos and zero subset indecies
+  # get pos and zero subset indices
   dirpos,dirzero,ineither,ixnotdir = ixcovars(p, dir, inpos, inzero)
 
   # design matrix w/o counts data
@@ -306,17 +306,17 @@ function srprojX(coefspos, coefszero, counts, covars, dir::Int; inpos=1:size(cov
 
   # add srproj of counts data to X
   if includezpos
-    Z = srproj(coefspos, coefszero, counts, dirpos, dirzero; intercept=true)
+    Z = srproj(coefspos, coefszero, counts, dirpos, dirzero; srprojargs...)
     X = [X_nocounts Z]
   end
 
-  if !includezpos || rank(X) < size(X,2)
+  if !includezpos || (testrank && rank(X) < size(X,2))
     if includezpos
       info("rank(X) = $(rank(X)) < $(size(X,2)) = size(X,2). dropping zpos.")
     else
       info("includezpos == false. dropping zpos.")
     end
-    Z = srproj(coefszero, posindic(counts), dirzero; intercept=true)
+    Z = srproj(coefszero, posindic(counts), dirzero; srprojargs...)
     X = [X_nocounts Z]
     includezpos = false
   end
