@@ -63,14 +63,12 @@ function logfactorial(n::Int)
   x
 end
 
-"Evaluates log(exp(x)-1.0) even when exp(x) blows up and the answer is simply x"
+"""
+Evaluates log(exp(x)-1.0) even when exp(x) blows up and the answer is simply x
+(solution is related to more general logsumexp trick)
+"""
 function logexpm1(x::T) where {T}
-  expx = exp(x)
-  if isinf(expx)
-    x
-  else
-    log(expx-one(T))
-  end
+  x + log(one(T)-exp(-x))
 end
 
 # Note that the factorial will blow up with moderately large x
@@ -97,43 +95,45 @@ LAMBERTW_USE_NAN=true
 
 GLM.linkfun(::LogProductLogLink, μ) = log(λfn(μ))
 
-function GLM.linkinv(::LogProductLogLink, η)
+# exp(η) / (1.0 - exp(-exp(η))) = 1.0 / (exp(-η) - exp(-η)exp(-exp(η)))
+#                               = 1.0 / (exp(-η) - exp(-exp(η)-η))
+function GLM.linkinv(::LogProductLogLink, η::T) where {T}
   λ = exp(η)
-  λ / (1.0 - exp(-λ))
+  λ / (one(T) - exp(-λ))
 end
 
-function GLM.mueta(::LogProductLogLink, η)
+function GLM.mueta(::LogProductLogLink, η::T) where {T}
   λ = exp(η)
   expmλ = exp(-λ)
-  μ = λ / (1.0 - expmλ)
-  μ * (1.0 - μ*expmλ)
+  μ = λ / (one(T) - expmλ)
+  μ * (one(T) - μ*expmλ)
 end
 
-function GLM.inverselink(::LogProductLogLink, η)
+function GLM.inverselink(::LogProductLogLink, η::T) where {T}
     λ = exp(η)
     expmλ = exp(-λ)
-    μ = λ / (1.0 - expmλ)
-    dμdη = μ * (1.0 - μ*expmλ)
+    μ = λ / (one(T) - expmλ)
+    dμdη = μ * (one(T) - μ*expmλ)
     μ, dμdη, dμdη # third arg is the glmvar which in this case equals the derivative
 end
 
 GLM.canonicallink(::PositivePoisson) = LogProductLogLink()
 # GLM.glmvar(::PositivePoisson, ::LogProductLogLink, μ, η) = μ * (1.0 - μ*exp(-exp(η)))
 # GLM.glmvar(::PositivePoisson, μ) = μ * (1.0 - μ*exp(-exp(log(λfn(μ)))))
-GLM.glmvar(::PositivePoisson, μ) = μ * (1.0 - μ*exp(-λfn(μ)))
+GLM.glmvar(::PositivePoisson, μ::T) where {T} = μ * (one(T) - μ*exp(-λfn(μ)))
 GLM.mustart(::PositivePoisson, y, wt) = y + oftype(y, 0.1)
 
 function GLM.devresid(::PositivePoisson, y::T, μ::T) where {T}
-  if y>1
-    if μ>1
+  if y>one(T)
+    if μ>one(T)
       λμ = λfn(μ)
       λy = λfn(y)
       2 * (y*(log(λy)-log(λμ)) - logexpm1(λy) + logexpm1(λμ))
     else
-      typemax(μ) # +∞
+      typemax(T) # +∞
     end
   else
-    if μ>1
+    if μ>one(T)
       2 * (λfn(μ) - log(μ))
     else
       zero(T)

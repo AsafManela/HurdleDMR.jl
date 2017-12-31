@@ -7,24 +7,30 @@ using Base.Test, GLM, Lasso, DataFrames
 @testset "PositivePoisson" begin
 λ0=3.4
 xs = 1:10000
-@time lp1=[logpdf(Poisson(λ0),x)::Float64 for x=xs]
-@time lp2=[HurdleDMR.logpdf_approx(Poisson(λ0),x)::Float64 for x=xs]
+lp1=[logpdf(Poisson(λ0),x)::Float64 for x=xs]
+lp2=[HurdleDMR.logpdf_approx(Poisson(λ0),x)::Float64 for x=xs]
 @test lp1 ≈ lp2
 
-@time lp1=[logpdf(PositivePoisson(λ0),x)::Float64 for x=xs]
-@time lp2=[logpdf_exact(PositivePoisson(λ0),x)::Float64 for x=xs]
+lp1=[logpdf(PositivePoisson(λ0),x)::Float64 for x=xs]
+lp2=[logpdf_exact(PositivePoisson(λ0),x)::Float64 for x=xs]
 @test lp1 ≈ lp2
+
+le1 = HurdleDMR.logexpm1.(xs)
+le1big = HurdleDMR.logexpm1.(big.(xs))
+le1big2 = broadcast(x->log(exp(x)-one(x)),big.(xs))
+@test le1 ≈ le1big
+@test le1 ≈ le1big2
 
 ηs=-10:0.1:10
-@time μs=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
-@time ηscheck=broadcast(μ->linkfun(LogProductLogLink(),μ),μs)
+μs=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
+ηscheck=broadcast(μ->linkfun(LogProductLogLink(),μ),μs)
 @test ηs ≈ ηscheck
 
 loglik(y, μ) = GLM.loglik_obs(PositivePoisson(λ0), y, μ, one(y), 0)
 
 μs=1.01:0.1:1000
-@time ηs=broadcast(μ->linkfun(LogProductLogLink(),μ),μs)
-@time μscheck=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
+ηs=broadcast(μ->linkfun(LogProductLogLink(),μ),μs)
+μscheck=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
 @test μs ≈ μscheck
 #verify works for large μ
 ys = round.(Int,μs) + 1.0
@@ -42,8 +48,8 @@ logliks1 = loglik.(ys, μs)
 @test all(isfinite,logliks1)
 
 μsbig = big.(μs)
-@time ηs=broadcast(μ->linkfun(LogProductLogLink(),μ),μsbig)
-@time μscheck=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
+ηs=broadcast(μ->linkfun(LogProductLogLink(),μ),μsbig)
+μscheck=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
 @test μsbig ≈ μscheck
 #verify works for large μ
 ysbig = round.(BigInt,μsbig) + 1.0
@@ -64,8 +70,8 @@ logliksbig1 = loglik.(ysbig, μsbig)
 
 # μs close to 1.0
 μs=big.(collect(1.0+1e-10:1e-10:1.0+1000*1e-10))
-@time ηs=broadcast(μ->linkfun(LogProductLogLink(),μ),μs)
-@time μscheck=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
+ηs=broadcast(μ->linkfun(LogProductLogLink(),μ),μs)
+μscheck=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
 @test μs ≈ μscheck
 #verify works for large μ
 ys = round.(BigInt,μs) + 1.0
@@ -147,9 +153,9 @@ X=convert(Array{Float64,2},pdata[:,[:x2]])
 Xwconst=[ones(size(X,1)) X]
 y=convert(Array{Float64,1},pdata[:y1])
 
-@time glmfit = fit(GeneralizedLinearModel,Xwconst,y,PositivePoisson(),LogProductLogLink())
+glmfit = fit(GeneralizedLinearModel,Xwconst,y,PositivePoisson(),LogProductLogLink())
 
-# @time glmfit = fit(GeneralizedLinearModel,Xwconst,y,PositivePoisson(),LogProductLogLink();convTol=1e-2)
+# glmfit = fit(GeneralizedLinearModel,Xwconst,y,PositivePoisson(),LogProductLogLink();convTol=1e-2)
 coefsGLM = coef(glmfit)
 @test coefsGLM ≈ coefsR rtol=1e-7
 @test coefsGLM ≈ coefs0 rtol=0.05
@@ -157,12 +163,12 @@ coefsGLM = coef(glmfit)
 # rdist(coefsGLM,coefs0)
 
 # GammaLassoPath without actualy regularization
-@time glpfit = fit(GammaLassoPath,X,y,PositivePoisson(),LogProductLogLink(); λ=[0.0])
+glpfit = fit(GammaLassoPath,X,y,PositivePoisson(),LogProductLogLink(); λ=[0.0])
 coefsGLP = vec(coef(glpfit))
 @test coefsGLP ≈ coefsGLM
 
 # GammaLassoPath doing Lasso
-@time lassofit = fit(GammaLassoPath,X,y,PositivePoisson(),LogProductLogLink(); γ=0.0)
+lassofit = fit(GammaLassoPath,X,y,PositivePoisson(),LogProductLogLink(); γ=0.0)
 coefsLasso = vec(coef(lassofit;select=:AICc))
 @test coefsLasso ≈ coefsGLM rtol=0.02
 @test coefsLasso ≈ coefs0 rtol=0.05
@@ -170,7 +176,7 @@ coefsLasso = vec(coef(lassofit;select=:AICc))
 # rdist(coefsLasso,coefs0)
 
 # GammaLassoPath doing concave regularization
-@time glpfit = fit(GammaLassoPath,X,y,PositivePoisson(),LogProductLogLink(); γ=10.0)
+glpfit = fit(GammaLassoPath,X,y,PositivePoisson(),LogProductLogLink(); γ=10.0)
 coefsGLP = vec(coef(glpfit;select=:AICc))
 @test coefsGLP ≈ coefsLasso rtol=0.0002
 @test coefsGLP ≈ coefs0 rtol=0.05

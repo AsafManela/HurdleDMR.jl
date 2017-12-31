@@ -228,4 +228,4 @@ npos,ppos = size(covarspos)
 # #      Geom.subplot_grid(Geom.line),free_y_axis=true)
 end
 
-rmprocs(workers())
+# rmprocs(workers())

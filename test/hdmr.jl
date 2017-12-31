@@ -12,12 +12,12 @@ import HurdleDMR; @everywhere using HurdleDMR
 
 # # uncomment to generate R benchmark
 # using RCall
-# import Rdistrom
+# R"install.packages(\"textir\")"
 # R"library(textir)"
 # R"library(Matrix)"
 # R"data(we8there)"
 # we8thereCounts = DataFrame(rcopy(R"as.matrix(we8thereCounts)"))
-# we8thereRatings = rcopy("we8thereRatings")
+# we8thereRatings = rcopy(R"we8thereRatings")
 # we8thereTerms = rcopy(R"we8thereCounts@Dimnames$Terms")
 # names!(we8thereCounts,map(Symbol,we8thereTerms))
 # writetable(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"),we8thereCounts)
@@ -36,15 +36,15 @@ inpos = [1,3]
 covarspos = we8thereRatings[:,inpos]
 
 T = Float64
+# counts=sparse(convert(Matrix{T},we8thereCounts))
 d = 100
-# counts=sparse(convert(Matrix{Float64},we8thereCounts[:,end-d+1:end]))
 srand(13)
 counts = round.(10*sprand(n,d,0.3))
 covars=convert(Array{T,2},covars)
 covarspos=convert(Array{T,2},covarspos)
 
 npos,ppos = size(covarspos)
-
+d = size(counts,2)
 γ=1.0
 
 ###########################################################
@@ -401,4 +401,4 @@ end
 
 
 #
-rmprocs(workers())
+# rmprocs(workers())

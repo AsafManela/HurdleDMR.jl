@@ -1,10 +1,13 @@
 #BLAS.set_num_threads(1) # this one should have worked but did not
-ENV["OPENBLAS_NUM_THREADS"] = 1 # this prevents thrashing by pmap + blas
+ENV["OPENBLAS_NUM_THREADS"] = 1 # prevents thrashing by pmap + blas
 
 const nw = Sys.CPU_CORES-2
-if nworkers() > 1
-  rmprocs(workers())
+if nworkers() < nw
+    if nworkers() > 1
+        info("Removing existing parallel workers for tests...")
+        rmprocs(workers())
+    end
+    info("Starting $nw parallel workers for tests...")
+    addprocs(nw)
+    info("$(nworkers()) parallel workers started")
 end
-info("Starting $nw parallel workers for tests...")
-addprocs(nw)
-info("$(nworkers()) parallel workers started")
