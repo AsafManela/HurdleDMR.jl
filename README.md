@@ -75,7 +75,7 @@ X, X_nocounts, includezpos = HurdleDMR.srprojX(coefspos, coefszero, counts, cova
 insamplelm_nocounts = lm(X_nocounts,y)
 yhat_nocounts = predict(insamplelm_nocounts,X_nocounts)
 
-# dmr model w/ text
+# hdmr model w/ text
 insamplelm = lm(X,y)
 yhat = predict(insamplelm,X)
 
@@ -84,7 +84,7 @@ yhat = predict(insamplelm,X)
 
 ## TODO
 
- - Inverse regression interface
+ - Inverse regression interface: fit, predict, coef ...
 
 <!--More documentation is available at [ReadTheDocs](http://lassojl.readthedocs.org/en/latest/).
 
