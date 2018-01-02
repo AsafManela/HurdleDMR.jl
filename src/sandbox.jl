@@ -1,13 +1,60 @@
-include("testutils.jl")
+# Install the HurdleDMR package
+#Pkg.clone("https://github.com/AsafManela/HurdleDMR.jl")
 
-using Base.Test, Gadfly, Distributions
-
-include("addworkers.jl")
-
-using GLM, DataFrames, LassoPlot
-
+# Add parallel workers and make package available to workers
+addprocs(Sys.CPU_CORES-2)
 import HurdleDMR; @everywhere using HurdleDMR
-# reload("HurdleDMR")
+
+# Setup your data into an n-by-p covars matrix, and a (sparse) n-by-d counts matrix
+using GLM, DataFrames, Distributions
+we8thereCounts = readtable(joinpath(Pkg.dir("HurdleDMR"),"test","data","dmr_we8thereCounts.csv.gz"))
+counts = sparse(convert(Matrix{Float64},we8thereCounts))
+covars = convert(Matrix{Float64},readtable(joinpath(Pkg.dir("HurdleDMR"),"test","data","dmr_we8thereRatings.csv.gz")))
+terms = map(string,names(we8thereCounts))
+
+# To fit a distribtued multinomial regression (dmr):
+coefs = HurdleDMR.dmr(covars, counts)
+
+# To use the dmr coefficients for a forward regression:
+projdir = 1
+X, X_nocounts = HurdleDMR.srprojX(coefs,counts,covars,projdir)
+y = covars[:,projdir]
+
+# benchmark model w/o text
+insamplelm_nocounts = lm(X_nocounts,y)
+yhat_nocounts = predict(insamplelm_nocounts,X_nocounts)
+
+# dmr model w/ text
+insamplelm = lm(X,y)
+yhat = predict(insamplelm,X)
+
+## To fit a hurdle distribtued multinomial regression (hdmr):
+inzero = 1:size(covars,2)
+inpos = [1,3]
+
+# covariates that go into the model for positive counts
+covarspos = covars[:,inpos]
+
+# covariates that go into the hurdle crossing model for indicators
+covarszero = covars[:,inzero]
+
+# run the backward regression
+coefspos, coefszero = HurdleDMR.hdmr(covarszero, counts; covarspos=covarspos)
+
+## We can now use the hdmr coefficients for a forward regression:
+# collapse counts into low dimensional SR projection + covars
+X, X_nocounts, includezpos = HurdleDMR.srprojX(coefspos, coefszero, counts, covars, projdir; inpos=inpos, inzero=inzero)
+
+# benchmark model w/o text
+insamplelm_nocounts = lm(X_nocounts,y)
+yhat_nocounts = predict(insamplelm_nocounts,X_nocounts)
+
+# dmr model w/ text
+insamplelm = lm(X,y)
+yhat = predict(insamplelm,X)
+
+
+
 
 using Coverage
 # defaults to src/; alternatively, supply the folder name as argument

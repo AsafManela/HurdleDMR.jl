@@ -13,7 +13,7 @@ function hdmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstrac
       covarspos::Union{AbstractMatrix{T},Void} = nothing,
       intercept=true,
       parallel=true,
-      verbose=true, showwarnings=true,
+      verbose=true, showwarnings=false,
       kwargs...)
   # get dimensions
   n, d = size(counts)
@@ -78,7 +78,7 @@ function hdmr{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatr
           covarspos::Union{AbstractMatrix{T},Void} = nothing,
           intercept=true,
           parallel=true, local_cluster=true,
-          verbose=true, showwarnings=true,
+          verbose=true, showwarnings=false,
           kwargs...)
   if local_cluster || !parallel
     hdmr_local_cluster(covars,covarspos,counts,parallel,verbose,showwarnings,intercept; kwargs...)

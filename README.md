@@ -9,36 +9,86 @@ Kelly, Bryan, Asaf Manela, and Alan Moreira (2017). Text Selection. Working pape
 
 It includes a Julia implementation of the Distributed Multinomial Regression (DMR) model of Taddy (2015).
 
-<!--## Quick start
+## Quick start
 
-To fit a Lasso path with default parameters:
-
+Install the HurdleDMR package
 ```julia
-fit(LassoPath, X, y, dist, link)
+Pkg.clone("https://github.com/AsafManela/HurdleDMR.jl")
 ```
 
-`dist` is any distribution supported by GLM.jl and `link` defaults to
-the canonical link for that distribution.
-
-To fit a fused Lasso model:
-
+Add parallel workers and make package available to workers
 ```julia
-fit(FusedLasso, y, λ)
+addprocs(Sys.CPU_CORES-2)
+import HurdleDMR; @everywhere using HurdleDMR
 ```
 
-To fit a polynomial trend filtering model:
-
+Setup your data into an n-by-p covars matrix, and a (sparse) n-by-d counts matrix.
 ```julia
-fit(TrendFilter, y, order, λ)
+using GLM, DataFrames, Distributions
+we8thereCounts = readtable(joinpath(Pkg.dir("HurdleDMR"),"test","data","dmr_we8thereCounts.csv.gz"))
+counts = sparse(convert(Matrix{Float64},we8thereCounts))
+covars = convert(Matrix{Float64},readtable(joinpath(Pkg.dir("HurdleDMR"),"test","data","dmr_we8thereRatings.csv.gz")))
+terms = map(string,names(we8thereCounts))
 ```
 
-More documentation is available at [ReadTheDocs](http://lassojl.readthedocs.org/en/latest/).
+To fit a distribtued multinomial regression (dmr):
+```julia
+# fit dmr
+coefs = HurdleDMR.dmr(covars, counts)
+```
+
+To use the dmr coefficients for an multinomial inverse regression:
+```julia
+# collapse counts into low dimensional SR projection in direction first covar + other covars
+projdir = 1
+X, X_nocounts = HurdleDMR.srprojX(coefs,counts,covars,projdir)
+y = covars[:,projdir]
+
+# benchmark model w/o text
+insamplelm_nocounts = lm(X_nocounts,y)
+yhat_nocounts = predict(insamplelm_nocounts,X_nocounts)
+
+# dmr model w/ text
+insamplelm = lm(X,y)
+yhat = predict(insamplelm,X)
+```
+
+To fit a hurdle distributed multinomial regression (hdmr):
+```julia
+
+# pick covariates to go into model for positive counts and to model for zeros (hurdle crossing)
+inzero = 1:size(covars,2)
+inpos = [1,3]
+covarspos = covars[:,inpos]
+covarszero = covars[:,inzero]
+
+# run the backward regression
+coefspos, coefszero = HurdleDMR.hdmr(covarszero, counts; covarspos=covarspos)
+```
+
+We can now use the hdmr coefficients for a forward regression:
+```julia
+# collapse counts into low dimensional SR projection + covars
+X, X_nocounts, includezpos = HurdleDMR.srprojX(coefspos, coefszero, counts, covars, projdir; inpos=inpos, inzero=inzero)
+
+# benchmark model w/o text
+insamplelm_nocounts = lm(X_nocounts,y)
+yhat_nocounts = predict(insamplelm_nocounts,X_nocounts)
+
+# dmr model w/ text
+insamplelm = lm(X,y)
+yhat = predict(insamplelm,X)
+
+```
+
 
 ## TODO
 
- - User-specified weights are untested
- - Support unpenalized variables besides the intercept
- - Maybe integrate LARS.jl
+ - Inverse regression interface
+
+<!--More documentation is available at [ReadTheDocs](http://lassojl.readthedocs.org/en/latest/).
+
+
 
 ## See also
 

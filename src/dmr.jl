@@ -21,7 +21,7 @@ end
 function dmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatrix{V};
       intercept=true,
       parallel=true,
-      verbose=true, showwarnings=true,
+      verbose=true, showwarnings=false,
       kwargs...)
   # get dimensions
   n, d = size(counts)
@@ -71,7 +71,7 @@ for the entire multinomial (includes the intercept if one was included).
 function dmr{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatrix{V};
           intercept=true,
           parallel=true, local_cluster=true,
-          verbose=true, showwarnings=true,
+          verbose=true, showwarnings=false,
           kwargs...)
   if local_cluster || !parallel
     dmr_local_cluster(covars,counts,parallel,verbose,showwarnings,intercept; kwargs...)
