@@ -1,4 +1,4 @@
-__precompile__()
+# __precompile__()
 
 module HurdleDMR
 
@@ -22,6 +22,7 @@ include("positive_poisson.jl")
 include("hurdle.jl")
 include("sparserank.jl")
 include("dmr.jl")
+include("mnir.jl")
 include("hdmr.jl")
 include("multicounts.jl")
 include("cross_validation.jl")

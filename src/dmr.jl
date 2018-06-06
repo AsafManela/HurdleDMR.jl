@@ -2,11 +2,6 @@
 # Distributed Multinomial Regression (DMR)
 ##############################################################
 
-immutable DMRPaths
-  nlpaths::Vector{Nullable{GammaLassoPath}}
-  p::Int64 # number of covariates
-end
-
 "Collapse a vector of categories to a DataFrame of indicators"
 function collapse(categories)
   cat_indicators = DataFrame()
@@ -52,7 +47,9 @@ function dmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstract
     mapfn = map
   end
 
-  DMRPaths(convert(Vector{Nullable{GammaLassoPath}},mapfn(tryfitgl,countscols)), p)
+  nlpaths = convert(Vector{Nullable{GammaLassoPath}},mapfn(tryfitgl,countscols))
+
+  DMRPaths{T,V}(counts, covars, intercept, nlpaths, n, d, p)
 end
 
 function poisson_regression!{T<:AbstractFloat,V}(coefs::AbstractMatrix{T}, j::Int64, covars::AbstractMatrix{T},counts::AbstractMatrix{V}; kwargs...)
@@ -79,6 +76,77 @@ function dmr{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatri
     dmr_remote_cluster(covars,counts,parallel,verbose,showwarnings,intercept; kwargs...)
   end
 end
+
+"Abstract Distributed Counts Regression (DCR) returned object"
+abstract type DCR{T<:AbstractFloat,V} <: RegressionModel end
+
+"Abstract DMR returned object"
+abstract type DMR{T<:AbstractFloat,V} <: DCR{T,V} end
+
+"""
+Relatively heavy object used to return results when we care about the regulatrization paths.
+It is returned whenever we use a remote cluster.
+"""
+struct DMRPaths{T<:AbstractFloat,V} <: DMR{T,V}
+  counts::AbstractMatrix{V}     # n×d counts (document-term) matrix
+  covars::AbstractMatrix{T}     # n×p covariates matrix
+  intercept::Bool               # whether to include an intercept in each Poisson regression
+  nlpaths::Vector{Nullable{GammaLassoPath}} # independent Poisson GammaLassoPath for each phrase
+                                # (only kept with remote cluster, not with local cluster)
+  n::Int64                      # number of observations. May be lower than provided after removing all zero obs.
+  d::Int64                      # number of categories (terms/words/phrases)
+  p::Int64                      # number of covariates
+
+  DMRPaths{T,V}(counts::AbstractMatrix{V}, covars::AbstractMatrix{T}, intercept::Bool,
+    nlpaths::Vector{Nullable{GammaLassoPath}}, n::Int64, d::Int64, p::Int64) where {T<:AbstractFloat,V} =
+    new(counts, covars, intercept, nlpaths, n, d, p)
+end
+
+"""
+Relatively light object used to return results when we only care about estimated coefficients.
+It is returned whenever we use a local cluster.
+"""
+struct DMRCoefs{T<:AbstractFloat,V} <: DMR{T,V}
+  coefs::AbstractMatrix{T}      # model coefficients
+  intercept::Bool               # whether to include an intercept in each Poisson regression
+  n::Int64                      # number of observations. May be lower than provided after removing all zero obs.
+  d::Int64                      # number of categories (terms/words/phrases)
+  p::Int64                      # number of covariates
+
+  DMRCoefs{T,V}(coefs::AbstractMatrix{T}, intercept::Bool, n::Int64, d::Int64, p::Int64) where {T<:AbstractFloat,V} =
+    new(coefs, intercept, n, d, p)
+end
+
+function StatsBase.fit(::Type{D}, covars::AbstractMatrix{T}, counts::AbstractMatrix{V};
+  kwargs...) where {T<:AbstractFloat, V, D<:DMR}
+
+  dmrpaths(covars, counts; parallel=parallel, verbose=verbose, showwarnings=showwarnings, intercept=intercept, kwargs...)
+end
+
+function StatsBase.fit(::Type{DMRCoefs}, covars::AbstractMatrix{T}, counts::AbstractMatrix{V};
+  intercept=true, parallel=true, local_cluster=true, verbose=true, showwarnings=false,
+  kwargs...) where {T<:AbstractFloat, V}
+
+  if local_cluster || !parallel
+    dmr_local_cluster(covars,counts,parallel,verbose,showwarnings,intercept; kwargs...)
+  else
+    dmr_remote_cluster(covars,counts,parallel,verbose,showwarnings,intercept; kwargs...)
+  end
+end
+
+hasintercept(m::DCR) = m.intercept
+
+"Number of observations used. May be lower than provided after removing all zero obs."
+StatsBase.nobs(m::DCR) = m.n
+
+"Number of categories (terms/words/phrases) used for DMR estimation"
+Distributions.ncategories(m::DCR) = m.d
+
+"Number of covariates used for DMR estimation"
+ncovars(m::DMR) = m.p
+
+"Number of coefficient potentially including intercept used for each independent Poisson regression"
+ncoefs(m::DMR) = ncovars(m) + (hasintercept(m) ? 1 : 0)
 
 # some helpers for converting to SharedArray
 Base.convert(::Type{SharedArray}, A::SubArray) = (S = SharedArray{eltype(A)}(size(A)); copy!(S, A))
@@ -130,9 +198,7 @@ function dmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts:
   verbose && info("fitting $n observations on $d categories, $p covariates ")
 
   # add one coef for intercept
-  if intercept
-    p += 1
-  end
+  ncoef = p + (intercept ? 1 : 0)
 
   covars, counts, μ, n = shifters(covars, counts, showwarnings)
 
@@ -152,7 +218,7 @@ function dmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts:
   if parallel
     verbose && info("distributed poisson run on local cluster with $(nworkers()) nodes")
     counts = convert(SharedArray,counts)
-    coefs = SharedMatrix{T}(p,d)
+    coefs = SharedMatrix{T}(ncoef,d)
     covars = convert(SharedArray,covars)
     # μ = convert(SharedArray,μ) incompatible with GLM
 
@@ -161,36 +227,45 @@ function dmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts:
     end
   else
     verbose && info("serial poisson run on a single node")
-    coefs = Matrix{T}(p,d)
+    coefs = Matrix{T}(ncoef,d)
     for j=1:d
       tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false, intercept=intercept, kwargs...)
     end
   end
 
-  coefs
+  DMRCoefs{T,V}(coefs, intercept, n, d, p)
 end
 
 """
-This version does not share memory across workers, so may be more efficient for small problems, or on non remote clusters.
+This version does not share memory across workers, so may be more efficient for small problems, or on remote clusters.
 """
 function dmr_remote_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
           parallel,verbose,showwarnings,intercept; kwargs...)
   paths = dmrpaths(covars, counts; parallel=parallel, verbose=verbose, showwarnings=showwarnings, intercept=intercept, kwargs...)
-  coef(paths;select=:AICc)
+  coefs = coef(paths;select=:AICc)
+  DMRCoefs{T,V}(coefs, intercept, paths.n, paths.d, paths.p)
 end
 
 dropnull{T<:Nullable}(v::Vector{T}) = v[.!isnull.(v)]
 
-function StatsBase.coef(paths::DMRPaths; select=:all)
+function StatsBase.coef(m::DMRCoefs; select=:AICc)
+  if select == :AICc
+    m.coefs
+  else
+    error("coef(m::DMRCoefs) currently supports only AICc regulatrization path segement selection.")
+  end
+end
+
+function StatsBase.coef(m::DMRPaths; select=:AICc)
   # get dims
-  d = length(paths.nlpaths)
+  d = length(m.nlpaths)
   d < 1 && return nothing
 
   # drop null paths
-  nonnullpaths = dropnull(paths.nlpaths)
+  nonnullpaths = dropnull(m.nlpaths)
 
-  # get number of variables from paths object
-  p = paths.p + 1
+  # get number of coefs from paths object
+  p = ncoefs(m)
 
   # establish maximum path lengths
   nλ = 0
@@ -207,7 +282,7 @@ function StatsBase.coef(paths::DMRPaths; select=:all)
 
   # iterate over paths
   for j=1:d
-    nlpath = paths.nlpaths[j]
+    nlpath = m.nlpaths[j]
     if !Base.isnull(nlpath)
       path = nlpath.value
       cj = coef(path;select=select)
@@ -229,80 +304,3 @@ function StatsBase.coef(paths::DMRPaths; select=:all)
 end
 
 aicc{R<:RegularizationPath}(paths::Vector{R}; k=2) = map(path->Lasso.aicc(path;k=k),paths)
-
-"""
-srproj calculates the MNIR Sufficient Reduction projection from text counts on
-to the attribute dimensions of interest (covars in mnlm). In particular, for
-counts C, with row sums m, and mnlm coefficients φ_j corresponding to attribute
-j, z_j = C'φ_j/m is the SR projection in the direction of j.
-The MNIR paper explains how V=[v_1 ... v_K],
-your original covariates/attributes, are independent of text counts C given SR
-projections Z=[z_1 ... z_K].
-"""
-function srproj(coefs, counts, dir=nothing; intercept=true, focusj=indices(counts,2))
-   ixoffset = intercept ? 1 : 0 # omitting the intercept
-   if dir==nothing
-     Φ=coefs[ixoffset+1:end,focusj]' # all directions
-   else
-     Φ=coefs[ixoffset+dir:ixoffset+dir,focusj]' # keep only desired directions
-   end
-   m = sum(counts,2) # total counts per observation
-   z = counts[:,focusj]*Φ ./ (m+(m.==0)) # scale to get frequencies
-   [z m] # m is part of the sufficient reduction
-end
-
-"""
-Like srproj but efficiently interates over a sparse counts matrix, and
-only projects in a single direction (dir).
-"""
-function srproj(coefs, counts::SparseMatrixCSC, dir::Int; intercept=true, focusj=indices(counts,2))
-   ixoffset = intercept ? 1 : 0 # omitting the intercept
-   n,d = size(counts)
-   zm = zeros(n,2)
-   φ = vec(coefs[ixoffset+dir,:]) # keep only desired directions
-   rows = rowvals(counts)
-   vals = nonzeros(counts)
-   for j = 1:d
-      for i in nzrange(counts, j)
-         row = rows[i]
-         val = vals[i]
-         if in(j,focusj)
-           zm[row,1] += val*φ[j]  # projection part
-         end
-         zm[row,2] += val       # m = total count
-      end
-   end
-   for i=1:n
-     mi = zm[i,2]
-     if mi > 0
-       # scale to get frequencies
-       zm[i,1] /= mi
-     end
-   end
-   zm # m is part of the sufficient reduction
-end
-
-"""
-  Builds the design matrix X for predicting covar in direction projdir
-  dmr version
-"""
-function srprojX(coefs,counts,covars,projdir; includem=true, srprojargs...)
-  # dims
-  n,p = size(covars)
-  # ixnotdir = 1:p .!= projdir
-  ixnotdir = setdiff(1:p,[projdir])
-
-  # design matrix w/o counts data
-  X_nocounts = [ones(n) getindex(covars,:,ixnotdir)]
-
-  # add srproj of counts data to X
-  Z = srproj(coefs,counts,projdir; srprojargs...)
-  X = [X_nocounts Z]
-
-  if !includem
-    # drop last column with total counts m
-    X = X[:,1:end-1]
-  end
-
-  X, X_nocounts
-end

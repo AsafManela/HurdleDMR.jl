@@ -4,7 +4,7 @@ using Base.Test, Gadfly, Distributions
 
 include("addworkers.jl")
 
-using GLM, DataFrames, LassoPlot
+using CSV, GLM, DataFrames, LassoPlot
 
 import HurdleDMR; @everywhere using HurdleDMR
 
@@ -31,18 +31,18 @@ import HurdleDMR; @everywhere using HurdleDMR
 # zRdistrom = rcopy(R"as.matrix(srproj(fits,we8thereCounts))")
 # z1Rdistrom = rcopy(R"as.matrix(srproj(fits,we8thereCounts,1))")
 #
-# writetable(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"),we8thereCounts)
-# writetable(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"),we8thereRatings)
-# writetable(joinpath(testdir,"data","dmr_coefsRdistrom.csv.gz"),DataFrame(full(coefsRdistrom)))
-# writetable(joinpath(testdir,"data","dmr_zRdistrom.csv.gz"),DataFrame(zRdistrom))
-# writetable(joinpath(testdir,"data","dmr_z1Rdistrom.csv.gz"),DataFrame(z1Rdistrom))
+# CSV.write(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"),we8thereCounts)
+# CSV.write(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"),we8thereRatings)
+# CSV.write(joinpath(testdir,"data","dmr_coefsRdistrom.csv.gz"),DataFrame(full(coefsRdistrom)))
+# CSV.write(joinpath(testdir,"data","dmr_zRdistrom.csv.gz"),DataFrame(zRdistrom))
+# CSV.write(joinpath(testdir,"data","dmr_z1Rdistrom.csv.gz"),DataFrame(z1Rdistrom))
 
-we8thereCounts = readtable(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"))
-we8thereRatings = readtable(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"))
-we8thereTerms = map(string,names(we8thereCounts))
-coefsRdistrom = sparse(convert(Matrix{Float64},readtable(joinpath(testdir,"data","dmr_coefsRdistrom.csv.gz"))))
-zRdistrom = convert(Matrix{Float64},readtable(joinpath(testdir,"data","dmr_zRdistrom.csv.gz")))
-z1Rdistrom = convert(Matrix{Float64},readtable(joinpath(testdir,"data","dmr_z1Rdistrom.csv.gz")))
+we8thereCounts = CSV.read(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"))
+we8thereRatings = CSV.read(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"))
+we8thereTerms = broadcast(string,names(we8thereCounts))
+coefsRdistrom = sparse(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","dmr_coefsRdistrom.csv.gz"))))
+zRdistrom = convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","dmr_zRdistrom.csv.gz")))
+z1Rdistrom = convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","dmr_z1Rdistrom.csv.gz")))
 
 # covars = we8thereRatings[:,[:Overall]]
 covars = we8thereRatings[:,:]
@@ -69,16 +69,30 @@ d = size(counts,2)
 @testset "dmr" begin
 
 # to get exactly Rdistrom's run use λminratio=0.01 because our gamlr's have different defaults
-@time coefs = HurdleDMR.dmr(covars, counts; γ=γ, λminratio=0.01)
+@time dmrcoefs = HurdleDMR.dmr(covars, counts; γ=γ, λminratio=0.01)
+coefs = coef(dmrcoefs)
 @test size(coefs) == (p+1, d)
 
-@time coefs2 = HurdleDMR.dmr(covars, counts; local_cluster=false, γ=γ, λminratio=0.01)
+@time dmrcoefsb = fit(DMRCoefs, covars, counts; γ=γ, λminratio=0.01)
+@test coef(dmrcoefs) == coefs
+@test n > nobs(dmrcoefs)
+@test d == ncategories(dmrcoefs)
+@test p == ncovars(dmrcoefs)
+
+@time dmrcoefs2 = HurdleDMR.dmr(covars, counts; local_cluster=false, γ=γ, λminratio=0.01)
+coefs2 = coef(dmrcoefs2)
 @test coefs ≈ coefs2
+@time dmrcoefs2 = fit(DMRCoefs, covars, counts; local_cluster=false, γ=γ, λminratio=0.01)
+@test coef(dmrcoefs2) == coefs2
 
 @time dmrPaths = HurdleDMR.dmrpaths(covars, counts; γ=γ, λminratio=0.01, verbose=false)
-
-paths = dmrPaths.nlpaths
-@test dmrPaths.p == p
+@time dmrPaths2 = fit(DMRPaths, covars, counts; γ=γ, λminratio=0.01, verbose=false)
+@time dmrPaths3 = fit(DMR, covars, counts; γ=γ, λminratio=0.01, verbose=false)
+@test coef(dmrPaths) == coef(dmrPaths2)
+@test coef(dmrPaths) == coef(dmrPaths3)
+@test n > nobs(dmrPaths3)
+@test d == ncategories(dmrPaths3)
+@test p == ncovars(dmrPaths3)
 
 # these terms require the full counts data, but we use only first 100 for quick testing
 # plotterms=["first_date","chicken_wing","ate_here", "good_food","food_fabul","terribl_servic"]
@@ -94,6 +108,9 @@ filename = joinpath(testdir,"plots","we8there.svg")
 
 #reload("HurdleDMR")
 @time z = HurdleDMR.srproj(coefs, counts)
+@time zb = HurdleDMR.srproj(dmrcoefs, counts)
+@time zc = HurdleDMR.srproj(dmrPaths, counts)
+@test z == zb
 @test size(z) == (size(covars,1),p+1)
 
 regdata = DataFrame(y=covars[:,1], z=z[:,1], m=z[:,2])
@@ -117,9 +134,15 @@ r23 = adjr2(lm3)
 
 # project in a single direction
 @time z1 = HurdleDMR.srproj(coefs, counts, 1)
+@time z1b = HurdleDMR.srproj(dmrcoefs, counts, 1)
+@time z1c = HurdleDMR.srproj(coefs, counts, 1)
 @test z1 ≈ z[:,[1,end]]
 
 @time z1dense = HurdleDMR.srproj(coefs, full(counts), 1)
+@time z1denseb = HurdleDMR.srproj(dmrcoefs, full(counts), 1)
+@time z1densec = HurdleDMR.srproj(dmrPaths, full(counts), 1)
+@test z1dense == z1denseb
+@test z1dense ≈ z1densec
 @test z1dense ≈ z1
 
 @test z1 ≈ z1Rdistrom rtol=rtol
@@ -127,10 +150,16 @@ r23 = adjr2(lm3)
 X1, X1_nocounts = HurdleDMR.srprojX(coefs,counts,covars,1; includem=true)
 @test X1_nocounts == [ones(n,1) covars[:,2:end]]
 @test X1 == [X1_nocounts z1]
+X1b, X1_nocountsb = HurdleDMR.srprojX(dmrcoefs,counts,covars,1; includem=true)
+@test X1 == X1b
+@test X1_nocounts == X1_nocountsb
 
 X2, X2_nocounts = HurdleDMR.srprojX(coefs,counts,covars,1; includem=false)
 @test X2_nocounts == X1_nocounts
 @test X2 == X1[:,1:end-1]
+X2b, X2_nocountsb = HurdleDMR.srprojX(dmrcoefs,counts,covars,1; includem=false)
+@test X2 == X2b
+@test X2_nocounts == X2_nocountsb
 
 # project in a single direction, focusing only on cj
 focusj = 3
@@ -183,11 +212,13 @@ m = sum(zcounts,2)
 @test sum(m .== 0) == 0
 
 # this one should warn on dimension 2
-@time zcoefs = HurdleDMR.dmr(covars, zcounts; γ=γ, λminratio=0.01, showwarnings=true)
+@time dmrzcoefs = HurdleDMR.dmr(covars, zcounts; γ=γ, λminratio=0.01, showwarnings=true)
+zcoefs = coef(dmrzcoefs)
 @test size(zcoefs) == (p+1, smalld)
 @test zcoefs[:,2] ≈ zeros(p+1)
 
-@time zcoefs2 = HurdleDMR.dmr(covars, zcounts; local_cluster=false, γ=γ, λminratio=0.01)
+@time dmrzcoefs2 = HurdleDMR.dmr(covars, zcounts; local_cluster=false, γ=γ, λminratio=0.01)
+zcoefs2 = coef(dmrzcoefs2)
 @test zcoefs2 ≈ zcoefs2
 
 end

@@ -6,10 +6,10 @@ addprocs(Sys.CPU_CORES-2)
 import HurdleDMR; @everywhere using HurdleDMR
 
 # Setup your data into an n-by-p covars matrix, and a (sparse) n-by-d counts matrix
-using GLM, DataFrames, Distributions
-we8thereCounts = readtable(joinpath(Pkg.dir("HurdleDMR"),"test","data","dmr_we8thereCounts.csv.gz"))
+using CSV, GLM, DataFrames, Distributions
+we8thereCounts = CSV.read(joinpath(Pkg.dir("HurdleDMR"),"test","data","dmr_we8thereCounts.csv.gz"))
 counts = sparse(convert(Matrix{Float64},we8thereCounts))
-covars = convert(Matrix{Float64},readtable(joinpath(Pkg.dir("HurdleDMR"),"test","data","dmr_we8thereRatings.csv.gz")))
+covars = convert(Matrix{Float64},CSV.read(joinpath(Pkg.dir("HurdleDMR"),"test","data","dmr_we8thereRatings.csv.gz")))
 terms = map(string,names(we8thereCounts))
 
 # To fit a distribtued multinomial regression (dmr):

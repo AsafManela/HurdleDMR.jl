@@ -4,27 +4,14 @@ using Base.Test, Gadfly, Distributions
 
 include("addworkers.jl")
 
-using GLM, DataFrames, LassoPlot
+using CSV, GLM, DataFrames, LassoPlot
 
 import HurdleDMR; @everywhere using HurdleDMR
 # uncomment following for debugging and comment the previous @everywhere line. then use reload after making changes
 # reload("HurdleDMR")
 
-# # uncomment to generate R benchmark
-# using RCall
-# import Rdistrom
-# R"library(textir)"
-# R"library(Matrix)"
-# R"data(we8there)"
-# we8thereCounts = DataFrame(rcopy(R"as.matrix(we8thereCounts)"))
-# we8thereRatings = rcopy("we8thereRatings")
-# we8thereTerms = rcopy(R"we8thereCounts@Dimnames$Terms")
-# names!(we8thereCounts,map(Symbol,we8thereTerms))
-# writetable(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"),we8thereCounts)
-# writetable(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"),we8thereRatings)
-
-we8thereCounts = readtable(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"))
-we8thereRatings = readtable(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"))
+we8thereCounts = CSV.read(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"))
+we8thereRatings = CSV.read(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"))
 we8thereTerms = map(string,names(we8thereCounts))
 
 # covars = we8thereRatings[:,[:Overall]]
@@ -106,13 +93,13 @@ npos,ppos = size(covarspos)
 # # @time fits = Rdistrom.dmr(covars, counts; nlocal_workers=nworkers(), gamma=γ, verb=0)
 # # coefsRdistrom = Rdistrom.coef(fits)
 # # writetable(joinpath(testdir,"data","dmr_coefsRdistrom.csv.gz"),DataFrame(full(coefsRdistrom)))
-# coefsRdistrom = sparse(convert(Matrix{Float64},readtable(joinpath(testdir,"data","dmr_coefsRdistrom.csv.gz"))))
+# coefsRdistrom = sparse(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","dmr_coefsRdistrom.csv.gz"))))
 # @test coefs ≈ full(coefsRdistrom) rtol=2rtol
 # # println("rdist(coefs,coefsRdistrom)=$(rdist(coefs,coefsRdistrom))")
 #
 # # zRdistrom = Rdistrom.srproj(fits,counts)
 # # writetable(joinpath(testdir,"data","dmr_zRdistrom.csv.gz"),DataFrame(zRdistrom))
-# zRdistrom = convert(Matrix{Float64},readtable(joinpath(testdir,"data","dmr_zRdistrom.csv.gz")))
+# zRdistrom = convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","dmr_zRdistrom.csv.gz")))
 # @test z ≈ zRdistrom rtol=rtol
 # # println("rdist(z,zRdistrom)=$(rdist(z,zRdistrom))")
 #
@@ -134,7 +121,7 @@ npos,ppos = size(covarspos)
 #
 # # z1Rdistrom = Rdistrom.srproj(fits,counts,1)
 # # writetable(joinpath(testdir,"data","dmr_z1Rdistrom.csv.gz"),DataFrame(z1Rdistrom))
-# z1Rdistrom = convert(Matrix{Float64},readtable(joinpath(testdir,"data","dmr_z1Rdistrom.csv.gz")))
+# z1Rdistrom = convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","dmr_z1Rdistrom.csv.gz")))
 # @test z1 ≈ z1Rdistrom rtol=rtol
 #
 # X1, X1_nocounts = HurdleDMR.srprojX(coefs,counts,covars,1; includem=true)

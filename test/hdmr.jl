@@ -4,27 +4,14 @@ using Base.Test, Gadfly, Distributions
 
 include("addworkers.jl")
 
-using GLM, DataFrames, LassoPlot
+using CSV, GLM, DataFrames, LassoPlot
 
 import HurdleDMR; @everywhere using HurdleDMR
 
 # reload("HurdleDMR")
 
-# # uncomment to generate R benchmark
-# using RCall
-# R"install.packages(\"textir\")"
-# R"library(textir)"
-# R"library(Matrix)"
-# R"data(we8there)"
-# we8thereCounts = DataFrame(rcopy(R"as.matrix(we8thereCounts)"))
-# we8thereRatings = rcopy(R"we8thereRatings")
-# we8thereTerms = rcopy(R"we8thereCounts@Dimnames$Terms")
-# names!(we8thereCounts,map(Symbol,we8thereTerms))
-# writetable(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"),we8thereCounts)
-# writetable(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"),we8thereRatings)
-
-we8thereCounts = readtable(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"))
-we8thereRatings = readtable(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"))
+we8thereCounts = CSV.read(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"))
+we8thereRatings = CSV.read(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"))
 we8thereTerms = map(string,names(we8thereCounts))
 
 # covars = we8thereRatings[:,[:Overall]]
