@@ -221,12 +221,12 @@ function cross_validate_hdmr_srproj(covars,counts,projdir; inpos=1:size(covars,2
       ixtest = setdiff(1:n, ixtrain)
 
       # estimate hdmr in train subsample
-      coefspos, coefszero = hdmr(getindex(covars,ixtrain,inzero), getindex(counts,ixtrain,:); covarspos=getindex(covars,ixtrain,inpos), γ=γ, showwarnings=showwarnings)
+      m = hdmr(getindex(covars,ixtrain,inzero), getindex(counts,ixtrain,:); covarspos=getindex(covars,ixtrain,inpos), γ=γ, showwarnings=showwarnings)
 
       # get full sample design matrices for regressions at the same time.
       # this makes sure the same model is used for both train and test,
       # otherwise, we could be dropping zpos from only one of them.
-      X, X_nocounts, includezpos = srprojX(coefspos,coefszero,counts,covars,projdir; inpos=inpos, inzero=inzero)
+      X, X_nocounts, includezpos = srprojX(m,counts,covars,projdir; inpos=inpos, inzero=inzero)
 
       # train subsample design matrices
       Xtrain_nocounts = getindex(X_nocounts,ixtrain,:)

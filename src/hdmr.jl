@@ -18,7 +18,7 @@ It is returned whenever we use a remote cluster.
 struct HDMRPaths{T<:AbstractFloat,V} <: HDMR{T,V}
   counts::AbstractMatrix{V}     # n×d counts (document-term) matrix
   covars::AbstractMatrix{T}     # n×p covariates matrix for zeros or both model
-  covarspos::AbstractMatrix{T}  # n×ppos covariates matrix for positives model
+  covarspos::Union{AbstractMatrix{T},Void}  # n×ppos covariates matrix for positives model
   intercept::Bool               # whether to include an intercept in each Poisson regression
   nlpaths::Vector{Nullable{Hurdle}} # independent Hurdle{GammaLassoPath} for each phrase
                                 # (only kept with remote cluster, not with local cluster)
@@ -27,7 +27,7 @@ struct HDMRPaths{T<:AbstractFloat,V} <: HDMR{T,V}
   pzero::Int64                  # number of covariates for zeros model
   ppos::Int64                   # number of covariates for positives model
 
-  HDMRPaths{T,V}(counts::AbstractMatrix{V}, covars::AbstractMatrix{T}, covarspos::AbstractMatrix{T}, intercept::Bool,
+  HDMRPaths{T,V}(counts::AbstractMatrix{V}, covars::AbstractMatrix{T}, covarspos::Union{AbstractMatrix{T},Void}, intercept::Bool,
     nlpaths::Vector{Nullable{Hurdle}}, n::Int64, d::Int64, pzero::Int64, ppos::Int64) where {T<:AbstractFloat,V} =
     new(counts, covars, covarspos, intercept, nlpaths, n, d, pzero, ppos)
 end
@@ -49,8 +49,10 @@ struct HDMRCoefs{T<:AbstractFloat,V} <: HDMR{T,V}
     n::Int64, d::Int64, pzero::Int64, ppos::Int64) where {T<:AbstractFloat,V} =
     new(coefspos, coefszero, intercept, n, d, pzero, ppos)
 
-  HDMRCoefs{T,V}(m::HDMRPaths{T,V}) where {T<:AbstractFloat,V} =
-    new(coef(paths;select=:AICc)..., intercept, paths.n, paths.d, paths.pzero, paths.ppos)
+  function HDMRCoefs{T,V}(paths::HDMRPaths{T,V}) where {T<:AbstractFloat,V}
+    coefspos, coefszero = coef(paths;select=:AICc)
+    new(coefspos, coefszero, paths.intercept, paths.n, paths.d, paths.pzero, paths.ppos)
+  end
 end
 
 
@@ -67,9 +69,9 @@ function StatsBase.fit(::Type{HDMRCoefs}, covars::AbstractMatrix{T}, counts::Abs
   kwargs...) where {T<:AbstractFloat, V}
 
   if local_cluster || !parallel
-    hdmr_local_cluster(covars,counts,parallel,verbose,showwarnings,intercept; covarspos=covarspos, kwargs...)
+    hdmr_local_cluster(covars,covarspos,counts,parallel,verbose,showwarnings,intercept; kwargs...)
   else
-    hdmr_remote_cluster(covars,counts,parallel,verbose,showwarnings,intercept; covarspos=covarspos, kwargs...)
+    hdmr_remote_cluster(covars,covarspos,counts,parallel,verbose,showwarnings,intercept; kwargs...)
   end
 end
 
@@ -289,8 +291,8 @@ function StatsBase.coef(m::HDMRPaths; select=:all)
   nonnullpaths = dropnull(m.nlpaths)
 
   # get number of variables from paths object
-  ppos = ncoefpos(m)
-  pzero = ncoefzero(m)
+  ppos = ncoefspos(m)
+  pzero = ncoefszero(m)
 
   # establish maximum path lengths
   nλzero = nλpos = 0
