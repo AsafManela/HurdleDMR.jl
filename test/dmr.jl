@@ -69,7 +69,7 @@ d = size(counts,2)
 @testset "dmr" begin
 
 # to get exactly Rdistrom's run use λminratio=0.01 because our gamlr's have different defaults
-@time dmrcoefs = HurdleDMR.dmr(covars, counts; γ=γ, λminratio=0.01)
+@time dmrcoefs = dmr(covars, counts; γ=γ, λminratio=0.01)
 coefs = coef(dmrcoefs)
 @test size(coefs) == (p+1, d)
 
@@ -79,13 +79,13 @@ coefs = coef(dmrcoefs)
 @test d == ncategories(dmrcoefs)
 @test p == ncovars(dmrcoefs)
 
-@time dmrcoefs2 = HurdleDMR.dmr(covars, counts; local_cluster=false, γ=γ, λminratio=0.01)
+@time dmrcoefs2 = dmr(covars, counts; local_cluster=false, γ=γ, λminratio=0.01)
 coefs2 = coef(dmrcoefs2)
 @test coefs ≈ coefs2
 @time dmrcoefs2 = fit(DMRCoefs, covars, counts; local_cluster=false, γ=γ, λminratio=0.01)
 @test coef(dmrcoefs2) == coefs2
 
-@time dmrPaths = HurdleDMR.dmrpaths(covars, counts; γ=γ, λminratio=0.01, verbose=false)
+@time dmrPaths = dmrpaths(covars, counts; γ=γ, λminratio=0.01, verbose=false)
 @time dmrPaths2 = fit(DMRPaths, covars, counts; γ=γ, λminratio=0.01, verbose=false)
 @time dmrPaths3 = fit(DMR, covars, counts; γ=γ, λminratio=0.01, verbose=false)
 @test coef(dmrPaths) == coef(dmrPaths2)
@@ -94,22 +94,21 @@ coefs2 = coef(dmrcoefs2)
 @test d == ncategories(dmrPaths3)
 @test p == ncovars(dmrPaths3)
 
+paths = dmrPaths.nlpaths
 # these terms require the full counts data, but we use only first 100 for quick testing
 # plotterms=["first_date","chicken_wing","ate_here", "good_food","food_fabul","terribl_servic"]
 plotterms=we8thereTerms[1:6]
 plotix=[find(we8thereTerms.==term)[1]::Int64 for term=plotterms]
 plotterms==we8thereTerms[plotix]
-
 plots=permutedims(convert(Matrix{Gadfly.Plot},reshape([plot(paths[plotix[i]].value,Guide.title(plotterms[i]);select=:AICc,x=:logλ) for i=1:length(plotterms)],2,3)), [2,1])
 filename = joinpath(testdir,"plots","we8there.svg")
 # # TODO: uncomment after Gadfly get's its get_stroke_vector bug fixed
 # draw(SVG(filename,9inch,11inch),Gadfly.gridstack(plots))
 # @test isfile(filename)
 
-#reload("HurdleDMR")
-@time z = HurdleDMR.srproj(coefs, counts)
-@time zb = HurdleDMR.srproj(dmrcoefs, counts)
-@time zc = HurdleDMR.srproj(dmrPaths, counts)
+@time z = srproj(coefs, counts)
+@time zb = srproj(dmrcoefs, counts)
+@time zc = srproj(dmrPaths, counts)
 @test z == zb
 @test size(z) == (size(covars,1),p+1)
 
@@ -133,65 +132,65 @@ r23 = adjr2(lm3)
 # Rdistrom.dmrplots(fits.gamlrs[plotix],we8thereTerms[plotix])
 
 # project in a single direction
-@time z1 = HurdleDMR.srproj(coefs, counts, 1)
-@time z1b = HurdleDMR.srproj(dmrcoefs, counts, 1)
-@time z1c = HurdleDMR.srproj(coefs, counts, 1)
+@time z1 = srproj(coefs, counts, 1)
+@time z1b = srproj(dmrcoefs, counts, 1)
+@time z1c = srproj(coefs, counts, 1)
 @test z1 ≈ z[:,[1,end]]
 
-@time z1dense = HurdleDMR.srproj(coefs, full(counts), 1)
-@time z1denseb = HurdleDMR.srproj(dmrcoefs, full(counts), 1)
-@time z1densec = HurdleDMR.srproj(dmrPaths, full(counts), 1)
+@time z1dense = srproj(coefs, full(counts), 1)
+@time z1denseb = srproj(dmrcoefs, full(counts), 1)
+@time z1densec = srproj(dmrPaths, full(counts), 1)
 @test z1dense == z1denseb
 @test z1dense ≈ z1densec
 @test z1dense ≈ z1
 
 @test z1 ≈ z1Rdistrom rtol=rtol
 
-X1, X1_nocounts = HurdleDMR.srprojX(coefs,counts,covars,1; includem=true)
+X1, X1_nocounts = srprojX(coefs,counts,covars,1; includem=true)
 @test X1_nocounts == [ones(n,1) covars[:,2:end]]
 @test X1 == [X1_nocounts z1]
-X1b, X1_nocountsb = HurdleDMR.srprojX(dmrcoefs,counts,covars,1; includem=true)
+X1b, X1_nocountsb = srprojX(dmrcoefs,counts,covars,1; includem=true)
 @test X1 == X1b
 @test X1_nocounts == X1_nocountsb
 
-X2, X2_nocounts = HurdleDMR.srprojX(coefs,counts,covars,1; includem=false)
+X2, X2_nocounts = srprojX(coefs,counts,covars,1; includem=false)
 @test X2_nocounts == X1_nocounts
 @test X2 == X1[:,1:end-1]
-X2b, X2_nocountsb = HurdleDMR.srprojX(dmrcoefs,counts,covars,1; includem=false)
+X2b, X2_nocountsb = srprojX(dmrcoefs,counts,covars,1; includem=false)
 @test X2 == X2b
 @test X2_nocounts == X2_nocountsb
 
 # project in a single direction, focusing only on cj
 focusj = 3
-@time z1j = HurdleDMR.srproj(coefs, counts, 1; focusj=focusj)
-@time z1jdense = HurdleDMR.srproj(coefs, full(counts), 1; focusj=focusj)
+@time z1j = srproj(coefs, counts, 1; focusj=focusj)
+@time z1jdense = srproj(coefs, full(counts), 1; focusj=focusj)
 @test z1jdense == z1j
 
-X1j, X1j_nocounts = HurdleDMR.srprojX(coefs,counts,covars,1; includem=true, focusj=focusj)
+X1j, X1j_nocounts = srprojX(coefs,counts,covars,1; includem=true, focusj=focusj)
 @test X1j_nocounts == [ones(n,1) covars[:,2:end]]
 @test X1j == [X1_nocounts z1j]
 
-X2j, X2j_nocounts = HurdleDMR.srprojX(coefs,counts,covars,1; includem=false, focusj=focusj)
+X2j, X2j_nocounts = srprojX(coefs,counts,covars,1; includem=false, focusj=focusj)
 @test X2j_nocounts == X1_nocounts
 @test X2j == X1j[:,1:end-1]
 
-X1jfull, X1jfull_nocounts = HurdleDMR.srprojX(coefs,full(counts),covars,1; includem=true, focusj=focusj)
+X1jfull, X1jfull_nocounts = srprojX(coefs,full(counts),covars,1; includem=true, focusj=focusj)
 @test X1jfull ≈ X1j
 @test X1jfull_nocounts ≈ X1jfull_nocounts
 
-X2jfull, X2jfull_nocounts = HurdleDMR.srprojX(coefs,full(counts),covars,1; includem=false, focusj=focusj)
+X2jfull, X2jfull_nocounts = srprojX(coefs,full(counts),covars,1; includem=false, focusj=focusj)
 @test X2jfull ≈ X2j
 @test X2jfull_nocounts ≈ X2jfull_nocounts
 
 
-@time cvstats13 = HurdleDMR.cross_validate_dmr_srproj(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
-@time cvstats13b = HurdleDMR.cross_validate_dmr_srproj(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+@time cvstats13 = cross_validate_dmr_srproj(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+@time cvstats13b = cross_validate_dmr_srproj(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
 @test isequal(cvstats13,cvstats13b)
 
-cvstats14 = HurdleDMR.cross_validate_dmr_srproj(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
+cvstats14 = cross_validate_dmr_srproj(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
 @test !(isequal(cvstats13,cvstats14))
 
-cvstatsSerialKfold = HurdleDMR.cross_validate_dmr_srproj(covars,smallcounts,1; k=5, gentype=HurdleDMR.SerialKfold, γ=γ)
+cvstatsSerialKfold = cross_validate_dmr_srproj(covars,smallcounts,1; k=5, gentype=SerialKfold, γ=γ)
 
 end
 
@@ -212,12 +211,12 @@ m = sum(zcounts,2)
 @test sum(m .== 0) == 0
 
 # this one should warn on dimension 2
-@time dmrzcoefs = HurdleDMR.dmr(covars, zcounts; γ=γ, λminratio=0.01, showwarnings=true)
+@time dmrzcoefs = dmr(covars, zcounts; γ=γ, λminratio=0.01, showwarnings=true)
 zcoefs = coef(dmrzcoefs)
 @test size(zcoefs) == (p+1, smalld)
 @test zcoefs[:,2] ≈ zeros(p+1)
 
-@time dmrzcoefs2 = HurdleDMR.dmr(covars, zcounts; local_cluster=false, γ=γ, λminratio=0.01)
+@time dmrzcoefs2 = dmr(covars, zcounts; local_cluster=false, γ=γ, λminratio=0.01)
 zcoefs2 = coef(dmrzcoefs2)
 @test zcoefs2 ≈ zcoefs2
 
@@ -230,11 +229,11 @@ end
 # # NOTE: to run this and get the profile, do not add any parallel workers
 # # this makes it slow (about 350 secs) and may miss some serialization costs
 # # but I don't know how to profile all the workers too ...
-# @time cvstats13 = HurdleDMR.cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+# @time cvstats13 = cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
 # using ProfileView
 # Profile.init(delay=0.001)
 # Profile.clear()
-# @profile cvstats13 = HurdleDMR.cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ);
+# @profile cvstats13 = cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ);
 # ProfileView.view()
 # # ProfileView.svgwrite(joinpath(tempdir(),"profileview.svg"))
 # # Profile.print()

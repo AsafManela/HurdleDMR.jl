@@ -6,9 +6,11 @@ using Lasso, GLM.FPVector, DataFrames, Reexport, Compat
 
 @reexport using GLM, StatsBase, Distributions
 
-export dmr, dmr2, dmrpath, hdmr, hdmr2, hdmrpath, DMR, collapse, fit, coef, srproj, @~, mcdmr
+export dmr, dmrpaths, hdmr, hdmrpaths, collapse, fit, coef, srproj, srprojX, @~, mcdmr, posindic
+export DCR, DMR, HDMR, DMRCoefs, DMRPaths, HDMRCoefs, HDMRPaths
+export hasintercept, ncategories, nobs, ncoefs, ncovars, ncovarszero, ncovarspos, ncoefszero, ncoefspos
 export Hurdle, PositivePoisson, LogProductLogLink, logpdf_exact, logpdf_approx
-export cross_validate_dmr_srproj, cross_validate_dmr_srproj_for_different_specs, SerialKfold
+export cross_validate_dmr_srproj, cross_validate_hdmr_srproj, SerialKfold
 export CVStats, CVType, CVData, CVDataRow
 
 ##############################################

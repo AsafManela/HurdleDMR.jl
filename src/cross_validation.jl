@@ -107,7 +107,7 @@ end
 
 "Create a DataFrame from a vector of CVTypes"
 function DataFrames.DataFrame(v::Vector{T}) where {T <: CVType}
-    vcat(DataFrames.DataFrame.(v))
+    vcat(DataFrames.DataFrame.(v)...)
 end
 
 CVStats(T::Type) = CVStats{T}(zeros(T,12)...)

@@ -88,12 +88,7 @@ function srprojX(coefs::AbstractMatrix{T},counts,covars,projdir; includem=true, 
 
   X, X_nocounts
 end
-
-"""
-  Builds the design matrix X for predicting covar in direction projdir
-  generic version taking any DCR model
-"""
-srprojX(m::DCR,counts,covars,projdir; kwargs...) = srprojX(coef(m)...,counts,covars,projdir; kwargs...)
+srprojX(m::DMR,counts,covars,projdir; select=:AICc, kwargs...) = srprojX(coef(m;select=select),counts,covars,projdir; kwargs...)
 
 """
 srproj for hurdle dmr takes two coefficent matrices
@@ -185,3 +180,4 @@ function srprojX(coefspos::M, coefszero::M, counts, covars, projdir::Int;
 
   X, X_nocounts, includezpos
 end
+srprojX(m::HDMR,counts,covars,projdir; select=:AICc, kwargs...) = srprojX(coef(m;select=select)...,counts,covars,projdir; kwargs...)

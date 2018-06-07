@@ -120,7 +120,7 @@ end
 function StatsBase.fit(::Type{D}, covars::AbstractMatrix{T}, counts::AbstractMatrix{V};
   kwargs...) where {T<:AbstractFloat, V, D<:DMR}
 
-  dmrpaths(covars, counts; parallel=parallel, verbose=verbose, showwarnings=showwarnings, intercept=intercept, kwargs...)
+  dmrpaths(covars, counts; kwargs...)
 end
 
 function StatsBase.fit(::Type{DMRCoefs}, covars::AbstractMatrix{T}, counts::AbstractMatrix{V};

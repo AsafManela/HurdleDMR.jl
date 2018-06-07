@@ -5,7 +5,7 @@ using HurdleDMR
 
 resultstats = [CVStats(Float64), CVStats(Float64)]
 @test typeof(resultstats) <: AbstractArray{T} where {T <: CVType}
-@test typeof(resultstats[1]) <: HurdleDMR.CVType{Float64}
+@test typeof(resultstats[1]) <: CVType{Float64}
 @test typeof(DataFrame(resultstats)) <: DataFrame
 
 cvd1 = CVData([[] for i=1:6]...)
