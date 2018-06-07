@@ -118,20 +118,20 @@ struct DMRCoefs{T<:AbstractFloat,V} <: DMR{T,V}
 end
 
 function StatsBase.fit(::Type{D}, covars::AbstractMatrix{T}, counts::AbstractMatrix{V};
-  kwargs...) where {T<:AbstractFloat, V, D<:DMR}
-
-  dmrpaths(covars, counts; kwargs...)
-end
-
-function StatsBase.fit(::Type{DMRCoefs}, covars::AbstractMatrix{T}, counts::AbstractMatrix{V};
   intercept=true, parallel=true, local_cluster=true, verbose=true, showwarnings=false,
-  kwargs...) where {T<:AbstractFloat, V}
+  kwargs...) where {T<:AbstractFloat, V, D<:DMR}
 
   if local_cluster || !parallel
     dmr_local_cluster(covars,counts,parallel,verbose,showwarnings,intercept; kwargs...)
   else
     dmr_remote_cluster(covars,counts,parallel,verbose,showwarnings,intercept; kwargs...)
   end
+end
+
+function StatsBase.fit(::Type{DMRPaths}, covars::AbstractMatrix{T}, counts::AbstractMatrix{V};
+  kwargs...) where {T<:AbstractFloat, V}
+
+  dmrpaths(covars, counts; kwargs...)
 end
 
 hasintercept(m::DCR) = m.intercept

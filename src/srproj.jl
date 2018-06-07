@@ -67,6 +67,7 @@ end
 """
   Builds the design matrix X for predicting covar in direction projdir
   dmr version
+  inz=[1] always for dmr
 """
 function srprojX(coefs::AbstractMatrix{T},counts,covars,projdir; includem=true, srprojargs...) where T
   # dims
@@ -86,7 +87,9 @@ function srprojX(coefs::AbstractMatrix{T},counts,covars,projdir; includem=true, 
     X = X[:,1:end-1]
   end
 
-  X, X_nocounts
+  const inz=[1]
+
+  X, X_nocounts, inz
 end
 srprojX(m::DMR,counts,covars,projdir; select=:AICc, kwargs...) = srprojX(coef(m;select=select),counts,covars,projdir; kwargs...)
 
@@ -144,9 +147,11 @@ end
   hdmr version
   Assumes that covars include all variables for both positives and zeros models
   and indicates which variables are where with the index arrays inpos and inzero.
+  inz=[1,2] if both zpos and zzero are included
+  inz=[2] if zpos is dropped due to collinearity
 """
 function srprojX(coefspos::M, coefszero::M, counts, covars, projdir::Int;
-  inpos=1:size(covars,2), inzero=1:size(covars,2), includem=true, includezpos=true, testrank=true, srprojargs...) where {T, M<:AbstractMatrix{T}}
+  inpos=1:size(covars,2), inzero=1:size(covars,2), includem=true, inz=[1,2], testrank=true, srprojargs...) where {T, M<:AbstractMatrix{T}}
   # dims
   n,p = size(covars)
 
@@ -156,6 +161,7 @@ function srprojX(coefspos::M, coefszero::M, counts, covars, projdir::Int;
   # design matrix w/o counts data
   X_nocounts = [ones(n) getindex(covars,:,ixnotdir)]
 
+  includezpos = 1 ∈ inz
   # add srproj of counts data to X
   if includezpos
     Z = srproj(coefspos, coefszero, counts, dirpos, dirzero; srprojargs...)
@@ -170,7 +176,7 @@ function srprojX(coefspos::M, coefszero::M, counts, covars, projdir::Int;
     end
     Z = srproj(coefszero, posindic(counts), dirzero; srprojargs...)
     X = [X_nocounts Z]
-    includezpos = false
+    inz = [2]
   end
 
   if !includem
@@ -178,6 +184,22 @@ function srprojX(coefspos::M, coefszero::M, counts, covars, projdir::Int;
     X = X[:,1:end-1]
   end
 
-  X, X_nocounts, includezpos
+  X, X_nocounts, inz
 end
 srprojX(m::HDMR,counts,covars,projdir; select=:AICc, kwargs...) = srprojX(coef(m;select=select)...,counts,covars,projdir; kwargs...)
+
+# function srprojXinz(m::C, args...; kwargs...) where {BM<:DMR,FM,C<:CIR{BM,FM}}
+#   X, X_nocounts = srprojX(m.bwdm, args...; kwargs...)
+#   m.inz = [1]
+#   X, X_nocounts
+# end
+#
+# function srprojX!(m::C, args...; kwargs...) where {BM<:HDMR,FM,C<:CIR{BM,FM}}
+#   X, X_nocounts, includezpos = srprojX(m.bwdm, args...; kwargs...)
+#   if includezpos
+#     m.inz = [1,2]
+#   else
+#     m.inz = [2]
+#   end
+#   X, X_nocounts
+# end

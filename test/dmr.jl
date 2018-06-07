@@ -75,6 +75,8 @@ coefs = coef(dmrcoefs)
 
 @time dmrcoefsb = fit(DMRCoefs, covars, counts; γ=γ, λminratio=0.01)
 @test coef(dmrcoefs) == coefs
+@time dmrb = fit(DMR, covars, counts; γ=γ, λminratio=0.01)
+@test coef(dmrb) == coefs
 @test n > nobs(dmrcoefs)
 @test d == ncategories(dmrcoefs)
 @test p == ncovars(dmrcoefs)
@@ -87,12 +89,10 @@ coefs2 = coef(dmrcoefs2)
 
 @time dmrPaths = dmrpaths(covars, counts; γ=γ, λminratio=0.01, verbose=false)
 @time dmrPaths2 = fit(DMRPaths, covars, counts; γ=γ, λminratio=0.01, verbose=false)
-@time dmrPaths3 = fit(DMR, covars, counts; γ=γ, λminratio=0.01, verbose=false)
 @test coef(dmrPaths) == coef(dmrPaths2)
-@test coef(dmrPaths) == coef(dmrPaths3)
-@test n > nobs(dmrPaths3)
-@test d == ncategories(dmrPaths3)
-@test p == ncovars(dmrPaths3)
+@test n > nobs(dmrPaths)
+@test d == ncategories(dmrPaths)
+@test p == ncovars(dmrPaths)
 
 paths = dmrPaths.nlpaths
 # these terms require the full counts data, but we use only first 100 for quick testing
@@ -110,7 +110,8 @@ filename = joinpath(testdir,"plots","we8there.svg")
 @time zb = srproj(dmrcoefs, counts)
 @time zc = srproj(dmrPaths, counts)
 @test z == zb
-@test size(z) == (size(covars,1),p+1)
+@test z ≈ zc
+@test size(z) == (size(counts,1),p+1)
 
 regdata = DataFrame(y=covars[:,1], z=z[:,1], m=z[:,2])
 lm1 = lm(@formula(y ~ z+m), regdata)
@@ -146,19 +147,25 @@ r23 = adjr2(lm3)
 
 @test z1 ≈ z1Rdistrom rtol=rtol
 
-X1, X1_nocounts = srprojX(coefs,counts,covars,1; includem=true)
+X1, X1_nocounts, inz = srprojX(coefs,counts,covars,1; includem=true)
 @test X1_nocounts == [ones(n,1) covars[:,2:end]]
 @test X1 == [X1_nocounts z1]
-X1b, X1_nocountsb = srprojX(dmrcoefs,counts,covars,1; includem=true)
+@test inz == [1]
+
+X1b, X1_nocountsb, inz = srprojX(dmrcoefs,counts,covars,1; includem=true)
 @test X1 == X1b
 @test X1_nocounts == X1_nocountsb
+@test inz == [1]
 
-X2, X2_nocounts = srprojX(coefs,counts,covars,1; includem=false)
+X2, X2_nocounts, inz = srprojX(coefs,counts,covars,1; includem=false)
 @test X2_nocounts == X1_nocounts
 @test X2 == X1[:,1:end-1]
-X2b, X2_nocountsb = srprojX(dmrcoefs,counts,covars,1; includem=false)
+@test inz == [1]
+
+X2b, X2_nocountsb, inz = srprojX(dmrcoefs,counts,covars,1; includem=false)
 @test X2 == X2b
 @test X2_nocounts == X2_nocountsb
+@test inz == [1]
 
 # project in a single direction, focusing only on cj
 focusj = 3
@@ -166,31 +173,51 @@ focusj = 3
 @time z1jdense = srproj(coefs, full(counts), 1; focusj=focusj)
 @test z1jdense == z1j
 
-X1j, X1j_nocounts = srprojX(coefs,counts,covars,1; includem=true, focusj=focusj)
+X1j, X1j_nocounts, inz = srprojX(coefs,counts,covars,1; includem=true, focusj=focusj)
 @test X1j_nocounts == [ones(n,1) covars[:,2:end]]
 @test X1j == [X1_nocounts z1j]
+@test inz == [1]
 
-X2j, X2j_nocounts = srprojX(coefs,counts,covars,1; includem=false, focusj=focusj)
+X2j, X2j_nocounts, inz = srprojX(coefs,counts,covars,1; includem=false, focusj=focusj)
 @test X2j_nocounts == X1_nocounts
 @test X2j == X1j[:,1:end-1]
+@test inz == [1]
 
-X1jfull, X1jfull_nocounts = srprojX(coefs,full(counts),covars,1; includem=true, focusj=focusj)
+X1jfull, X1jfull_nocounts, inz = srprojX(coefs,full(counts),covars,1; includem=true, focusj=focusj)
 @test X1jfull ≈ X1j
 @test X1jfull_nocounts ≈ X1jfull_nocounts
+@test inz == [1]
 
-X2jfull, X2jfull_nocounts = srprojX(coefs,full(counts),covars,1; includem=false, focusj=focusj)
+X2jfull, X2jfull_nocounts, inz = srprojX(coefs,full(counts),covars,1; includem=false, focusj=focusj)
 @test X2jfull ≈ X2j
 @test X2jfull_nocounts ≈ X2jfull_nocounts
+@test inz == [1]
 
+# MNIR
+# using Juno
+# Juno.@enter fit(CIR{DMR,LinearModel},covars,counts,1)
+@time mnir = fit(CIR{DMR,LinearModel},covars,counts,1; γ=γ, λminratio=0.01, nocounts=true)
+@test coefbwd(mnir) ≈ coef(dmrcoefs)
 
-@time cvstats13 = cross_validate_dmr_srproj(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
-@time cvstats13b = cross_validate_dmr_srproj(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+zlm = lm(hcat(ones(n,1),z1,covars[:,2:end]),covars[:,1])
+@test r2(zlm) ≈ r2(mnir)
+@test adjr2(zlm) ≈ adjr2(mnir)
+@test predict(zlm,hcat(ones(10,1),z1[1:10,:],covars[1:10,2:end])) ≈ predict(mnir,covars[1:10,:],counts[1:10,:])
+
+zlmnocounts = lm(hcat(ones(n,1),covars[:,2:end]),covars[:,1])
+@test r2(zlmnocounts) ≈ r2(mnir; nocounts=true)
+@test adjr2(zlmnocounts) ≈ adjr2(mnir; nocounts=true)
+@test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,2:end])) ≈ predict(mnir,covars[1:10,:],counts[1:10,:]; nocounts=true)
+
+# CV
+@time cvstats13 = cross_validate_mnir(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+@time cvstats13b = cross_validate_mnir(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
 @test isequal(cvstats13,cvstats13b)
 
-cvstats14 = cross_validate_dmr_srproj(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
+cvstats14 = cross_validate_mnir(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
 @test !(isequal(cvstats13,cvstats14))
 
-cvstatsSerialKfold = cross_validate_dmr_srproj(covars,smallcounts,1; k=5, gentype=SerialKfold, γ=γ)
+@time cvstatsSerialKfold = cross_validate_dmr_srproj(covars,smallcounts,1; k=5, gentype=SerialKfold, γ=γ)
 
 end
 

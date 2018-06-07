@@ -155,7 +155,60 @@ function initcv(seed,gentype,n,k)
   gen, cvd
 end
 
-function cross_validate_dmr_srproj(covars,counts,projdir; k=10, gentype=Kfold, γ=0.0, seed=13, showwarnings=false)
+# function cross_validate_dmr_srproj(covars,counts,projdir; k=10, gentype=Kfold, γ=0.0, seed=13, showwarnings=false)
+#   # dims
+#   n,p = size(covars)
+#   # ixnotdir = 1:p .!= projdir
+#
+#   # init
+#   gen, cvd = initcv(seed,gentype,n,k)
+#
+#   # run cv
+#   for (i, ixtrain) in enumerate(gen)
+#       ixtest = setdiff(1:n, ixtrain)
+#
+#       # estimate dmr in train subsample
+#       coefs = dmr(covars[ixtrain,:],counts[ixtrain,:]; γ=γ, showwarnings=showwarnings)
+#
+#       # target variable
+#       ins_y = covars[ixtrain,projdir]
+#
+#       # get train sample design matrices for regressions
+#       X, X_nocounts = srprojX(coefs,counts[ixtrain,:],covars[ixtrain,:],projdir)
+#
+#       # benchmark model w/o text
+#       insamplelm_nocounts = lm(X_nocounts,ins_y)
+#       ins_yhat_nocounts = predict(insamplelm_nocounts,X_nocounts)
+#
+#       # model with text
+#       insamplelm = lm(X,ins_y)
+#       ins_yhat = predict(insamplelm,X)
+#
+#       # evaluate out-of-sample in test subsample
+#       # target variable
+#       oos_y = covars[ixtest,projdir]
+#
+#       # get test sample design matrices
+#       newX, newX_nocounts = srprojX(coefs,counts[ixtest,:],covars[ixtest,:],projdir)
+#
+#       # benchmark model w/o text
+#       oos_yhat_nocounts = predict(insamplelm_nocounts,newX_nocounts)
+#
+#       # dmr model w/ text
+#       oos_yhat = predict(insamplelm,newX)
+#
+#       # save results
+#       append!(cvd, CVDataRow(ins_y,oos_y,ins_yhat,oos_yhat,ins_yhat_nocounts,oos_yhat_nocounts))
+#
+#       info("estimated fold $i/$k")
+#   end
+#
+#   info("calculated aggreagate fit for $(length(cvd.ins_ys)) in-sample and $(length(cvd.oos_ys)) out-of-sample total observations (with duplication).")
+#
+#   CVStats(cvd)
+# end
+
+function cross_validate_mnir(covars,counts,projdir; k=10, gentype=Kfold, seed=13, dcrkwargs...)
   # dims
   n,p = size(covars)
   # ixnotdir = 1:p .!= projdir
@@ -168,34 +221,26 @@ function cross_validate_dmr_srproj(covars,counts,projdir; k=10, gentype=Kfold, �
       ixtest = setdiff(1:n, ixtrain)
 
       # estimate dmr in train subsample
-      coefs = dmr(covars[ixtrain,:],counts[ixtrain,:]; γ=γ, showwarnings=showwarnings)
+      mnir = fit(CIR{DMR,LinearModel},covars[ixtrain,:],counts[ixtrain,:],projdir; nocounts=true, dcrkwargs...)
 
       # target variable
       ins_y = covars[ixtrain,projdir]
 
-      # get train sample design matrices for regressions
-      X, X_nocounts = srprojX(coefs,counts[ixtrain,:],covars[ixtrain,:],projdir)
-
       # benchmark model w/o text
-      insamplelm_nocounts = lm(X_nocounts,ins_y)
-      ins_yhat_nocounts = predict(insamplelm_nocounts,X_nocounts)
+      ins_yhat_nocounts = predict(mnir,covars[ixtrain,:],counts[ixtrain,:]; nocounts=true)
 
       # model with text
-      insamplelm = lm(X,ins_y)
-      ins_yhat = predict(insamplelm,X)
+      ins_yhat = predict(mnir,covars[ixtrain,:],counts[ixtrain,:]; nocounts=false)
 
       # evaluate out-of-sample in test subsample
       # target variable
       oos_y = covars[ixtest,projdir]
 
-      # get test sample design matrices
-      newX, newX_nocounts = srprojX(coefs,counts[ixtest,:],covars[ixtest,:],projdir)
-
       # benchmark model w/o text
-      oos_yhat_nocounts = predict(insamplelm_nocounts,newX_nocounts)
+      oos_yhat_nocounts = predict(mnir,covars[ixtest,:],counts[ixtest,:]; nocounts=true)
 
       # dmr model w/ text
-      oos_yhat = predict(insamplelm,newX)
+      oos_yhat = predict(mnir,covars[ixtest,:],counts[ixtest,:]; nocounts=false)
 
       # save results
       append!(cvd, CVDataRow(ins_y,oos_y,ins_yhat,oos_yhat,ins_yhat_nocounts,oos_yhat_nocounts))

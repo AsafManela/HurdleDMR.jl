@@ -8,9 +8,10 @@ using Lasso, GLM.FPVector, DataFrames, Reexport, Compat
 
 export dmr, dmrpaths, hdmr, hdmrpaths, collapse, fit, coef, srproj, srprojX, @~, mcdmr, posindic
 export DCR, DMR, HDMR, DMRCoefs, DMRPaths, HDMRCoefs, HDMRPaths
+export CIR, predict, coeffwd, coefbwd
 export hasintercept, ncategories, nobs, ncoefs, ncovars, ncovarszero, ncovarspos, ncoefszero, ncoefspos
 export Hurdle, PositivePoisson, LogProductLogLink, logpdf_exact, logpdf_approx
-export cross_validate_dmr_srproj, cross_validate_hdmr_srproj, SerialKfold
+export cross_validate_mnir, cross_validate_hdmr_srproj, SerialKfold
 export CVStats, CVType, CVData, CVDataRow
 
 ##############################################
@@ -26,8 +27,7 @@ include("sparserank.jl")
 include("dmr.jl")
 include("hdmr.jl")
 include("srproj.jl")
-include("mnir.jl")
-include("hir.jl")
+include("invreg.jl")
 include("multicounts.jl")
 include("cross_validation.jl")
 
