@@ -133,14 +133,14 @@ coefs = coef(dmrcoefs)
 # @test X2_nocounts == X1_nocounts
 # @test X2 == X1[:,1:end-1]
 #
-# @time cvstats13 = cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
-# @time cvstats13b = cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+# @time cvstats13 = cross_validate_mnir(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+# @time cvstats13b = cross_validate_mnir(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
 # @test isequal(cvstats13,cvstats13b)
 #
-# cvstats14 = cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
+# cvstats14 = cross_validate_mnir(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
 # @test !(isequal(cvstats13,cvstats14))
 #
-# cvstatsSerialKfold = cross_validate_dmr_srproj(covars,counts,1; k=5, gentype=SerialKfold, γ=γ)
+# cvstatsSerialKfold = cross_validate_mnir(covars,counts,1; k=5, gentype=SerialKfold, γ=γ)
 #
 # #########################################################################3
 # # profile cv
@@ -149,11 +149,11 @@ coefs = coef(dmrcoefs)
 # # # NOTE: to run this and get the profile, do not add any parallel workers
 # # # this makes it slow (about 350 secs) and may miss some serialization costs
 # # # but I don't know how to profile all the workers too ...
-# # @time cvstats13 = cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+# # @time cvstats13 = cross_validate_mnir(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
 # # using ProfileView
 # # Profile.init(delay=0.001)
 # # Profile.clear()
-# # @profile cvstats13 = cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ);
+# # @profile cvstats13 = cross_validate_mnir(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ);
 # # ProfileView.view()
 # # # ProfileView.svgwrite(joinpath(tempdir(),"profileview.svg"))
 # # # Profile.print()

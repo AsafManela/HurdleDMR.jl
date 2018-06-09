@@ -42,8 +42,11 @@ d = size(counts,2)
 # reload("HurdleDMR")
 
 @time A = SharedMatrix{Float64}(3000,30000)
-@time Av = view(A,:,[3,4])
-@time Ag = getindex(A,:,[3,4])
+rand!(A)
+@time Av = view(A,:,3:20000)
+@time Ag = getindex(A,:,3:20000)
+@time inv(Av'*Av)
+@time inv(Ag'*Ag)
 
 # hurdle dmr parallel local cluster
 @time hdmrcoefs = hdmr(covars, counts; parallel=true, verbose=true)

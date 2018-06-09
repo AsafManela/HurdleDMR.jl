@@ -217,7 +217,7 @@ zlmnocounts = lm(hcat(ones(n,1),covars[:,2:end]),covars[:,1])
 cvstats14 = cross_validate_mnir(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
 @test !(isequal(cvstats13,cvstats14))
 
-@time cvstatsSerialKfold = cross_validate_dmr_srproj(covars,smallcounts,1; k=5, gentype=SerialKfold, γ=γ)
+@time cvstatsSerialKfold = cross_validate_mnir(covars,smallcounts,1; k=5, gentype=SerialKfold, γ=γ)
 
 end
 
@@ -256,11 +256,11 @@ end
 # # NOTE: to run this and get the profile, do not add any parallel workers
 # # this makes it slow (about 350 secs) and may miss some serialization costs
 # # but I don't know how to profile all the workers too ...
-# @time cvstats13 = cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+# @time cvstats13 = cross_validate_mnir(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
 # using ProfileView
 # Profile.init(delay=0.001)
 # Profile.clear()
-# @profile cvstats13 = cross_validate_dmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ);
+# @profile cvstats13 = cross_validate_mnir(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ);
 # ProfileView.view()
 # # ProfileView.svgwrite(joinpath(tempdir(),"profileview.svg"))
 # # Profile.print()
