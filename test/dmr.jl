@@ -47,6 +47,7 @@ z1Rdistrom = convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","dmr_z1Rdi
 # covars = we8thereRatings[:,[:Overall]]
 covars = we8thereRatings[:,:]
 n,p = size(covars)
+f = @formula(c ~ Food + Service + Value + Atmosphere + Overall)
 # inzero = 1:p
 #
 # inpos = [1,3]
@@ -80,6 +81,15 @@ coefs = coef(dmrcoefs)
 @test n > nobs(dmrcoefs)
 @test d == ncategories(dmrcoefs)
 @test p == ncovars(dmrcoefs)
+
+f1 = @model(y ~ x1 , y2 ~ x2)
+info(f1)
+
+# using a dataframe and list of variables
+@time dmrcoefsdf = fit(DMRCoefs, f, we8thereRatings, counts; γ=γ, λminratio=0.01)
+@test coef(dmrcoefsdf) == coefs
+@time dmrpathsdf = fit(DMRPaths, f, we8thereRatings, counts; γ=γ, λminratio=0.01)
+@test coef(dmrpathsdf) ≈ coefs
 
 @time dmrcoefs2 = dmr(covars, counts; local_cluster=false, γ=γ, λminratio=0.01)
 coefs2 = coef(dmrcoefs2)

@@ -2,7 +2,7 @@
 # hurdle
 #############################################
 
-using Reexport, GLM.FPVector, GLM.FP, Compat, StatsBase
+using Reexport, GLM.FPVector, GLM.FP, StatsBase
 @reexport using GLM, StatsBase
 using Lasso
 

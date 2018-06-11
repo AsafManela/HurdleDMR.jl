@@ -49,16 +49,46 @@ struct HDMRCoefs{T<:AbstractFloat,V} <: HDMR{T,V}
   end
 end
 
+# version that returns just the coefficients
 function StatsBase.fit(::Type{H}, covars::AbstractMatrix{T}, counts::AbstractMatrix{V};
   kwargs...) where {T<:AbstractFloat, V, H<:HDMR}
 
   hdmr(covars,counts; kwargs...)
 end
 
+# version that returns the entire regulatrization paths
 function StatsBase.fit(::Type{HDMRPaths}, covars::AbstractMatrix{T}, counts::AbstractMatrix{V};
   kwargs...) where {T<:AbstractFloat, V}
 
   hdmrpaths(covars, counts; kwargs...)
+end
+
+# fit wrapper that takes a model (two formulas) and dataframe instead of the covars matrix
+# e.g. @model(h ~ x1 + x2, c ~ x1)
+function StatsBase.fit(::Type{T}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix, args...;
+  contrasts::Dict = Dict(), kwargs...) where {T<:HDMR}
+
+  fzero = m.parts[1]
+  fpos = m.parts[2]
+  @assert fzero.lhs == nothing || fzero.lhs == :h "lhs of formula should be nothing or 'h'"
+  @assert fpos.lhs == nothing || fpos.lhs == :c "lhs of formula should be nothing or 'c'"
+
+  # ignore the response after cloning the formula
+  fzero = copy(fzero)
+  fpos = copy(fpos)
+  fzero.lhs = nothing
+  fpos.lhs = nothing
+
+  trmszero = StatsModels.Terms(fzero)
+  trmspos = StatsModels.Terms(fpos)
+  trms, inzero, inpos = mergerhsterms(trmszero,trmspos)
+
+  StatsModels.drop_intercept(T) && (trms.intercept = true)
+  mf = ModelFrame(trms, df, contrasts=contrasts)
+  StatsModels.drop_intercept(T) && (mf.terms.intercept = false)
+  mm = ModelMatrix(mf)
+
+  StatsModels.DataFrameRegressionModel(fit(T, mm.m, counts, args...; inzero=inzero, inpos=inpos, kwargs...), mf, mm)
 end
 
 "Number of covariates used for HDMR estimation of zeros model"

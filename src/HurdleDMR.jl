@@ -2,12 +2,12 @@
 
 module HurdleDMR
 
-using Lasso, GLM.FPVector, DataFrames, Reexport, Compat
+using Lasso, GLM.FPVector, DataFrames, Reexport
 
-@reexport using GLM, StatsBase, Distributions
+@reexport using GLM, StatsBase, Distributions, StatsModels
 
 export dmr, dmrpaths, hdmr, hdmrpaths, collapse, fit, coef, srproj, srprojX, @~, mcdmr, posindic
-export DCR, DMR, HDMR, DMRCoefs, DMRPaths, HDMRCoefs, HDMRPaths
+export DCR, DMR, HDMR, DMRCoefs, DMRPaths, HDMRCoefs, HDMRPaths, @model
 export CIR, predict, coeffwd, coefbwd
 export hasintercept, ncategories, nobs, ncoefs, ncovars, ncovarszero, ncovarspos, ncoefszero, ncoefspos
 export Hurdle, PositivePoisson, LogProductLogLink, logpdf_exact, logpdf_approx
@@ -24,6 +24,7 @@ export CVStats, CVType, CVData, CVDataRow
 include("positive_poisson.jl")
 include("hurdle.jl")
 include("sparserank.jl")
+include("model.jl")
 include("dmr.jl")
 include("hdmr.jl")
 include("srproj.jl")

@@ -117,21 +117,40 @@ struct DMRCoefs{T<:AbstractFloat,V} <: DMR{T,V}
     new(coefs, intercept, n, d, p)
 end
 
+# version that returns just the coefficients
 function StatsBase.fit(::Type{D}, covars::AbstractMatrix{T}, counts::AbstractMatrix{V};
-  intercept=true, parallel=true, local_cluster=true, verbose=true, showwarnings=false,
   kwargs...) where {T<:AbstractFloat, V, D<:DMR}
 
-  if local_cluster || !parallel
-    dmr_local_cluster(covars,counts,parallel,verbose,showwarnings,intercept; kwargs...)
-  else
-    dmr_remote_cluster(covars,counts,parallel,verbose,showwarnings,intercept; kwargs...)
-  end
+  dmr(covars, counts; kwargs...)
 end
 
+# version that returns the entire regulatrization paths
 function StatsBase.fit(::Type{DMRPaths}, covars::AbstractMatrix{T}, counts::AbstractMatrix{V};
   kwargs...) where {T<:AbstractFloat, V}
 
   dmrpaths(covars, counts; kwargs...)
+end
+
+# We take care of the intercept ourselves, without relying on StatsModels, because
+# it is unregulated, so we drop it from formula
+StatsModels.drop_intercept(::Type{T}) where {T<:DCR} = true
+
+# fit wrapper that takes a formula and dataframe instead of the covars matrix
+function StatsBase.fit(::Type{T}, f::Formula, df::AbstractDataFrame, counts::AbstractMatrix, args...;
+  contrasts::Dict = Dict(), kwargs...) where {T<:DMR}
+    @assert f.lhs == nothing || f.lhs == :c "lhs of formula should be nothing or 'c'"
+
+    # ignore the response after cloning the formula
+    ftmp = copy(f)
+    ftmp.lhs = nothing
+
+    trms = StatsModels.Terms(ftmp)
+    StatsModels.drop_intercept(T) && (trms.intercept = true)
+    mf = ModelFrame(trms, df, contrasts=contrasts)
+    StatsModels.drop_intercept(T) && (mf.terms.intercept = false)
+    mm = ModelMatrix(mf)
+
+    StatsModels.DataFrameRegressionModel(fit(T, mm.m, counts, args...; kwargs...), mf, mm)
 end
 
 hasintercept(m::DCR) = m.intercept

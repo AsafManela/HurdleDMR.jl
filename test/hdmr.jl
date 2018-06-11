@@ -39,6 +39,8 @@ d = size(counts,2)
 ###########################################################
 @testset "hurdle-dmr with covarspos == covarszero" begin
 
+f = @model(h ~ Food + Service + Value + Atmosphere + Overall, c ~ Food + Service + Value + Atmosphere + Overall)
+
 # reload("HurdleDMR")
 
 # hurdle dmr parallel local cluster
@@ -83,6 +85,19 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 # @time hdmrcoefs3 = fit(HDMRCoefs, covars, counts; parallel=false)
 # @test coef(hdmrcoefs3)[1] ≈ coefsHspos
 # @test coef(hdmrcoefs3)[2] ≈ coefsHszero
+
+# using a dataframe and formula
+@time hdmrcoefsdf = fit(HDMRCoefs, f, we8thereRatings, counts; γ=γ, λminratio=0.01)
+@test coef(hdmrcoefsdf)[1] ≈ coefsHppos
+@test coef(hdmrcoefsdf)[2] ≈ coefsHpzero
+[coef(hdmrcoefsdf)[2]' coefsHpzero']
+@time hdmrpathsdf = fit(HDMRPaths, f, we8thereRatings, counts; γ=γ, λminratio=0.01)
+@test coef(hdmrpathsdf)[1][1,:] ≈ coefsHppos3[1,:]
+@test coef(hdmrpathsdf)[1][2,:] ≈ coefsHppos3[2,:]
+@test coef(hdmrpathsdf)[1][:,3] ≈ coefsHppos3[:,3]
+@test coef(hdmrpathsdf)[1][:,4] ≈ coefsHppos3[:,4]
+@test coef(hdmrpathsdf)[1][:,5] ≈ coefsHppos3[:,5]
+@test coef(hdmrpathsdf)[1][:,6] ≈ coefsHppos3[:,6]
 
 # test posindic used by srproj
 m = rand(Poisson(0.1),30,500)
@@ -187,6 +202,8 @@ end
 # hurdle with covarspos ≠ covarszero, both models includes projdir
 ####################################################################
 @testset "hurdle-dmr with covarspos ≠ covarszero, both models includes projdir" begin
+
+mf = @model(h ~ Food + Service + Value + Atmosphere + Overall, c ~ Food + Value)
 
 # hurdle dmr parallel local cluster
 @time hdmrcoefs = hdmr(covars, counts; inpos=inpos, parallel=true)
@@ -307,6 +324,7 @@ end
 ########################################################################
 @testset "hurdle-dmr with covarspos ≠ covarszero, only pos model includes projdir" begin
 
+mf = @model(h ~ Service + Value + Atmosphere + Overall, c ~ Food + Service + Value + Atmosphere + Overall)
 covarszero = covars[:,2:end]
 nzero,pzero = size(covarszero)
 inzero = 2:p
