@@ -67,7 +67,8 @@ end
 """
   Builds the design matrix X for predicting covar in direction projdir
   dmr version
-  inz=[1] always for dmr
+  inz=[1] and testrank=false always for dmr, so variables are ignored and only here for convinence
+    of unified calling function
 """
 function srprojX(coefs::AbstractMatrix{T},counts,covars,projdir; includem=true, srprojargs...) where T
   # dims
@@ -91,7 +92,7 @@ function srprojX(coefs::AbstractMatrix{T},counts,covars,projdir; includem=true, 
 
   X, X_nocounts, inz
 end
-srprojX(m::DMR,counts,covars,projdir; select=:AICc, kwargs...) = srprojX(coef(m;select=select),counts,covars,projdir; kwargs...)
+srprojX(m::DMR,counts,covars,projdir; select=:AICc, inz=[1], testrank=false, kwargs...) = srprojX(coef(m;select=select),counts,covars,projdir; kwargs...)
 
 """
 srproj for hurdle dmr takes two coefficent matrices

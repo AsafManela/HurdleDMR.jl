@@ -41,25 +41,14 @@ d = size(counts,2)
 
 # reload("HurdleDMR")
 
-N = 10000
-@time A = SharedMatrix{Float64}(N,2N)
-rand!(A)
-@time Av = view(A,:,1:2:2N)
-@time Ag = getindex(A,:,1:2:2N)
-@time inv(Av)
-@time inv(Ag)
-
 # hurdle dmr parallel local cluster
 @time hdmrcoefs = hdmr(covars, counts; parallel=true, verbose=true)
-@time hdmroldcoefs = hdmrold(covars, counts; parallel=true, verbose=true)
 coefsHppos, coefsHpzero = coef(hdmrcoefs)
-coefsHpposold, coefsHpzeroold = coef(hdmroldcoefs)
-@test coefsHppos ≈ coefsHpposold
-@test coefsHpzero ≈ coefsHpzeroold
 @test size(coefsHppos) == (p+1, d)
 @test size(coefsHpzero) == (p+1, d)
 
 @time hdmrcoefsb = fit(HDMRCoefs, covars, counts; parallel=true, verbose=true)
+coef(hdmrcoefsb)[1]
 @test coef(hdmrcoefsb)[1] == coefsHppos
 @test coef(hdmrcoefsb)[2] == coefsHpzero
 @test n == nobs(hdmrcoefs)
@@ -69,13 +58,9 @@ coefsHpposold, coefsHpzeroold = coef(hdmroldcoefs)
 
 # hurdle dmr parallel remote cluster
 @time hdmrcoefs2 = hdmr(covars, counts; parallel=true, local_cluster=false)
-@time hdmroldcoefs2 = hdmrold(covars, counts; parallel=true, local_cluster=false)
 coefsHppos2, coefsHpzero2 = coef(hdmrcoefs2)
 @test coefsHppos ≈ coefsHppos2
 @test coefsHpzero ≈ coefsHpzero2
-coefsHpposold, coefsHpzeroold = coef(hdmroldcoefs)
-@test coefsHppos ≈ coefsHpposold
-@test coefsHpzero ≈ coefsHpzeroold
 @time hdmrcoefs2 = fit(HDMRCoefs, covars, counts; parallel=true, local_cluster=false)
 @test coef(hdmrcoefs2)[1] ≈ coefsHppos2
 @test coef(hdmrcoefs2)[2] ≈ coefsHpzero2
@@ -181,19 +166,19 @@ predict(hir,covars[1:10,:],counts[1:10,:])
 @test predict(zlm,hcat(ones(10,1),Z1[1:10,:],covars[1:10,2:end])) ≈ predict(hir,covars[1:10,:],counts[1:10,:])
 
 zlmnocounts = lm(hcat(ones(n,1),covars[:,2:end]),covars[:,1])
-@test r2(zlmnocounts) ≈ r2(mnir; nocounts=true)
-@test adjr2(zlmnocounts) ≈ adjr2(mnir; nocounts=true)
-@test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,2:end])) ≈ predict(mnir,covars[1:10,:],counts[1:10,:]; nocounts=true)
+@test r2(zlmnocounts) ≈ r2(hir; nocounts=true)
+@test adjr2(zlmnocounts) ≈ adjr2(hir; nocounts=true)
+@test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,2:end])) ≈ predict(hir,covars[1:10,:],counts[1:10,:]; nocounts=true)
 
 # CV
-@time cvstats13 = cross_validate_hdmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
-cvstats13b = cross_validate_hdmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+@time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+cvstats13b = cv(CIR{HDMR,LinearModel},covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
 @test isequal(cvstats13,cvstats13b)
 
-@time cvstats14 = cross_validate_hdmr_srproj(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
+@time cvstats14 = cv(CIR{HDMR,LinearModel},covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
 @test !(isequal(cvstats13,cvstats14))
 
-@time cvstatsSerialKfold = cross_validate_hdmr_srproj(covars,counts,1; k=3, gentype=SerialKfold, γ=γ)
+@time cvstatsSerialKfold = cv(CIR{HDMR,LinearModel},covars,counts,1; k=3, gentype=SerialKfold, γ=γ)
 @test !(isequal(cvstats13,cvstatsSerialKfold))
 
 end
@@ -204,29 +189,29 @@ end
 @testset "hurdle-dmr with covarspos ≠ covarszero, both models includes projdir" begin
 
 # hurdle dmr parallel local cluster
-@time hdmrcoefs = hdmr(covars, counts; covarspos=covarspos, parallel=true)
+@time hdmrcoefs = hdmr(covars, counts; inpos=inpos, parallel=true)
 coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test size(coefsHppos) == (ppos+1, d)
 @test size(coefsHpzero) == (p+1, d)
 
-@time hdmrcoefsb = fit(HDMRCoefs, covars, counts; covarspos=covarspos, parallel=true, verbose=true)
+@time hdmrcoefsb = fit(HDMRCoefs, covars, counts; inpos=inpos, parallel=true, verbose=true)
 @test coef(hdmrcoefsb)[1] == coefsHppos
 @test coef(hdmrcoefsb)[2] == coefsHpzero
-@test n == nobs(hdmrcoefs)
-@test d == ncategories(hdmrcoefs)
-@test ppos == ncovarspos(hdmrcoefs)
-@test p == ncovarszero(hdmrcoefs)
+@test n == nobs(hdmrcoefsb)
+@test d == ncategories(hdmrcoefsb)
+@test ppos == ncovarspos(hdmrcoefsb)
+@test p == ncovarszero(hdmrcoefsb)
 
 # hurdle dmr parallel remote cluster
-@time hdmrcoefs2 = hdmr(covars, counts; covarspos=covarspos, parallel=true, local_cluster=false)
-coefsHppos2, coefsHpzero2 = coef(hdmrcoefs)
+@time hdmrcoefs2 = hdmr(covars, counts; inpos=inpos, parallel=true, local_cluster=false)
+coefsHppos2, coefsHpzero2 = coef(hdmrcoefs2)
 @test coefsHppos ≈ coefsHppos2
 @test coefsHpzero ≈ coefsHpzero2
-@time hdmrcoefs2 = fit(HDMRCoefs, covars, counts; covarspos=covarspos, parallel=true, local_cluster=false)
+@time hdmrcoefs2 = fit(HDMRCoefs, covars, counts; inpos=inpos, parallel=true, local_cluster=false)
 @test coef(hdmrcoefs2)[1] ≈ coefsHppos2
 @test coef(hdmrcoefs2)[2] ≈ coefsHpzero2
 
-@time hdmrpaths3 = fit(HDMRPaths, covars, counts; covarspos=covarspos, parallel=true, verbose=true)
+@time hdmrpaths3 = fit(HDMRPaths, covars, counts; inpos=inpos, parallel=true, verbose=true)
 coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 @test coefsHppos3 ≈ coefsHppos
 @test coefsHpzero3 ≈ coefsHpzero
@@ -305,14 +290,14 @@ X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,3; inpos=inpos
 @test X3_nocountsb == X3_nocountsb
 @test includezposb == includezposb
 
-@time cvstats13 = cross_validate_hdmr_srproj(covars,counts,1; inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
-@time cvstats13b = cross_validate_hdmr_srproj(covars,counts,1; inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
+@time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,1; inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
+@time cvstats13b = cv(CIR{HDMR,LinearModel},covars,counts,1; inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
 @test isequal(cvstats13,cvstats13b)
 
-@time cvstats14 = cross_validate_hdmr_srproj(covars,counts,1; inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
+@time cvstats14 = cv(CIR{HDMR,LinearModel},covars,counts,1; inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
 @test !(isequal(cvstats13,cvstats14))
 
-@time cvstatsSerialKfold = cross_validate_hdmr_srproj(covars,counts,1; inpos=inpos, k=3, gentype=SerialKfold, γ=γ)
+@time cvstatsSerialKfold = cv(CIR{HDMR,LinearModel},covars,counts,1; inpos=inpos, k=3, gentype=SerialKfold, γ=γ)
 @test !(isequal(cvstats13,cvstatsSerialKfold))
 
 end
@@ -327,12 +312,12 @@ nzero,pzero = size(covarszero)
 inzero = 2:p
 
 # hurdle dmr parallel local cluster
-@time hdmrcoefs = hdmr(covarszero, counts; covarspos=covarspos, parallel=true)
+@time hdmrcoefs = hdmr(covars, counts; inpos=inpos, inzero=inzero, parallel=true)
 coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test size(coefsHppos) == (ppos+1, d)
 @test size(coefsHpzero) == (pzero+1, d)
 
-@time hdmrcoefsb = fit(HDMRCoefs, covarszero, counts; covarspos=covarspos, parallel=true)
+@time hdmrcoefsb = fit(HDMRCoefs, covars, counts; inpos=inpos, inzero=inzero, parallel=true)
 @test coef(hdmrcoefsb)[1] == coefsHppos
 @test coef(hdmrcoefsb)[2] == coefsHpzero
 @test n == nobs(hdmrcoefs)
@@ -341,15 +326,17 @@ coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test pzero == ncovarszero(hdmrcoefs)
 
 # hurdle dmr parallel remote cluster
-@time hdmrcoefs2 = hdmr(covarszero, counts; covarspos=covarspos, parallel=true, local_cluster=false)
-coefsHppos2, coefsHpzero2 = coef(hdmrcoefs)
+@time hdmrcoefs2 = hdmr(covars, counts; inpos=inpos, inzero=inzero, parallel=true, local_cluster=false)
+coefsHppos2, coefsHpzero2 = coef(hdmrcoefs2)
 @test coefsHppos ≈ coefsHppos2
 @test coefsHpzero ≈ coefsHpzero2
-@time hdmrcoefs2 = fit(HDMRCoefs, covarszero, counts; covarspos=covarspos, parallel=true, local_cluster=false)
+@time hdmrcoefs2 = fit(HDMRCoefs, covars, counts; inpos=inpos, inzero=inzero, parallel=true, local_cluster=false)
 @test coef(hdmrcoefs2)[1] ≈ coefsHppos2
 @test coef(hdmrcoefs2)[2] ≈ coefsHpzero2
 
-@time hdmrpaths3 = fit(HDMRPaths, covarszero, counts; covarspos=covarspos, parallel=true, verbose=true)
+@time hdmrpaths3 = fit(HDMRPaths, covars, counts; inpos=inpos, inzero=inzero, parallel=true, verbose=true)
+# using Juno
+# Juno.@enter fit(HDMRPaths, covars, counts; inpos=inpos, inzero=inzero, parallel=true, verbose=true)
 coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 @test coefsHppos3 ≈ coefsHppos
 @test coefsHpzero3 ≈ coefsHpzero
@@ -422,14 +409,14 @@ X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,3; inzero=inze
 @test X3_nocountsb == X3_nocountsb
 @test includezposb == includezposb
 
-@time cvstats13 = cross_validate_hdmr_srproj(covars,counts,1; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
-@time cvstats13b = cross_validate_hdmr_srproj(covars,counts,1; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
+@time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,1; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
+@time cvstats13b = cv(CIR{HDMR,LinearModel},covars,counts,1; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
 @test isequal(cvstats13,cvstats13b)
 
-@time cvstats14 = cross_validate_hdmr_srproj(covars,counts,1; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
+@time cvstats14 = cv(CIR{HDMR,LinearModel},covars,counts,1; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
 @test !(isequal(cvstats13,cvstats14))
 
-@time cvstatsSerialKfold = cross_validate_hdmr_srproj(covars,counts,1; inzero=inzero, inpos=inpos, k=3, gentype=SerialKfold, γ=γ)
+@time cvstatsSerialKfold = cv(CIR{HDMR,LinearModel},covars,counts,1; inzero=inzero, inpos=inpos, k=3, gentype=SerialKfold, γ=γ)
 @test !(isequal(cvstats13,cvstatsSerialKfold))
 
 end
@@ -555,6 +542,13 @@ end
 # [b0 coefs']'
 #
 
+# N = 10000
+# @time A = SharedMatrix{Float64}(N,2N)
+# rand!(A)
+# @time Av = view(A,:,1:2:2N)
+# @time Ag = getindex(A,:,1:2:2N)
+# @time inv(Av)
+# @time inv(Ag)
 
 #
 # rmprocs(workers())

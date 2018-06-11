@@ -60,7 +60,7 @@ function StatsBase.predict(m::CIR,covars::AbstractMatrix{T},counts::AbstractMatr
   nocounts=false) where {T<:AbstractFloat,V}
 
   # calculate srproj design matrices for regressions
-  X, X_nocounts = srprojX(m.bwdm,counts,covars,m.projdir)
+  X, X_nocounts, inz = srprojX(m.bwdm,counts,covars,m.projdir;inz=m.inz,testrank=false)
 
   # use forward model to predict
   if nocounts
@@ -74,24 +74,24 @@ function StatsBase.predict(m::CIR,covars::AbstractMatrix{T},counts::AbstractMatr
   end
 end
 
-# when the backward model is an HDMR we need to make sure we didn't drop a colinear zpos
-function StatsBase.predict(m::C,covars::AbstractMatrix{T},counts::AbstractMatrix{V};
-  nocounts=false) where {T<:AbstractFloat,V,BM<:HDMR,FM,C<:CIR{BM,FM}}
-
-  # calculate srproj design matrices for regressions
-  X, X_nocounts, includezpos = srprojX(m.bwdm,counts,covars,m.projdir)
-
-  # use forward model to predict
-  if nocounts
-    if isdefined(m,:fwdmnocounts)
-      predict(m.fwdmnocounts,X_nocounts)
-    else
-      error("To predict with benchmark model w/o counts the CIR model must be fit with nocounts=true")
-    end
-  else
-    predict(m.fwdm,X)
-  end
-end
+# # when the backward model is an HDMR we need to make sure we didn't drop a colinear zpos
+# function StatsBase.predict(m::C,covars::AbstractMatrix{T},counts::AbstractMatrix{V};
+#   nocounts=false) where {T<:AbstractFloat,V,BM<:HDMR,FM,C<:CIR{BM,FM}}
+#
+#   # calculate srproj design matrices for regressions
+#   X, X_nocounts, includezpos = srprojX(m.bwdm,counts,covars,m.projdir)
+#
+#   # use forward model to predict
+#   if nocounts
+#     if isdefined(m,:fwdmnocounts)
+#       predict(m.fwdmnocounts,X_nocounts)
+#     else
+#       error("To predict with benchmark model w/o counts the CIR model must be fit with nocounts=true")
+#     end
+#   else
+#     predict(m.fwdm,X)
+#   end
+# end
 
 """
 Returns coefficients of forward regression model.

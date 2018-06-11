@@ -210,14 +210,14 @@ zlmnocounts = lm(hcat(ones(n,1),covars[:,2:end]),covars[:,1])
 @test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,2:end])) ≈ predict(mnir,covars[1:10,:],counts[1:10,:]; nocounts=true)
 
 # CV
-@time cvstats13 = cross_validate_mnir(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
-@time cvstats13b = cross_validate_mnir(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+@time cvstats13 = cv(CIR{DMR,LinearModel},covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+@time cvstats13b = cv(CIR{DMR,LinearModel},covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
 @test isequal(cvstats13,cvstats13b)
 
-cvstats14 = cross_validate_mnir(covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
+cvstats14 = cv(CIR{DMR,LinearModel},covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
 @test !(isequal(cvstats13,cvstats14))
 
-@time cvstatsSerialKfold = cross_validate_mnir(covars,smallcounts,1; k=5, gentype=SerialKfold, γ=γ)
+@time cvstatsSerialKfold = cv(CIR{DMR,LinearModel},covars,smallcounts,1; k=5, gentype=SerialKfold, γ=γ)
 
 end
 
@@ -256,11 +256,11 @@ end
 # # NOTE: to run this and get the profile, do not add any parallel workers
 # # this makes it slow (about 350 secs) and may miss some serialization costs
 # # but I don't know how to profile all the workers too ...
-# @time cvstats13 = cross_validate_mnir(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+# @time cvstats13 = cv(CIR{DMR,LinearModel},covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
 # using ProfileView
 # Profile.init(delay=0.001)
 # Profile.clear()
-# @profile cvstats13 = cross_validate_mnir(covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ);
+# @profile cvstats13 = cv(CIR{DMR,LinearModel},covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ);
 # ProfileView.view()
 # # ProfileView.svgwrite(joinpath(tempdir(),"profileview.svg"))
 # # Profile.print()

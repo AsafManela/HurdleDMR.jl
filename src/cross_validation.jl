@@ -155,58 +155,53 @@ function initcv(seed,gentype,n,k)
   gen, cvd
 end
 
-# function cross_validate_dmr_srproj(covars,counts,projdir; k=10, gentype=Kfold, γ=0.0, seed=13, showwarnings=false)
-#   # dims
-#   n,p = size(covars)
-#   # ixnotdir = 1:p .!= projdir
-#
-#   # init
-#   gen, cvd = initcv(seed,gentype,n,k)
-#
-#   # run cv
-#   for (i, ixtrain) in enumerate(gen)
-#       ixtest = setdiff(1:n, ixtrain)
-#
-#       # estimate dmr in train subsample
-#       coefs = dmr(covars[ixtrain,:],counts[ixtrain,:]; γ=γ, showwarnings=showwarnings)
-#
-#       # target variable
-#       ins_y = covars[ixtrain,projdir]
-#
-#       # get train sample design matrices for regressions
-#       X, X_nocounts = srprojX(coefs,counts[ixtrain,:],covars[ixtrain,:],projdir)
-#
-#       # benchmark model w/o text
-#       insamplelm_nocounts = lm(X_nocounts,ins_y)
-#       ins_yhat_nocounts = predict(insamplelm_nocounts,X_nocounts)
-#
-#       # model with text
-#       insamplelm = lm(X,ins_y)
-#       ins_yhat = predict(insamplelm,X)
-#
-#       # evaluate out-of-sample in test subsample
-#       # target variable
-#       oos_y = covars[ixtest,projdir]
-#
-#       # get test sample design matrices
-#       newX, newX_nocounts = srprojX(coefs,counts[ixtest,:],covars[ixtest,:],projdir)
-#
-#       # benchmark model w/o text
-#       oos_yhat_nocounts = predict(insamplelm_nocounts,newX_nocounts)
-#
-#       # dmr model w/ text
-#       oos_yhat = predict(insamplelm,newX)
-#
-#       # save results
-#       append!(cvd, CVDataRow(ins_y,oos_y,ins_yhat,oos_yhat,ins_yhat_nocounts,oos_yhat_nocounts))
-#
-#       info("estimated fold $i/$k")
-#   end
-#
-#   info("calculated aggreagate fit for $(length(cvd.ins_ys)) in-sample and $(length(cvd.oos_ys)) out-of-sample total observations (with duplication).")
-#
-#   CVStats(cvd)
-# end
+function cv(::Type{C},covars::AbstractMatrix{T},counts::AbstractMatrix{V},projdir::Int;
+  k=10, gentype=Kfold, seed=13,
+  dcrkwargs...) where {T<:AbstractFloat,V,BM<:DCR,FM<:RegressionModel,C<:CIR{BM,FM}}
+
+  # dims
+  n,p = size(covars)
+  # ixnotdir = 1:p .!= projdir
+
+  # init
+  gen, cvd = initcv(seed,gentype,n,k)
+
+  # run cv
+  for (i, ixtrain) in enumerate(gen)
+      ixtest = setdiff(1:n, ixtrain)
+
+      # estimate dmr in train subsample
+      hir = fit(C,covars[ixtrain,:],counts[ixtrain,:],projdir; nocounts=true, dcrkwargs...)
+
+      # target variable
+      ins_y = covars[ixtrain,projdir]
+
+      # benchmark model w/o text
+      ins_yhat_nocounts = predict(hir,covars[ixtrain,:],counts[ixtrain,:]; nocounts=true)
+
+      # model with text
+      ins_yhat = predict(hir,covars[ixtrain,:],counts[ixtrain,:]; nocounts=false)
+
+      # evaluate out-of-sample in test subsample
+      # target variable
+      oos_y = covars[ixtest,projdir]
+
+      # benchmark model w/o text
+      oos_yhat_nocounts = predict(hir,covars[ixtest,:],counts[ixtest,:]; nocounts=true)
+
+      # dmr model w/ text
+      oos_yhat = predict(hir,covars[ixtest,:],counts[ixtest,:]; nocounts=false)
+
+      # save results
+      append!(cvd, CVDataRow(ins_y,oos_y,ins_yhat,oos_yhat,ins_yhat_nocounts,oos_yhat_nocounts))
+
+      info("estimated fold $i/$k")
+  end
+
+  info("calculated aggreagate fit for $(length(cvd.ins_ys)) in-sample and $(length(cvd.oos_ys)) out-of-sample total observations (with duplication).")
+
+  CVStats(cvd)
+end
 
 function cross_validate_mnir(covars,counts,projdir; k=10, gentype=Kfold, seed=13, dcrkwargs...)
   # dims
@@ -253,63 +248,63 @@ function cross_validate_mnir(covars,counts,projdir; k=10, gentype=Kfold, seed=13
   CVStats(cvd)
 end
 
-function cross_validate_hdmr_srproj(covars,counts,projdir; inpos=1:size(covars,2), inzero=1:size(covars,2),
-                        k=10, gentype=Kfold, γ=0.0, seed=13, showwarnings=false)
-  # dims
-  n,p = size(covars)
-
-  # init
-  gen, cvd = initcv(seed,gentype,n,k)
-
-  # run cv
-  for (i, ixtrain) in enumerate(gen)
-      ixtest = setdiff(1:n, ixtrain)
-
-      # estimate hdmr in train subsample
-      m = hdmr(getindex(covars,ixtrain,inzero), getindex(counts,ixtrain,:); covarspos=getindex(covars,ixtrain,inpos), γ=γ, showwarnings=showwarnings)
-
-      # get full sample design matrices for regressions at the same time.
-      # this makes sure the same model is used for both train and test,
-      # otherwise, we could be dropping zpos from only one of them.
-      X, X_nocounts, includezpos = srprojX(m,counts,covars,projdir; inpos=inpos, inzero=inzero)
-
-      # train subsample design matrices
-      Xtrain_nocounts = getindex(X_nocounts,ixtrain,:)
-      Xtrain = getindex(X,ixtrain,:)
-
-      # target variable
-      ins_y = getindex(covars,ixtrain,projdir)
-
-      # benchmark model w/o text
-      insamplelm_nocounts = lm(Xtrain_nocounts,ins_y)
-      ins_yhat_nocounts = predict(insamplelm_nocounts,Xtrain_nocounts)
-
-      # model with text
-      insamplelm = lm(Xtrain,ins_y)
-      ins_yhat = predict(insamplelm,Xtrain)
-
-      # evaluate out-of-sample in test subsample
-      # target variable
-      oos_y = getindex(covars,ixtest,projdir)
-
-      # get test sample design matrices
-      # newX, newX_nocounts, newincludezpos = srprojX(coefspos,coefszero,getindex(counts,ixtest,:),getindex(covars,ixtest,:),projdir; inpos=inpos, inzero=inzero, includezpos=includezpos)
-      Xtest = getindex(X,ixtest,:)
-      Xtest_nocounts = getindex(X_nocounts,ixtest,:)
-
-      # benchmark model w/o text
-      oos_yhat_nocounts = predict(insamplelm_nocounts,Xtest_nocounts)
-
-      # dmr model w/ text
-      oos_yhat = predict(insamplelm,Xtest)
-
-      # save results
-      append!(cvd, CVDataRow(ins_y,oos_y,ins_yhat,oos_yhat,ins_yhat_nocounts,oos_yhat_nocounts))
-
-      info("estimated fold $i/$k")
-  end
-
-  info("calculated aggreagate fit for $(length(cvd.ins_ys)) in-sample and $(length(cvd.oos_ys)) out-of-sample total observations (with duplication).")
-
-  CVStats(cvd)
-end
+# function cross_validate_hdmr_srproj(covars,counts,projdir; inpos=1:size(covars,2), inzero=1:size(covars,2),
+#                         k=10, gentype=Kfold, γ=0.0, seed=13, showwarnings=false)
+#   # dims
+#   n,p = size(covars)
+#
+#   # init
+#   gen, cvd = initcv(seed,gentype,n,k)
+#
+#   # run cv
+#   for (i, ixtrain) in enumerate(gen)
+#       ixtest = setdiff(1:n, ixtrain)
+#
+#       # estimate hdmr in train subsample
+#       m = hdmr(getindex(covars,ixtrain,inzero), getindex(counts,ixtrain,:); covarspos=getindex(covars,ixtrain,inpos), γ=γ, showwarnings=showwarnings)
+#
+#       # get full sample design matrices for regressions at the same time.
+#       # this makes sure the same model is used for both train and test,
+#       # otherwise, we could be dropping zpos from only one of them.
+#       X, X_nocounts, inz = srprojX(m,counts,covars,projdir; inpos=inpos, inzero=inzero)
+#
+#       # train subsample design matrices
+#       Xtrain_nocounts = getindex(X_nocounts,ixtrain,:)
+#       Xtrain = getindex(X,ixtrain,:)
+#
+#       # target variable
+#       ins_y = getindex(covars,ixtrain,projdir)
+#
+#       # benchmark model w/o text
+#       insamplelm_nocounts = lm(Xtrain_nocounts,ins_y)
+#       ins_yhat_nocounts = predict(insamplelm_nocounts,Xtrain_nocounts)
+#
+#       # model with text
+#       insamplelm = lm(Xtrain,ins_y)
+#       ins_yhat = predict(insamplelm,Xtrain)
+#
+#       # evaluate out-of-sample in test subsample
+#       # target variable
+#       oos_y = getindex(covars,ixtest,projdir)
+#
+#       # get test sample design matrices
+#       # newX, newX_nocounts, newincludezpos = srprojX(coefspos,coefszero,getindex(counts,ixtest,:),getindex(covars,ixtest,:),projdir; inpos=inpos, inzero=inzero, includezpos=includezpos)
+#       Xtest = getindex(X,ixtest,:)
+#       Xtest_nocounts = getindex(X_nocounts,ixtest,:)
+#
+#       # benchmark model w/o text
+#       oos_yhat_nocounts = predict(insamplelm_nocounts,Xtest_nocounts)
+#
+#       # dmr model w/ text
+#       oos_yhat = predict(insamplelm,Xtest)
+#
+#       # save results
+#       append!(cvd, CVDataRow(ins_y,oos_y,ins_yhat,oos_yhat,ins_yhat_nocounts,oos_yhat_nocounts))
+#
+#       info("estimated fold $i/$k")
+#   end
+#
+#   info("calculated aggreagate fit for $(length(cvd.ins_ys)) in-sample and $(length(cvd.oos_ys)) out-of-sample total observations (with duplication).")
+#
+#   CVStats(cvd)
+# end
