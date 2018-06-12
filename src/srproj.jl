@@ -129,7 +129,7 @@ function srproj(coefspos::C, coefszero::C, counts, dirpos::D, dirzero::D; kwargs
   end
 end
 
-function ixcovars(p::Int, dir::Int, inpos, inzero)
+function ixcovars(dir::Int, inpos, inzero)
   # @assert dir ∈ inzero "projection direction $dir must be included in coefzero estimation!"
   # @assert dir ∈ inpos "projection direction $dir must be included in coefpos estimation!"
 
@@ -157,7 +157,7 @@ function srprojX(coefspos::M, coefszero::M, counts, covars, projdir::Int;
   n,p = size(covars)
 
   # get pos and zero subset indices
-  dirpos,dirzero,ineither,ixnotdir = ixcovars(p, projdir, inpos, inzero)
+  dirpos,dirzero,ineither,ixnotdir = ixcovars(projdir, inpos, inzero)
 
   # design matrix w/o counts data
   X_nocounts = [ones(n) getindex(covars,:,ixnotdir)]
@@ -187,7 +187,7 @@ function srprojX(coefspos::M, coefszero::M, counts, covars, projdir::Int;
 
   X, X_nocounts, inz
 end
-srprojX(m::HDMR,counts,covars,projdir; select=:AICc, kwargs...) = srprojX(coef(m;select=select)...,counts,covars,projdir; kwargs...)
+srprojX(m::HDMR,counts,covars,projdir; select=:AICc, kwargs...) = srprojX(coef(m;select=select)...,counts,covars,projdir; inpos=m.inpos, inzero=m.inzero, kwargs...)
 
 # function srprojXinz(m::C, args...; kwargs...) where {BM<:DMR,FM,C<:CIR{BM,FM}}
 #   X, X_nocounts = srprojX(m.bwdm, args...; kwargs...)

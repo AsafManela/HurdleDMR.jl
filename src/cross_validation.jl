@@ -88,6 +88,11 @@ function Base.isequal(x::T,y::T) where {T <: CVType}
   all(map(field->isequal(getfield(x,field),getfield(y,field)),fieldnames(T)))
 end
 
+"Params are approximatly equal if all their fields are equal"
+function Base.isapprox(x::T,y::T; kwargs...) where {T <: CVType}
+  all(map(field->isapprox(getfield(x,field),getfield(y,field);kwargs...),fieldnames(T)))
+end
+
 "Params have the same hash if all their fields have the same hash"
 function Base.hash(a::T, h::UInt=zero(UInt)) where {T <: CVType}
   recursiveh = h
@@ -155,7 +160,7 @@ function initcv(seed,gentype,n,k)
   gen, cvd
 end
 
-function cv(::Type{C},covars::AbstractMatrix{T},counts::AbstractMatrix{V},projdir::Int;
+function cv(::Type{C},covars::AbstractMatrix{T},counts::AbstractMatrix{V},projdir::Int, fmargs...;
   k=10, gentype=Kfold, seed=13,
   dcrkwargs...) where {T<:AbstractFloat,V,BM<:DCR,FM<:RegressionModel,C<:CIR{BM,FM}}
 
@@ -171,26 +176,26 @@ function cv(::Type{C},covars::AbstractMatrix{T},counts::AbstractMatrix{V},projdi
       ixtest = setdiff(1:n, ixtrain)
 
       # estimate dmr in train subsample
-      hir = fit(C,covars[ixtrain,:],counts[ixtrain,:],projdir; nocounts=true, dcrkwargs...)
+      cir = fit(C,covars[ixtrain,:],counts[ixtrain,:],projdir,fmargs...; nocounts=true, dcrkwargs...)
 
       # target variable
       ins_y = covars[ixtrain,projdir]
 
       # benchmark model w/o text
-      ins_yhat_nocounts = predict(hir,covars[ixtrain,:],counts[ixtrain,:]; nocounts=true)
+      ins_yhat_nocounts = predict(cir,covars[ixtrain,:],counts[ixtrain,:]; nocounts=true)
 
       # model with text
-      ins_yhat = predict(hir,covars[ixtrain,:],counts[ixtrain,:]; nocounts=false)
+      ins_yhat = predict(cir,covars[ixtrain,:],counts[ixtrain,:]; nocounts=false)
 
       # evaluate out-of-sample in test subsample
       # target variable
       oos_y = covars[ixtest,projdir]
 
       # benchmark model w/o text
-      oos_yhat_nocounts = predict(hir,covars[ixtest,:],counts[ixtest,:]; nocounts=true)
+      oos_yhat_nocounts = predict(cir,covars[ixtest,:],counts[ixtest,:]; nocounts=true)
 
       # dmr model w/ text
-      oos_yhat = predict(hir,covars[ixtest,:],counts[ixtest,:]; nocounts=false)
+      oos_yhat = predict(cir,covars[ixtest,:],counts[ixtest,:]; nocounts=false)
 
       # save results
       append!(cvd, CVDataRow(ins_y,oos_y,ins_yhat,oos_yhat,ins_yhat_nocounts,oos_yhat_nocounts))
@@ -201,6 +206,38 @@ function cv(::Type{C},covars::AbstractMatrix{T},counts::AbstractMatrix{V},projdi
   info("calculated aggreagate fit for $(length(cvd.ins_ys)) in-sample and $(length(cvd.oos_ys)) out-of-sample total observations (with duplication).")
 
   CVStats(cvd)
+end
+
+function cv(::Type{C}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix, sprojdir::Symbol, fmargs...;
+  contrasts::Dict = Dict(), kwargs...) where {BM<:DMR,FM<:RegressionModel,C<:CIR{BM,FM}}
+  # parse and merge rhs terms
+  trms = getrhsterms(m, :c)
+
+  # create model matrix
+  mf, mm = createmodelmatrix(trms, df, contrasts)
+
+  # resolve projdir
+  projdir = ixprojdir(trms, sprojdir)
+
+  # delegates but does not wrap in DataFrameRegressionModel
+  cv(C, mm.m, counts, projdir, fmargs...; kwargs...)
+end
+
+function cv(::Type{C}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix, sprojdir::Symbol, fmargs...;
+  contrasts::Dict = Dict(), kwargs...) where {BM<:HDMR,FM<:RegressionModel,C<:CIR{BM,FM}}
+  # parse and merge rhs terms
+  trmszero = getrhsterms(m, :h)
+  trmspos = getrhsterms(m, :c)
+  trms, inzero, inpos = mergerhsterms(trmszero,trmspos)
+
+  # create model matrix
+  mf, mm = createmodelmatrix(trms, df, contrasts)
+
+  # resolve projdir
+  projdir = ixprojdir(trms, sprojdir)
+
+  # delegates but does not wrap in DataFrameRegressionModel
+  cv(C, mm.m, counts, projdir, fmargs...; inzero=inzero, inpos=inpos, kwargs...)
 end
 
 function cross_validate_mnir(covars,counts,projdir; k=10, gentype=Kfold, seed=13, dcrkwargs...)

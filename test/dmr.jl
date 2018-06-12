@@ -205,24 +205,39 @@ X2jfull, X2jfull_nocounts, inz = srprojX(coefs,full(counts),covars,1; includem=f
 # Juno.@enter fit(CIR{DMR,LinearModel},covars,counts,1)
 @time mnir = fit(CIR{DMR,LinearModel},covars,counts,1; γ=γ, λminratio=0.01, nocounts=true)
 @test coefbwd(mnir) ≈ coef(dmrcoefs)
+@time mnirglm = fit(CIR{DMR,GeneralizedLinearModel},covars,counts,1,Poisson(); γ=γ, λminratio=0.01, nocounts=true)
+@test coefbwd(mnirglm) ≈ coef(dmrcoefs)
+@test !(coeffwd(mnirglm) ≈ coeffwd(mnir))
+@test !(predict(mnir,covars[1:10,:],counts[1:10,:]) ≈ predict(mnirglm,covars[1:10,:],counts[1:10,:]))
+
+@time mnirdf = fit(CIR{DMR,LinearModel},f,we8thereRatings,counts,:Food; γ=γ, λminratio=0.01, nocounts=true)
+@test coefbwd(mnirdf) ≈ coef(dmrcoefs)
+@test coeffwd(mnirdf) ≈ coeffwd(mnir)
+@time mnirglmdf = fit(CIR{DMR,GeneralizedLinearModel},f,we8thereRatings,counts,:Food,Poisson(); γ=γ, λminratio=0.01, nocounts=true)
+@test coefbwd(mnirglmdf) ≈ coef(dmrcoefs)
 
 zlm = lm(hcat(ones(n,1),z1,covars[:,2:end]),covars[:,1])
 @test r2(zlm) ≈ r2(mnir)
 @test adjr2(zlm) ≈ adjr2(mnir)
 @test predict(zlm,hcat(ones(10,1),z1[1:10,:],covars[1:10,2:end])) ≈ predict(mnir,covars[1:10,:],counts[1:10,:])
+@test predict(zlm,hcat(ones(10,1),z1[1:10,:],covars[1:10,2:end])) ≈ predict(mnirdf,covars[1:10,:],counts[1:10,:])
 
 zlmnocounts = lm(hcat(ones(n,1),covars[:,2:end]),covars[:,1])
 @test r2(zlmnocounts) ≈ r2(mnir; nocounts=true)
 @test adjr2(zlmnocounts) ≈ adjr2(mnir; nocounts=true)
 @test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,2:end])) ≈ predict(mnir,covars[1:10,:],counts[1:10,:]; nocounts=true)
+@test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,2:end])) ≈ predict(mnirdf,covars[1:10,:],counts[1:10,:]; nocounts=true)
 
 # CV
 @time cvstats13 = cv(CIR{DMR,LinearModel},covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
-@time cvstats13b = cv(CIR{DMR,LinearModel},covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+@time cvstats13b = cv(CIR{DMR,LinearModel},f,we8thereRatings,smallcounts,:Food; k=2, gentype=MLBase.Kfold, γ=γ)
 @test isequal(cvstats13,cvstats13b)
 
 cvstats14 = cv(CIR{DMR,LinearModel},covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
 @test !(isequal(cvstats13,cvstats14))
+
+cvstats13glm = cv(CIR{DMR,GeneralizedLinearModel},f,we8thereRatings,smallcounts,:Food,Poisson(); k=2, gentype=MLBase.Kfold, γ=γ, seed=13)
+@test !(isequal(cvstats13,cvstats13glm))
 
 @time cvstatsSerialKfold = cv(CIR{DMR,LinearModel},covars,smallcounts,1; k=5, gentype=SerialKfold, γ=γ)
 

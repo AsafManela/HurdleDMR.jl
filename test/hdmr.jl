@@ -161,12 +161,28 @@ X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,3; includem=tr
 @test X3_nocountsb == X3_nocountsb
 @test includezposb == includezposb
 
-# MNIR
+# HIR
 # using Juno
 # Juno.@enter fit(CIR{DMR,LinearModel},covars,counts,1)
 @time hir = fit(CIR{HDMR,LinearModel},covars,counts,1; nocounts=true)
 @test coefbwd(hir)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hir)[2] ≈ coef(hdmrcoefs)[2]
+
+@time hirglm = fit(CIR{HDMR,GeneralizedLinearModel},covars,counts,1,Poisson(); nocounts=true)
+@test coefbwd(hirglm)[1] ≈ coef(hdmrcoefs)[1]
+@test coefbwd(hirglm)[2] ≈ coef(hdmrcoefs)[2]
+@test !(coeffwd(hirglm)[1] ≈ coeffwd(hir)[1])
+@test !(coeffwd(hirglm)[2] ≈ coeffwd(hir)[2])
+
+@time hirdf = fit(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; nocounts=true)
+@test coefbwd(hirdf)[1] ≈ coef(hdmrcoefs)[1]
+@test coefbwd(hirdf)[2] ≈ coef(hdmrcoefs)[2]
+@test coeffwd(hirdf) ≈ coeffwd(hir)
+@time hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,we8thereRatings,counts,:Food,Poisson(); nocounts=true)
+@test coefbwd(hirglmdf)[1] ≈ coef(hdmrcoefs)[1]
+@test coefbwd(hirglmdf)[2] ≈ coef(hdmrcoefs)[2]
+@test !(coeffwd(hirglmdf)[2] ≈ coeffwd(hirdf)[2])
+@test !(coeffwd(hirglmdf)[1] ≈ coeffwd(hirdf)[1])
 
 zlm = lm(hcat(ones(n,1),Z1,covars[:,2:end]),covars[:,1])
 @test r2(zlm) ≈ r2(hir)
@@ -182,14 +198,17 @@ zlmnocounts = lm(hcat(ones(n,1),covars[:,2:end]),covars[:,1])
 
 # CV
 @time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
-cvstats13b = cv(CIR{HDMR,LinearModel},covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
-@test isequal(cvstats13,cvstats13b)
+@time cvstats13b = cv(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; k=2, gentype=MLBase.Kfold, γ=γ)
+@test isapprox(cvstats13,cvstats13b)
 
 @time cvstats14 = cv(CIR{HDMR,LinearModel},covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
-@test !(isequal(cvstats13,cvstats14))
+@test !(isapprox(cvstats13,cvstats14))
+
+cvstats13glm = cv(CIR{HDMR,GeneralizedLinearModel},f,we8thereRatings,counts,:Food,Poisson(); k=2, gentype=MLBase.Kfold, γ=γ)
+@test !(isapprox(cvstats13,cvstats13glm))
 
 @time cvstatsSerialKfold = cv(CIR{HDMR,LinearModel},covars,counts,1; k=3, gentype=SerialKfold, γ=γ)
-@test !(isequal(cvstats13,cvstatsSerialKfold))
+@test !(isapprox(cvstats13,cvstatsSerialKfold))
 
 end
 
@@ -311,12 +330,37 @@ X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,3; inpos=inpos
 @test X3_nocountsb == X3_nocountsb
 @test includezposb == includezposb
 
+# HIR
+@time hir = fit(CIR{HDMR,LinearModel},covars,counts,1; inpos=inpos, nocounts=true)
+@test coefbwd(hir)[1] ≈ coef(hdmrcoefs)[1]
+@test coefbwd(hir)[2] ≈ coef(hdmrcoefs)[2]
+
+@time hirglm = fit(CIR{HDMR,GeneralizedLinearModel},covars,counts,1,Poisson(); inpos=inpos, nocounts=true)
+@test coefbwd(hirglm)[1] ≈ coef(hdmrcoefs)[1]
+@test coefbwd(hirglm)[2] ≈ coef(hdmrcoefs)[2]
+@test !(coeffwd(hirglm)[1] ≈ coeffwd(hir)[1])
+@test !(coeffwd(hirglm)[2] ≈ coeffwd(hir)[2])
+
+@time hirdf = fit(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; nocounts=true)
+@test coefbwd(hirdf)[1] ≈ coef(hdmrcoefs)[1]
+@test coefbwd(hirdf)[2] ≈ coef(hdmrcoefs)[2]
+@test coeffwd(hirdf) ≈ coeffwd(hir)
+@time hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,we8thereRatings,counts,:Food,Poisson(); nocounts=true)
+@test coefbwd(hirglmdf)[1] ≈ coef(hdmrcoefs)[1]
+@test coefbwd(hirglmdf)[2] ≈ coef(hdmrcoefs)[2]
+@test !(coeffwd(hirglmdf)[2] ≈ coeffwd(hirdf)[2])
+@test !(coeffwd(hirglmdf)[1] ≈ coeffwd(hirdf)[1])
+
+# CV
 @time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,1; inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
-@time cvstats13b = cv(CIR{HDMR,LinearModel},covars,counts,1; inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
-@test isequal(cvstats13,cvstats13b)
+@time cvstats13b = cv(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; k=2, gentype=MLBase.Kfold, γ=γ)
+@test isapprox(cvstats13,cvstats13b)
 
 @time cvstats14 = cv(CIR{HDMR,LinearModel},covars,counts,1; inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
-@test !(isequal(cvstats13,cvstats14))
+@test !(isapprox(cvstats13,cvstats14))
+
+cvstats13glm = cv(CIR{HDMR,GeneralizedLinearModel},f,we8thereRatings,counts,:Food,Poisson(); k=2, gentype=MLBase.Kfold, γ=γ)
+@test !(isapprox(cvstats13,cvstats13glm))
 
 @time cvstatsSerialKfold = cv(CIR{HDMR,LinearModel},covars,counts,1; inpos=inpos, k=3, gentype=SerialKfold, γ=γ)
 @test !(isequal(cvstats13,cvstatsSerialKfold))
@@ -332,10 +376,15 @@ f = @model(c ~ Value + Food, h ~ Value + Service + Atmosphere + Overall)
 # NOTE: the @model results in a different order of variables relative to the inzero/inpos interface
 # which in turn yields slightly different estimates. Probably due to coordinate descent iterating differently.
 # so for the tests we align the variables to give the same results.
-inzero = [3,2,4,5]
-inpos = [3,1]
+trmszero = getrhsterms(f, :h)
+trmspos = getrhsterms(f, :c)
+trms, inzero, inpos = mergerhsterms(trmszero,trmspos)
+
+covars = convert(Matrix{Float64},we8thereRatings[:,trms.terms])
 pzero = length(inzero)
 ppos = length(inpos)
+
+projdir = ixprojdir(trms, :Food)
 
 # hurdle dmr parallel local cluster
 @time hdmrcoefs = hdmr(covars, counts; inpos=inpos, inzero=inzero, parallel=true)
@@ -381,6 +430,8 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 
 # using a dataframe and formula
 @time hdmrcoefsdf = fit(HDMRCoefs, f, we8thereRatings, counts; parallel=true, verbose=true)
+hdmrcoefsdf.model.inpos
+hdmrcoefsdf.model.inzero
 @test coef(hdmrcoefsdf)[1] ≈ coefsHppos
 @test coef(hdmrcoefsdf)[2] ≈ coefsHpzero
 @test n == nobs(hdmrcoefsdf)
@@ -427,39 +478,114 @@ lmv1 = lm(@formula(y ~ zv1+m), regdata)
 r2v1 = adjr2(lmv1)
 
 # @enter srprojX(coefsHppos,coefsHpzero,counts,covars,1; inzero=inzero, inpos=inpos, includem=true)
-@time X1, X1_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,1; inzero=inzero, inpos=inpos, includem=true)
-ix = filter!(x->x!=1,union(inpos,inzero))
+@time X1, X1_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inzero=inzero, inpos=inpos, includem=true)
+ix = filter!(x->x!=projdir,collect(1:5))
 @test X1_nocounts ≈ [ones(n) covars[:,ix]] rtol=1e-8
 @test X1 ≈ [X1_nocounts Z1] rtol=1e-8
-X1b, X1_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,1; inzero=inzero, inpos=inpos, includem=true)
+X1b, X1_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,projdir; inzero=inzero, inpos=inpos, includem=true)
 @test X1 ≈ X1b rtol=1e-8
 @test X1_nocountsb ≈ X1_nocountsb rtol=1e-8
 @test includezposb == includezposb
 
-X2, X2_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,1; inzero=inzero, inpos=inpos, includem=false)
+X2, X2_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inzero=inzero, inpos=inpos, includem=false)
 @test X2_nocounts ≈ X1_nocounts rtol=1e-8
 @test X2 ≈ X1[:,1:end-1] rtol=1e-8
-X2b, X2_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,1; inzero=inzero, inpos=inpos, includem=false)
+X2b, X2_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,projdir; inzero=inzero, inpos=inpos, includem=false)
 @test X2 ≈ X2b rtol=1e-8
 @test X2_nocountsb ≈ X2_nocountsb rtol=1e-8
 @test includezposb == includezposb
 
-X3, X3_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,3; inzero=inzero, inpos=inpos, includem=true)
-@test X3_nocounts ≈ [ones(n) covars[:,[2,4,5,1]]] rtol=1e-8
+X3, X3_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,1; inzero=inzero, inpos=inpos, includem=true)
+ix = filter!(x->x!=1,collect(1:5))
+@test X3_nocounts ≈ [ones(n) covars[:,ix]] rtol=1e-8
 @test X3 ≈ [X3_nocounts Z3] rtol=1e-8
-X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,3; inzero=inzero, inpos=inpos, includem=true)
+X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,1; inzero=inzero, inpos=inpos, includem=true)
 @test X3 ≈ X3b rtol=1e-8
 @test X3_nocountsb ≈ X3_nocountsb rtol=1e-8
 @test includezposb == includezposb
 
-@time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,1; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
-@time cvstats13b = cv(CIR{HDMR,LinearModel},covars,counts,1; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
-@test isequal(cvstats13,cvstats13b)
+# HIR
+@time hir = fit(CIR{HDMR,LinearModel},covars,counts,projdir; inzero=inzero, inpos=inpos, nocounts=true)
+@test coefbwd(hir)[1] ≈ coef(hdmrcoefs)[1]
+@test coefbwd(hir)[2] ≈ coef(hdmrcoefs)[2]
 
-@time cvstats14 = cv(CIR{HDMR,LinearModel},covars,counts,1; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
+@time hirglm = fit(CIR{HDMR,GeneralizedLinearModel},covars,counts,projdir,Poisson(); inzero=inzero, inpos=inpos, nocounts=true)
+@test coefbwd(hirglm)[1] ≈ coef(hdmrcoefs)[1]
+@test coefbwd(hirglm)[2] ≈ coef(hdmrcoefs)[2]
+@test !(coeffwd(hirglm)[1] ≈ coeffwd(hir)[1])
+@test !(coeffwd(hirglm)[2] ≈ coeffwd(hir)[2])
+
+###### debug #######
+using Juno
+@enter fit(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; nocounts=true)
+C = CIR{HDMR,LinearModel}
+m = f
+df = we8thereRatings
+sprojdir = :Food
+nocounts=true
+contrasts = Dict()
+
+trmszero = getrhsterms(m, :h)
+trmspos = getrhsterms(m, :c)
+trms, inzero, inpos = mergerhsterms(trmszero,trmspos)
+
+# create model matrix
+mf, mm = createmodelmatrix(trms, df, contrasts)
+
+# resolve projdir
+projdir = ixprojdir(trms, sprojdir)
+
+# fit and wrap in DataFrameRegressionModel
+# StatsModels.DataFrameRegressionModel(fit(C, mm.m, counts, projdir; inzero=inzero, inpos=inpos), mf, mm)
+# @enter fit(C, mm.m, counts, projdir; inzero=inzero, inpos=inpos)
+BM, FM = HDMR, LinearModel
+
+# run inverse regression
+bwdm = fit(BM,covars,counts; inzero=inzero, inpos=inpos)
+
+# target variable
+y = covars[:,projdir]
+
+# calculate srproj design matrices for regressions
+# X, X_nocounts, inz = srprojX(bwdm,counts,covars,projdir)
+coef(bwdm;select=:AICc)
+@enter srprojX(coef(bwdm;select=:AICc)...,counts,covars,projdir)
+
+# forward regression model with counts
+fwdm = fit(FM,X,y,fmargs...)
+
+if nocounts
+  # forward model w/o counts
+  fwdmnocounts = fit(FM,X_nocounts,y,fmargs...)
+
+  # wrap in struct
+  CIR{BM,FM}(covars, counts, projdir, inz, bwdm, fwdm, fwdmnocounts)
+else
+  # wrap in struct
+  CIR{BM,FM}(covars, counts, projdir, inz, bwdm, fwdm)
+end
+
+#####################
+@time hirdf = fit(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; nocounts=true)
+@test coefbwd(hirdf)[1] ≈ coef(hdmrcoefs)[1]
+@test coefbwd(hirdf)[2] ≈ coef(hdmrcoefs)[2]
+@test coeffwd(hirdf) ≈ coeffwd(hir)
+@time hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,we8thereRatings,counts,:Food,Poisson(); nocounts=true)
+@test coefbwd(hirglmdf)[1] ≈ coef(hdmrcoefs)[1]
+@test coefbwd(hirglmdf)[2] ≈ coef(hdmrcoefs)[2]
+@test !(coeffwd(hirglmdf)[2] ≈ coeffwd(hirdf)[2])
+@test !(coeffwd(hirglmdf)[1] ≈ coeffwd(hirdf)[1])
+
+
+# CV
+@time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,projdir; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
+@time cvstats13b = cv(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; k=2, gentype=MLBase.Kfold, γ=γ)
+@test cvstats13 ≈ cvstats13b
+
+@time cvstats14 = cv(CIR{HDMR,LinearModel},covars,counts,projdir; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
 @test !(isequal(cvstats13,cvstats14))
 
-@time cvstatsSerialKfold = cv(CIR{HDMR,LinearModel},covars,counts,1; inzero=inzero, inpos=inpos, k=3, gentype=SerialKfold, γ=γ)
+@time cvstatsSerialKfold = cv(CIR{HDMR,LinearModel},covars,counts,projdir; inzero=inzero, inpos=inpos, k=3, gentype=SerialKfold, γ=γ)
 @test !(isequal(cvstats13,cvstatsSerialKfold))
 
 end

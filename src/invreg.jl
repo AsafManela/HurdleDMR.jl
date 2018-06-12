@@ -2,7 +2,7 @@
 Counts inverse regression (CIR) model supports both multinomial and hurdle inverse regressions
 and holds both the inverse and forward regression model estimates
 """
-struct CIR{BM<:DCR,FM<:RegressionModel}
+struct CIR{BM<:DCR,FM<:RegressionModel} <: RegressionModel
   covars::AbstractMatrix     # n×p covariates matrix
   counts::AbstractMatrix     # n×d counts (document-term) matrix
   projdir::Int               # projection direction is the index of covariate representing the response
@@ -25,7 +25,7 @@ example:
   yhat = predict(m, covars, counts)
   yhatnc = predict(m, covars, counts; nocounts=true)
 """
-function StatsBase.fit(::Type{C},covars::AbstractMatrix{T},counts::AbstractMatrix{V},projdir::Int;
+function StatsBase.fit(::Type{C},covars::AbstractMatrix{T},counts::AbstractMatrix{V},projdir::Int, fmargs...;
   nocounts=false, dcrkwargs...) where {T<:AbstractFloat,V,BM<:DCR,FM<:RegressionModel,C<:CIR{BM,FM}}
 
   # run inverse regression
@@ -38,11 +38,11 @@ function StatsBase.fit(::Type{C},covars::AbstractMatrix{T},counts::AbstractMatri
   X, X_nocounts, inz = srprojX(bwdm,counts,covars,projdir)
 
   # forward regression model with counts
-  fwdm = fit(FM,X,y)
+  fwdm = fit(FM,X,y,fmargs...)
 
   if nocounts
     # forward model w/o counts
-    fwdmnocounts = fit(FM,X_nocounts,y)
+    fwdmnocounts = fit(FM,X_nocounts,y,fmargs...)
 
     # wrap in struct
     CIR{BM,FM}(covars, counts, projdir, inz, bwdm, fwdm, fwdmnocounts)
@@ -51,6 +51,67 @@ function StatsBase.fit(::Type{C},covars::AbstractMatrix{T},counts::AbstractMatri
     CIR{BM,FM}(covars, counts, projdir, inz, bwdm, fwdm)
   end
 end
+
+"""
+Fit a Multinomial inverse regression (MNIR).
+Set nocounts=true to also fit a benchmark model without counts
+example:
+  m = fit(CIR{DMR,LinearModel}, @model(c~x1+x2), df, counts, :x1; nocounts=true)
+  where c~ is the model for counts.
+  x1 (projdir) is the variable to predict.
+  yhat = predict(m, df, counts)
+  yhatnc = predict(m, df, counts; nocounts=true)
+"""
+function StatsBase.fit(::Type{C}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix, sprojdir::Symbol, fmargs...;
+  contrasts::Dict = Dict(), kwargs...) where {BM<:DMR,FM<:RegressionModel,C<:CIR{BM,FM}}
+  # parse and merge rhs terms
+  trms = getrhsterms(m, :c)
+
+  # create model matrix
+  mf, mm = createmodelmatrix(trms, df, contrasts)
+
+  # resolve projdir
+  projdir = ixprojdir(trms, sprojdir)
+
+  # fit and wrap in DataFrameRegressionModel
+  StatsModels.DataFrameRegressionModel(fit(C, mm.m, counts, projdir, fmargs...; kwargs...), mf, mm)
+end
+
+"""
+Fit a Hurdle inverse regression (HIR).
+Set nocounts=true to also fit a benchmark model without counts
+example:
+  m = fit(CIR{HDMR,LinearModel}, @model(h~x1+x2, c~x1), df, counts, :x1; nocounts=true)
+  where h~ is the model for zeros, c~ is the model for positives.
+  x1 (projdir) is the variable to predict.
+  yhat = predict(m, df, counts)
+  yhatnc = predict(m, df, counts; nocounts=true)
+"""
+function StatsBase.fit(::Type{C}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix, sprojdir::Symbol, fmargs...;
+  contrasts::Dict = Dict(), kwargs...) where {BM<:HDMR,FM<:RegressionModel,C<:CIR{BM,FM}}
+  # parse and merge rhs terms
+  trmszero = getrhsterms(m, :h)
+  trmspos = getrhsterms(m, :c)
+  trms, inzero, inpos = mergerhsterms(trmszero,trmspos)
+
+  # create model matrix
+  mf, mm = createmodelmatrix(trms, df, contrasts)
+
+  # resolve projdir
+  projdir = ixprojdir(trms, sprojdir)
+
+  # fit and wrap in DataFrameRegressionModel
+  StatsModels.DataFrameRegressionModel(fit(C, mm.m, counts, projdir, fmargs...; inzero=inzero, inpos=inpos, kwargs...), mf, mm)
+end
+
+# find column number of sprojdir
+function ixprojdir(trms::StatsModels.Terms, sprojdir::Symbol)
+  ix = findfirst(trms.terms,sprojdir)
+  @assert ix > 0 "$sprojdir not found in provided dataframe"
+  ix
+end
+
+StatsModels.@delegate StatsModels.DataFrameRegressionModel.model [coeffwd, coefbwd]
 
 """
 Predict using a fitter Counts inverse regression (CIR).
