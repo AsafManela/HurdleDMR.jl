@@ -50,7 +50,6 @@ coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test size(coefsHpzero) == (p+1, d)
 
 @time hdmrcoefsb = fit(HDMRCoefs, covars, counts; parallel=true, verbose=true)
-coef(hdmrcoefsb)[1]
 @test coef(hdmrcoefsb)[1] == coefsHppos
 @test coef(hdmrcoefsb)[2] == coefsHpzero
 @test n == nobs(hdmrcoefs)
@@ -87,17 +86,13 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 # @test coef(hdmrcoefs3)[2] ≈ coefsHszero
 
 # using a dataframe and formula
-@time hdmrcoefsdf = fit(HDMRCoefs, f, we8thereRatings, counts; γ=γ, λminratio=0.01)
-@test coef(hdmrcoefsdf)[1] ≈ coefsHppos
+@time hdmrcoefsdf = fit(HDMRCoefs, f, we8thereRatings, counts; parallel=true, verbose=true)
+@test coef(hdmrcoefsdf)[1] == coefsHppos
 @test coef(hdmrcoefsdf)[2] ≈ coefsHpzero
-[coef(hdmrcoefsdf)[2]' coefsHpzero']
-@time hdmrpathsdf = fit(HDMRPaths, f, we8thereRatings, counts; γ=γ, λminratio=0.01)
-@test coef(hdmrpathsdf)[1][1,:] ≈ coefsHppos3[1,:]
-@test coef(hdmrpathsdf)[1][2,:] ≈ coefsHppos3[2,:]
-@test coef(hdmrpathsdf)[1][:,3] ≈ coefsHppos3[:,3]
-@test coef(hdmrpathsdf)[1][:,4] ≈ coefsHppos3[:,4]
-@test coef(hdmrpathsdf)[1][:,5] ≈ coefsHppos3[:,5]
-@test coef(hdmrpathsdf)[1][:,6] ≈ coefsHppos3[:,6]
+
+@time hdmrpathsdf = fit(HDMRPaths, f, we8thereRatings, counts; parallel=true, verbose=true)
+@test coef(hdmrpathsdf)[1] == coefsHppos3
+@test coef(hdmrpathsdf)[2] ≈ coefsHpzero3
 
 # test posindic used by srproj
 m = rand(Poisson(0.1),30,500)
@@ -203,7 +198,7 @@ end
 ####################################################################
 @testset "hurdle-dmr with covarspos ≠ covarszero, both models includes projdir" begin
 
-mf = @model(h ~ Food + Service + Value + Atmosphere + Overall, c ~ Food + Value)
+f = @model(h ~ Food + Service + Value + Atmosphere + Overall, c ~ Food + Value)
 
 # hurdle dmr parallel local cluster
 @time hdmrcoefs = hdmr(covars, counts; inpos=inpos, parallel=true)
@@ -246,6 +241,15 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 # @time hdmrcoefs3 = fit(HDMRCoefs, covars, counts; covarspos=covarspos, parallel=false)
 # @test coef(hdmrcoefs3)[1] ≈ coefsHspos
 # @test coef(hdmrcoefs3)[2] ≈ coefsHszero
+
+# using a dataframe and formula
+@time hdmrcoefsdf = fit(HDMRCoefs, f, we8thereRatings, counts; parallel=true, verbose=true)
+@test coef(hdmrcoefsdf)[1] == coefsHppos
+@test coef(hdmrcoefsdf)[2] ≈ coefsHpzero
+
+@time hdmrpathsdf = fit(HDMRPaths, f, we8thereRatings, counts; parallel=true, verbose=true)
+@test coef(hdmrpathsdf)[1] == coefsHppos3
+@test coef(hdmrpathsdf)[2] ≈ coefsHpzero3
 
 zHpos = srproj(coefsHppos, counts)
 @test size(zHpos) == (n,ppos+1)
@@ -324,10 +328,14 @@ end
 ########################################################################
 @testset "hurdle-dmr with covarspos ≠ covarszero, only pos model includes projdir" begin
 
-mf = @model(h ~ Service + Value + Atmosphere + Overall, c ~ Food + Service + Value + Atmosphere + Overall)
-covarszero = covars[:,2:end]
-nzero,pzero = size(covarszero)
-inzero = 2:p
+f = @model(c ~ Value + Food, h ~ Value + Service + Atmosphere + Overall)
+# NOTE: the @model results in a different order of variables relative to the inzero/inpos interface
+# which in turn yields slightly different estimates. Probably due to coordinate descent iterating differently.
+# so for the tests we align the variables to give the same results.
+inzero = [3,2,4,5]
+inpos = [3,1]
+pzero = length(inzero)
+ppos = length(inpos)
 
 # hurdle dmr parallel local cluster
 @time hdmrcoefs = hdmr(covars, counts; inpos=inpos, inzero=inzero, parallel=true)
@@ -353,8 +361,6 @@ coefsHppos2, coefsHpzero2 = coef(hdmrcoefs2)
 @test coef(hdmrcoefs2)[2] ≈ coefsHpzero2
 
 @time hdmrpaths3 = fit(HDMRPaths, covars, counts; inpos=inpos, inzero=inzero, parallel=true, verbose=true)
-# using Juno
-# Juno.@enter fit(HDMRPaths, covars, counts; inpos=inpos, inzero=inzero, parallel=true, verbose=true)
 coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 @test coefsHppos3 ≈ coefsHppos
 @test coefsHpzero3 ≈ coefsHpzero
@@ -373,58 +379,77 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 # @test coef(hdmrcoefs3)[1] ≈ coefsHspos
 # @test coef(hdmrcoefs3)[2] ≈ coefsHszero
 
+# using a dataframe and formula
+@time hdmrcoefsdf = fit(HDMRCoefs, f, we8thereRatings, counts; parallel=true, verbose=true)
+@test coef(hdmrcoefsdf)[1] ≈ coefsHppos
+@test coef(hdmrcoefsdf)[2] ≈ coefsHpzero
+@test n == nobs(hdmrcoefsdf)
+@test d == ncategories(hdmrcoefsdf)
+@test ppos == ncovarspos(hdmrcoefsdf)
+@test pzero == ncovarszero(hdmrcoefsdf)
+
+@time hdmrpathsdf = fit(HDMRPaths, f, we8thereRatings, counts; parallel=true, verbose=true)
+@test coef(hdmrpathsdf)[1] ≈ coefsHppos3
+@test coef(hdmrpathsdf)[2] ≈ coefsHpzero3
+@test n == nobs(hdmrpathsdf)
+@test d == ncategories(hdmrpathsdf)
+@test ppos == ncovarspos(hdmrpathsdf)
+@test pzero == ncovarszero(hdmrpathsdf)
+
 zHpos = srproj(coefsHppos, counts)
 @test size(zHpos) == (n,ppos+1)
 
 zHzero = srproj(coefsHpzero, posindic(counts))
 @test size(zHzero) == (n,pzero+1)
 
-z1pos = srproj(coefsHppos, counts, 1)
-@test z1pos ≈ zHpos[:,[1,ppos+1]]
+z1pos = srproj(coefsHppos, counts, 2)
+@test z1pos ≈ zHpos[:,[2,ppos+1]]
 
 # projdir is not included in zero model
 # z1zero = srproj(coefsHpzero, posindic(counts), 1)
 # @test z1zero ≈ zHzero[:,[1,p+1]]
 
-Z1 = srproj(coefsHppos, coefsHpzero, counts, 1, 0; intercept=true)
+Z1 = srproj(coefsHppos, coefsHpzero, counts, 2, 0; intercept=true)
 @test Z1 == z1pos
-@time Z1b = srproj(hdmrcoefs, counts, 1, 0; intercept=true)
+@time Z1b = srproj(hdmrcoefs, counts, 2, 0; intercept=true)
 @test Z1 == Z1b
 
-Z3 = srproj(coefsHppos, coefsHpzero, counts, 2, 2; intercept=true)
-z3pos = srproj(coefsHppos, counts, 2)
-z3zero = srproj(coefsHpzero, posindic(counts), 2)
+Z3 = srproj(coefsHppos, coefsHpzero, counts, 1, 1; intercept=true)
+z3pos = srproj(coefsHppos, counts, 1)
+z3zero = srproj(coefsHpzero, posindic(counts), 1)
 @test Z3 == [z3pos[:,1] z3zero[:,1] z3pos[:,2]]
-@time Z3b = srproj(hdmrcoefs, counts, 2, 2; intercept=true)
+@time Z3b = srproj(hdmrcoefs, counts, 1, 1; intercept=true)
 @test Z3 == Z3b
 
-regdata = DataFrame(y=covars[:,1], zv1=z1pos[:,1], m=z1pos[:,2], v1=covarspos[:,1], w1=covarszero[:,1])
+regdata = DataFrame(y=covars[:,1], zv1=z1pos[:,1], m=z1pos[:,2], v1=covarspos[:,1], w1=covars[:,inzero[1]])
 
 lmv1 = lm(@formula(y ~ zv1+m), regdata)
 r2v1 = adjr2(lmv1)
 
+# @enter srprojX(coefsHppos,coefsHpzero,counts,covars,1; inzero=inzero, inpos=inpos, includem=true)
 @time X1, X1_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,1; inzero=inzero, inpos=inpos, includem=true)
-@test X1_nocounts == [ones(n) covars[:,2:end]]
-@test X1 == [X1_nocounts Z1]
+ix = filter!(x->x!=1,union(inpos,inzero))
+@test X1_nocounts ≈ [ones(n) covars[:,ix]] rtol=1e-8
+@test X1 ≈ [X1_nocounts Z1] rtol=1e-8
 X1b, X1_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,1; inzero=inzero, inpos=inpos, includem=true)
-@test X1 == X1b
-@test X1_nocountsb == X1_nocountsb
+@test X1 ≈ X1b rtol=1e-8
+@test X1_nocountsb ≈ X1_nocountsb rtol=1e-8
 @test includezposb == includezposb
 
 X2, X2_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,1; inzero=inzero, inpos=inpos, includem=false)
-@test X2_nocounts == X1_nocounts
-@test X2 == X1[:,1:end-1]
+@test X2_nocounts ≈ X1_nocounts rtol=1e-8
+@test X2 ≈ X1[:,1:end-1] rtol=1e-8
 X2b, X2_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,1; inzero=inzero, inpos=inpos, includem=false)
-@test X2 == X2b
-@test X2_nocountsb == X2_nocountsb
+@test X2 ≈ X2b rtol=1e-8
+@test X2_nocountsb ≈ X2_nocountsb rtol=1e-8
 @test includezposb == includezposb
 
 X3, X3_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,3; inzero=inzero, inpos=inpos, includem=true)
-@test X3_nocounts == [ones(n) covars[:,[2,4,5,1]]]
-@test X3 == [X3_nocounts Z3]
+@test X3_nocounts ≈ [ones(n) covars[:,[2,4,5,1]]] rtol=1e-8
+@test X3 ≈ [X3_nocounts Z3] rtol=1e-8
 X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,3; inzero=inzero, inpos=inpos, includem=true)
-@test X3 == X3b
-@test X3_nocountsb == X3_nocountsb
+@test X3 ≈ X3b rtol=1e-8
+@test X3_nocountsb ≈ X3_nocountsb rtol=1e-8
 @test includezposb == includezposb
 
 @time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,1; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)

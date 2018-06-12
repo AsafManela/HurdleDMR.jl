@@ -7,7 +7,7 @@ using Lasso, GLM.FPVector, DataFrames, Reexport
 @reexport using GLM, StatsBase, Distributions, StatsModels
 
 export dmr, dmrpaths, hdmr, hdmrpaths, collapse, fit, coef, srproj, srprojX, @~, mcdmr, posindic
-export DCR, DMR, HDMR, DMRCoefs, DMRPaths, HDMRCoefs, HDMRPaths, @model
+export DCR, DMR, HDMR, DMRCoefs, DMRPaths, HDMRCoefs, HDMRPaths, @model, Model
 export CIR, predict, coeffwd, coefbwd
 export hasintercept, ncategories, nobs, ncoefs, ncovars, ncovarszero, ncovarspos, ncoefszero, ncoefspos
 export Hurdle, PositivePoisson, LogProductLogLink, logpdf_exact, logpdf_approx

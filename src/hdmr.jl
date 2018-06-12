@@ -65,29 +65,19 @@ end
 
 # fit wrapper that takes a model (two formulas) and dataframe instead of the covars matrix
 # e.g. @model(h ~ x1 + x2, c ~ x1)
+# h and c on the lhs indicate model for zeros and positives, respectively.
 function StatsBase.fit(::Type{T}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix, args...;
   contrasts::Dict = Dict(), kwargs...) where {T<:HDMR}
 
-  fzero = m.parts[1]
-  fpos = m.parts[2]
-  @assert fzero.lhs == nothing || fzero.lhs == :h "lhs of formula should be nothing or 'h'"
-  @assert fpos.lhs == nothing || fpos.lhs == :c "lhs of formula should be nothing or 'c'"
-
-  # ignore the response after cloning the formula
-  fzero = copy(fzero)
-  fpos = copy(fpos)
-  fzero.lhs = nothing
-  fpos.lhs = nothing
-
-  trmszero = StatsModels.Terms(fzero)
-  trmspos = StatsModels.Terms(fpos)
+  # parse and merge rhs terms
+  trmszero = getrhsterms(m, :h)
+  trmspos = getrhsterms(m, :c)
   trms, inzero, inpos = mergerhsterms(trmszero,trmspos)
 
-  StatsModels.drop_intercept(T) && (trms.intercept = true)
-  mf = ModelFrame(trms, df, contrasts=contrasts)
-  StatsModels.drop_intercept(T) && (mf.terms.intercept = false)
-  mm = ModelMatrix(mf)
+  # create model matrix
+  mf, mm = createmodelmatrix(trms, df, contrasts)
 
+  # fit and wrap in DataFrameRegressionModel
   StatsModels.DataFrameRegressionModel(fit(T, mm.m, counts, args...; inzero=inzero, inpos=inpos, kwargs...), mf, mm)
 end
 

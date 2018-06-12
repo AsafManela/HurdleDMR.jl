@@ -53,3 +53,49 @@ function mergerhsterms(a::StatsModels.Terms, b::StatsModels.Terms)
 
   newt, ina, inb
 end
+
+function getpart(m::Model, lhs::Symbol, clearlhs=true)
+  ix = findfirst(p->p.lhs==lhs,m.parts)
+  @assert ix > 0 "The model is missing a formula with $lhs on its left-hand-side."
+  f = m.parts[ix]
+  if clearlhs
+    f = copy(f)
+    f.lhs = nothing
+  end
+  f
+end
+
+function getformula(f::Formula, lhs::Symbol, clearlhs=true)
+  @assert f.lhs == lhs "The model is missing a formula with $lhs on its left-hand-side."
+  if clearlhs
+    f = copy(f)
+    f.lhs = nothing
+  end
+  f
+end
+
+function getformula(m::Model, lhs::Symbol, clearlhs=true)
+  ix = findfirst(p->p.lhs==lhs,m.parts)
+  @assert ix > 0 "The model is missing a formula with $lhs on its left-hand-side."
+  f = m.parts[ix]
+  if clearlhs
+    f = copy(f)
+    f.lhs = nothing
+  end
+  f
+end
+
+function getrhsterms(args...)
+  f = getformula(args...)
+  StatsModels.Terms(f)
+end
+
+function createmodelmatrix(trms, df, contrasts)
+  # StatsModels.drop_intercept(T) && (trms.intercept = true)
+  trms.intercept = true
+  mf = ModelFrame(trms, df, contrasts=contrasts)
+  # StatsModels.drop_intercept(T) && (mf.terms.intercept = false)
+  mf.terms.intercept = false
+  mm = ModelMatrix(mf)
+  mf, mm
+end

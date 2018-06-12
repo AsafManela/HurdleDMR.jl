@@ -135,22 +135,21 @@ end
 # it is unregulated, so we drop it from formula
 StatsModels.drop_intercept(::Type{T}) where {T<:DCR} = true
 
-# fit wrapper that takes a formula and dataframe instead of the covars matrix
-function StatsBase.fit(::Type{T}, f::Formula, df::AbstractDataFrame, counts::AbstractMatrix, args...;
+StatsModels.@delegate StatsModels.DataFrameRegressionModel.model [hasintercept, Distributions.ncategories, ncovars, ncoefs, ncovarszero, ncovarspos, ncoefszero, ncoefspos]
+
+# fit wrapper that takes a model and dataframe instead of the covars matrix
+# e.g. @model(c ~ x1*x2)
+# c must be specified on the lhs to indicate the model for counts.
+function StatsBase.fit(::Type{T}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix;
   contrasts::Dict = Dict(), kwargs...) where {T<:DMR}
-    @assert f.lhs == nothing || f.lhs == :c "lhs of formula should be nothing or 'c'"
+  # parse and merge rhs terms
+  trms = getrhsterms(m, :c)
 
-    # ignore the response after cloning the formula
-    ftmp = copy(f)
-    ftmp.lhs = nothing
+  # create model matrix
+  mf, mm = createmodelmatrix(trms, df, contrasts)
 
-    trms = StatsModels.Terms(ftmp)
-    StatsModels.drop_intercept(T) && (trms.intercept = true)
-    mf = ModelFrame(trms, df, contrasts=contrasts)
-    StatsModels.drop_intercept(T) && (mf.terms.intercept = false)
-    mm = ModelMatrix(mf)
-
-    StatsModels.DataFrameRegressionModel(fit(T, mm.m, counts, args...; kwargs...), mf, mm)
+  # fit and wrap in DataFrameRegressionModel
+  StatsModels.DataFrameRegressionModel(fit(T, mm.m, counts; kwargs...), mf, mm)
 end
 
 hasintercept(m::DCR) = m.intercept
