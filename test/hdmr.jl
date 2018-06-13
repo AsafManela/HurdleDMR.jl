@@ -206,7 +206,7 @@ cvstats13glm = cv(CIR{HDMR,GeneralizedLinearModel},f,we8thereRatings,counts,:Foo
 @test !(isapprox(cvstats13,cvstats13glm))
 
 @time cvstatsSerialKfold = cv(CIR{HDMR,LinearModel},covars,counts,1; k=3, gentype=SerialKfold, γ=γ)
-@test !(isapprox(cvstats13,cvstatsSerialKfold))
+@test_throws DimensionMismatch isapprox(cvstats13,cvstatsSerialKfold)
 
 end
 
@@ -361,7 +361,7 @@ cvstats13glm = cv(CIR{HDMR,GeneralizedLinearModel},f,we8thereRatings,counts,:Foo
 @test !(isapprox(cvstats13,cvstats13glm))
 
 @time cvstatsSerialKfold = cv(CIR{HDMR,LinearModel},covars,counts,1; inpos=inpos, k=3, gentype=SerialKfold, γ=γ)
-@test !(isequal(cvstats13,cvstatsSerialKfold))
+@test_throws DimensionMismatch isapprox(cvstats13,cvstatsSerialKfold)
 
 end
 
@@ -531,7 +531,7 @@ X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,1; inzero=inze
 @test !(isequal(cvstats13,cvstats14))
 
 @time cvstatsSerialKfold = cv(CIR{HDMR,LinearModel},covars,counts,projdir; inzero=inzero, inpos=inpos, k=3, gentype=SerialKfold, γ=γ)
-@test !(isequal(cvstats13,cvstatsSerialKfold))
+@test_throws DimensionMismatch isapprox(cvstats13,cvstatsSerialKfold)
 
 end
 

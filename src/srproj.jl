@@ -188,19 +188,3 @@ function srprojX(coefspos::M, coefszero::M, counts, covars, projdir::Int;
   X, X_nocounts, inz
 end
 srprojX(m::HDMR,counts,covars,projdir; select=:AICc, kwargs...) = srprojX(coef(m;select=select)...,counts,covars,projdir; inpos=m.inpos, inzero=m.inzero, kwargs...)
-
-# function srprojXinz(m::C, args...; kwargs...) where {BM<:DMR,FM,C<:CIR{BM,FM}}
-#   X, X_nocounts = srprojX(m.bwdm, args...; kwargs...)
-#   m.inz = [1]
-#   X, X_nocounts
-# end
-#
-# function srprojX!(m::C, args...; kwargs...) where {BM<:HDMR,FM,C<:CIR{BM,FM}}
-#   X, X_nocounts, includezpos = srprojX(m.bwdm, args...; kwargs...)
-#   if includezpos
-#     m.inz = [1,2]
-#   else
-#     m.inz = [2]
-#   end
-#   X, X_nocounts
-# end

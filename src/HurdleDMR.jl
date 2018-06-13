@@ -11,7 +11,7 @@ export DCR, DMR, HDMR, DMRCoefs, DMRPaths, HDMRCoefs, HDMRPaths, @model, Model
 export CIR, predict, coeffwd, coefbwd
 export hasintercept, ncategories, nobs, ncoefs, ncovars, ncovarszero, ncovarspos, ncoefszero, ncoefspos
 export Hurdle, PositivePoisson, LogProductLogLink, logpdf_exact, logpdf_approx
-export cv, cross_validate_mnir, cross_validate_hdmr_srproj, SerialKfold
+export cv, SerialKfold
 export CVStats, CVType, CVData, CVDataRow
 
 

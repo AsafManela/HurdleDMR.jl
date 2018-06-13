@@ -1,9 +1,17 @@
 using MLBase, StatsBase, DataFrames
 
 # performance evaluation stats
-mse(y::AbstractVector,yhat::AbstractVector) = mean(abs2.(y-yhat))
-rmse(y::AbstractVector,yhat::AbstractVector) = sqrt(mean(abs2.(y-yhat)))
-StatsBase.r2(y::AbstractVector,yhat::AbstractVector) = 1-sum(abs2,y-yhat)/sum(abs2,y.-mean(y))
+mse(y::V,yhat::V) where {T<:Number,V<:AbstractVector{T}} = mean(abs2.(y-yhat))
+mse(y::V,yhat::V) where {T<:AbstractVector,V<:AbstractVector{T}} = mse(vcat(y...),vcat(yhat...))
+StatsBase.r2(y::V,yhat::V) where {T<:Number,V<:AbstractVector{T}} = 1-sum(abs2,y-yhat)/sum(abs2,y.-mean(y))
+StatsBase.r2(y::V,yhat::V) where {T<:AbstractVector,V<:AbstractVector{T}} = r2(vcat(y...),vcat(yhat...))
+rmse(args...) = sqrt(mse(args...))
+# rmse(y::V,yhat::V) where {T<:Number,V<:AbstractVector{T}} = sqrt(mean(abs2.(y-yhat)))
+# rmse(y::V,yhat::V) where {T<:AbstractVector,V<:AbstractVector{T}} = rmse(vcat(y...),vcat(yhat...))
+σmse(y::V,yhat::V) where {T<:AbstractVector,V<:AbstractVector{T}} = std(mse.(y,yhat)) / sqrt(length(y)-1)
+σrmse(y::V,yhat::V) where {T<:AbstractVector,V<:AbstractVector{T}} = σmse(y,yhat) / (2rmse(y,yhat))
+σΔmse(y::V,yhat::V,yhat_nocounts::V) where {T<:AbstractVector,V<:AbstractVector{T}} = std(mse.(y,yhat) .- mse.(y,yhat_nocounts)) / sqrt(length(y)-1)
+
 
 # non-random K-fold that simply splits into consequtive blocks of data
 # useful for time-series CV
@@ -37,24 +45,25 @@ struct CVDataRow{T} <: CVType{T}
 end
 
 mutable struct CVData{T} <: CVType{T}
-  ins_ys::AbstractVector{T}
-  oos_ys::AbstractVector{T}
-  ins_yhats::AbstractVector{T}
-  oos_yhats::AbstractVector{T}
-  ins_yhats_nocounts::AbstractVector{T}
-  oos_yhats_nocounts::AbstractVector{T}
+  ins_ys::Vector{AbstractVector{T}}
+  oos_ys::Vector{AbstractVector{T}}
+  ins_yhats::Vector{AbstractVector{T}}
+  oos_yhats::Vector{AbstractVector{T}}
+  ins_yhats_nocounts::Vector{AbstractVector{T}}
+  oos_yhats_nocounts::Vector{AbstractVector{T}}
 end
 
+const VV{T} = Vector{Vector{T}}
 
-CVData(T::Type) = CVData{T}(Vector{T}(0),Vector{T}(0),Vector{T}(0),Vector{T}(0),Vector{T}(0),Vector{T}(0))
+CVData(::Type{T}) where T = CVData{T}(VV{T}(),VV{T}(),VV{T}(),VV{T}(),VV{T}(),VV{T}())
 
 function Base.append!(d::CVData, r::CVDataRow)
-  append!(d.ins_ys,r.ins_y)
-  append!(d.oos_ys,r.oos_y)
-  append!(d.ins_yhats,r.ins_yhat)
-  append!(d.oos_yhats,r.oos_yhat)
-  append!(d.ins_yhats_nocounts,r.ins_yhat_nocounts)
-  append!(d.oos_yhats_nocounts,r.oos_yhat_nocounts)
+  push!(d.ins_ys,r.ins_y)
+  push!(d.oos_ys,r.oos_y)
+  push!(d.ins_yhats,r.ins_yhat)
+  push!(d.oos_yhats,r.oos_yhat)
+  push!(d.ins_yhats_nocounts,r.ins_yhat_nocounts)
+  push!(d.oos_yhats_nocounts,r.oos_yhat_nocounts)
   d
 end
 
@@ -68,29 +77,36 @@ function Base.append!(d::CVData, r::CVData)
   d
 end
 
+
 mutable struct CVStats{T} <: CVType{T}
-  oos_rmse::T
-  oos_rmse_nocounts::T
-  oos_pct_change_rmse::T
-  ins_rmse::T
-  ins_rmse_nocounts::T
-  ins_pct_change_rmse::T
+  oos_mse::T
+  oos_mse_nocounts::T
+  oos_change_mse::T
+  oos_σmse::T
+  oos_σmse_nocounts::T
+  oos_σchange_mse::T
+  ins_mse::T
+  ins_mse_nocounts::T
+  ins_change_mse::T
+  ins_σmse::T
+  ins_σmse_nocounts::T
+  ins_σchange_mse::T
   oos_r2::T
   oos_r2_nocounts::T
-  oos_pct_change_r2::T
+  oos_change_r2::T
   ins_r2::T
   ins_r2_nocounts::T
-  ins_pct_change_r2::T
+  ins_change_r2::T
 end
 
 "Params are equal if all their fields are equal"
 function Base.isequal(x::T,y::T) where {T <: CVType}
-  all(map(field->isequal(getfield(x,field),getfield(y,field)),fieldnames(T)))
+  all(broadcast(field->isequal(getfield(x,field),getfield(y,field)),fieldnames(T)))
 end
 
 "Params are approximatly equal if all their fields are equal"
 function Base.isapprox(x::T,y::T; kwargs...) where {T <: CVType}
-  all(map(field->isapprox(getfield(x,field),getfield(y,field);kwargs...),fieldnames(T)))
+  all(broadcast(field->isapprox(getfield(x,field),getfield(y,field);kwargs...),fieldnames(T)))
 end
 
 "Params have the same hash if all their fields have the same hash"
@@ -115,7 +131,7 @@ function DataFrames.DataFrame(v::Vector{T}) where {T <: CVType}
     vcat(DataFrames.DataFrame.(v)...)
 end
 
-CVStats(T::Type) = CVStats{T}(zeros(T,12)...)
+CVStats(T::Type) = CVStats{T}(zeros(T,18)...)
 
 function CVStats{T}(d::CVData{T})
 
@@ -127,16 +143,23 @@ function CVStats{T}(d::CVData{T})
   s.oos_r2_nocounts = r2(d.oos_ys,d.oos_yhats_nocounts)
   s.oos_r2 = r2(d.oos_ys,d.oos_yhats)
 
-  s.ins_rmse_nocounts = rmse(d.ins_ys,d.ins_yhats_nocounts)
-  s.ins_rmse = rmse(d.ins_ys,d.ins_yhats)
-  s.oos_rmse_nocounts = rmse(d.oos_ys,d.oos_yhats_nocounts)
-  s.oos_rmse = rmse(d.oos_ys,d.oos_yhats)
+  s.ins_mse_nocounts = mse(d.ins_ys,d.ins_yhats_nocounts)
+  s.ins_mse = mse(d.ins_ys,d.ins_yhats)
+  s.oos_mse_nocounts = mse(d.oos_ys,d.oos_yhats_nocounts)
+  s.oos_mse = mse(d.oos_ys,d.oos_yhats)
 
-  # pct changes
-  s.oos_pct_change_rmse = 100*(s.oos_rmse/s.oos_rmse_nocounts - 1)
-  s.ins_pct_change_rmse = 100*(s.ins_rmse/s.ins_rmse_nocounts - 1)
-  s.oos_pct_change_r2 = 100*(s.oos_r2/s.oos_r2_nocounts - 1)
-  s.ins_pct_change_r2 = 100*(s.ins_r2/s.ins_r2_nocounts - 1)
+  s.ins_σmse_nocounts = σmse(d.ins_ys,d.ins_yhats_nocounts)
+  s.ins_σmse = σmse(d.ins_ys,d.ins_yhats)
+  s.oos_σmse_nocounts = σmse(d.oos_ys,d.oos_yhats_nocounts)
+  s.oos_σmse = σmse(d.oos_ys,d.oos_yhats)
+
+  # mse changes
+  s.oos_change_mse = s.oos_mse - s.oos_mse_nocounts
+  s.ins_change_mse = s.ins_mse - s.ins_mse_nocounts
+  s.oos_change_r2 = s.oos_r2 - s.oos_r2_nocounts
+  s.ins_change_r2 = s.ins_r2 - s.ins_r2_nocounts
+  s.oos_σchange_mse = σΔmse(d.oos_ys,d.oos_yhats,d.oos_yhats_nocounts)
+  s.ins_σchange_mse = σΔmse(d.ins_ys,d.ins_yhats,d.ins_yhats_nocounts)
 
   # # vec and transpose are unnecessary, but for code sanity
   # vec([oos_rmse oos_rmse_nocounts oos_pct_change_rmse
@@ -205,7 +228,7 @@ function cv(::Type{C},covars::AbstractMatrix{T},counts::AbstractMatrix{V},projdi
 
   info("calculated aggreagate fit for $(length(cvd.ins_ys)) in-sample and $(length(cvd.oos_ys)) out-of-sample total observations (with duplication).")
 
-  CVStats(cvd)
+  cvd
 end
 
 function cv(::Type{C}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix, sprojdir::Symbol, fmargs...;
@@ -239,109 +262,3 @@ function cv(::Type{C}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix, 
   # delegates but does not wrap in DataFrameRegressionModel
   cv(C, mm.m, counts, projdir, fmargs...; inzero=inzero, inpos=inpos, kwargs...)
 end
-
-function cross_validate_mnir(covars,counts,projdir; k=10, gentype=Kfold, seed=13, dcrkwargs...)
-  # dims
-  n,p = size(covars)
-  # ixnotdir = 1:p .!= projdir
-
-  # init
-  gen, cvd = initcv(seed,gentype,n,k)
-
-  # run cv
-  for (i, ixtrain) in enumerate(gen)
-      ixtest = setdiff(1:n, ixtrain)
-
-      # estimate dmr in train subsample
-      mnir = fit(CIR{DMR,LinearModel},covars[ixtrain,:],counts[ixtrain,:],projdir; nocounts=true, dcrkwargs...)
-
-      # target variable
-      ins_y = covars[ixtrain,projdir]
-
-      # benchmark model w/o text
-      ins_yhat_nocounts = predict(mnir,covars[ixtrain,:],counts[ixtrain,:]; nocounts=true)
-
-      # model with text
-      ins_yhat = predict(mnir,covars[ixtrain,:],counts[ixtrain,:]; nocounts=false)
-
-      # evaluate out-of-sample in test subsample
-      # target variable
-      oos_y = covars[ixtest,projdir]
-
-      # benchmark model w/o text
-      oos_yhat_nocounts = predict(mnir,covars[ixtest,:],counts[ixtest,:]; nocounts=true)
-
-      # dmr model w/ text
-      oos_yhat = predict(mnir,covars[ixtest,:],counts[ixtest,:]; nocounts=false)
-
-      # save results
-      append!(cvd, CVDataRow(ins_y,oos_y,ins_yhat,oos_yhat,ins_yhat_nocounts,oos_yhat_nocounts))
-
-      info("estimated fold $i/$k")
-  end
-
-  info("calculated aggreagate fit for $(length(cvd.ins_ys)) in-sample and $(length(cvd.oos_ys)) out-of-sample total observations (with duplication).")
-
-  CVStats(cvd)
-end
-
-# function cross_validate_hdmr_srproj(covars,counts,projdir; inpos=1:size(covars,2), inzero=1:size(covars,2),
-#                         k=10, gentype=Kfold, γ=0.0, seed=13, showwarnings=false)
-#   # dims
-#   n,p = size(covars)
-#
-#   # init
-#   gen, cvd = initcv(seed,gentype,n,k)
-#
-#   # run cv
-#   for (i, ixtrain) in enumerate(gen)
-#       ixtest = setdiff(1:n, ixtrain)
-#
-#       # estimate hdmr in train subsample
-#       m = hdmr(getindex(covars,ixtrain,inzero), getindex(counts,ixtrain,:); covarspos=getindex(covars,ixtrain,inpos), γ=γ, showwarnings=showwarnings)
-#
-#       # get full sample design matrices for regressions at the same time.
-#       # this makes sure the same model is used for both train and test,
-#       # otherwise, we could be dropping zpos from only one of them.
-#       X, X_nocounts, inz = srprojX(m,counts,covars,projdir; inpos=inpos, inzero=inzero)
-#
-#       # train subsample design matrices
-#       Xtrain_nocounts = getindex(X_nocounts,ixtrain,:)
-#       Xtrain = getindex(X,ixtrain,:)
-#
-#       # target variable
-#       ins_y = getindex(covars,ixtrain,projdir)
-#
-#       # benchmark model w/o text
-#       insamplelm_nocounts = lm(Xtrain_nocounts,ins_y)
-#       ins_yhat_nocounts = predict(insamplelm_nocounts,Xtrain_nocounts)
-#
-#       # model with text
-#       insamplelm = lm(Xtrain,ins_y)
-#       ins_yhat = predict(insamplelm,Xtrain)
-#
-#       # evaluate out-of-sample in test subsample
-#       # target variable
-#       oos_y = getindex(covars,ixtest,projdir)
-#
-#       # get test sample design matrices
-#       # newX, newX_nocounts, newincludezpos = srprojX(coefspos,coefszero,getindex(counts,ixtest,:),getindex(covars,ixtest,:),projdir; inpos=inpos, inzero=inzero, includezpos=includezpos)
-#       Xtest = getindex(X,ixtest,:)
-#       Xtest_nocounts = getindex(X_nocounts,ixtest,:)
-#
-#       # benchmark model w/o text
-#       oos_yhat_nocounts = predict(insamplelm_nocounts,Xtest_nocounts)
-#
-#       # dmr model w/ text
-#       oos_yhat = predict(insamplelm,Xtest)
-#
-#       # save results
-#       append!(cvd, CVDataRow(ins_y,oos_y,ins_yhat,oos_yhat,ins_yhat_nocounts,oos_yhat_nocounts))
-#
-#       info("estimated fold $i/$k")
-#   end
-#
-#   info("calculated aggreagate fit for $(length(cvd.ins_ys)) in-sample and $(length(cvd.oos_ys)) out-of-sample total observations (with duplication).")
-#
-#   CVStats(cvd)
-# end
