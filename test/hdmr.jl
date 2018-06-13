@@ -162,8 +162,6 @@ X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,3; includem=tr
 @test includezposb == includezposb
 
 # HIR
-# using Juno
-# Juno.@enter fit(CIR{DMR,LinearModel},covars,counts,1)
 @time hir = fit(CIR{HDMR,LinearModel},covars,counts,1; nocounts=true)
 @test coefbwd(hir)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hir)[2] ≈ coef(hdmrcoefs)[2]
@@ -376,15 +374,15 @@ f = @model(c ~ Value + Food, h ~ Value + Service + Atmosphere + Overall)
 # NOTE: the @model results in a different order of variables relative to the inzero/inpos interface
 # which in turn yields slightly different estimates. Probably due to coordinate descent iterating differently.
 # so for the tests we align the variables to give the same results.
-trmszero = getrhsterms(f, :h)
-trmspos = getrhsterms(f, :c)
-trms, inzero, inpos = mergerhsterms(trmszero,trmspos)
+trmszero = HurdleDMR.getrhsterms(f, :h)
+trmspos = HurdleDMR.getrhsterms(f, :c)
+trms, inzero, inpos = HurdleDMR.mergerhsterms(trmszero,trmspos)
 
 covars = convert(Matrix{Float64},we8thereRatings[:,trms.terms])
 pzero = length(inzero)
 ppos = length(inpos)
 
-projdir = ixprojdir(trms, :Food)
+projdir = HurdleDMR.ixprojdir(trms, :Food)
 
 # hurdle dmr parallel local cluster
 @time hdmrcoefs = hdmr(covars, counts; inpos=inpos, inzero=inzero, parallel=true)
@@ -477,7 +475,6 @@ regdata = DataFrame(y=covars[:,1], zv1=z1pos[:,1], m=z1pos[:,2], v1=covarspos[:,
 lmv1 = lm(@formula(y ~ zv1+m), regdata)
 r2v1 = adjr2(lmv1)
 
-# @enter srprojX(coefsHppos,coefsHpzero,counts,covars,1; inzero=inzero, inpos=inpos, includem=true)
 @time X1, X1_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inzero=inzero, inpos=inpos, includem=true)
 ix = filter!(x->x!=projdir,collect(1:5))
 @test X1_nocounts ≈ [ones(n) covars[:,ix]] rtol=1e-8
@@ -515,57 +512,57 @@ X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,1; inzero=inze
 @test !(coeffwd(hirglm)[1] ≈ coeffwd(hir)[1])
 @test !(coeffwd(hirglm)[2] ≈ coeffwd(hir)[2])
 
-###### debug #######
-using Juno
-@enter fit(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; nocounts=true)
-C = CIR{HDMR,LinearModel}
-m = f
-df = we8thereRatings
-sprojdir = :Food
-nocounts=true
-contrasts = Dict()
-
-trmszero = getrhsterms(m, :h)
-trmspos = getrhsterms(m, :c)
-trms, inzero, inpos = mergerhsterms(trmszero,trmspos)
-
-# create model matrix
-mf, mm = createmodelmatrix(trms, df, contrasts)
-
-# resolve projdir
-projdir = ixprojdir(trms, sprojdir)
-
-# fit and wrap in DataFrameRegressionModel
-# StatsModels.DataFrameRegressionModel(fit(C, mm.m, counts, projdir; inzero=inzero, inpos=inpos), mf, mm)
-# @enter fit(C, mm.m, counts, projdir; inzero=inzero, inpos=inpos)
-BM, FM = HDMR, LinearModel
-
-# run inverse regression
-bwdm = fit(BM,covars,counts; inzero=inzero, inpos=inpos)
-
-# target variable
-y = covars[:,projdir]
-
-# calculate srproj design matrices for regressions
-# X, X_nocounts, inz = srprojX(bwdm,counts,covars,projdir)
-coef(bwdm;select=:AICc)
-@enter srprojX(coef(bwdm;select=:AICc)...,counts,covars,projdir)
-
-# forward regression model with counts
-fwdm = fit(FM,X,y,fmargs...)
-
-if nocounts
-  # forward model w/o counts
-  fwdmnocounts = fit(FM,X_nocounts,y,fmargs...)
-
-  # wrap in struct
-  CIR{BM,FM}(covars, counts, projdir, inz, bwdm, fwdm, fwdmnocounts)
-else
-  # wrap in struct
-  CIR{BM,FM}(covars, counts, projdir, inz, bwdm, fwdm)
-end
-
-#####################
+# ###### debug #######
+# using Juno
+# @enter fit(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; nocounts=true)
+# C = CIR{HDMR,LinearModel}
+# m = f
+# df = we8thereRatings
+# sprojdir = :Food
+# nocounts=true
+# contrasts = Dict()
+#
+# trmszero = getrhsterms(m, :h)
+# trmspos = getrhsterms(m, :c)
+# trms, inzero, inpos = mergerhsterms(trmszero,trmspos)
+#
+# # create model matrix
+# mf, mm = createmodelmatrix(trms, df, contrasts)
+#
+# # resolve projdir
+# projdir = ixprojdir(trms, sprojdir)
+#
+# # fit and wrap in DataFrameRegressionModel
+# # StatsModels.DataFrameRegressionModel(fit(C, mm.m, counts, projdir; inzero=inzero, inpos=inpos), mf, mm)
+# # @enter fit(C, mm.m, counts, projdir; inzero=inzero, inpos=inpos)
+# BM, FM = HDMR, LinearModel
+#
+# # run inverse regression
+# bwdm = fit(BM,covars,counts; inzero=inzero, inpos=inpos)
+#
+# # target variable
+# y = covars[:,projdir]
+#
+# # calculate srproj design matrices for regressions
+# # X, X_nocounts, inz = srprojX(bwdm,counts,covars,projdir)
+# coef(bwdm;select=:AICc)
+# @enter srprojX(coef(bwdm;select=:AICc)...,counts,covars,projdir)
+#
+# # forward regression model with counts
+# fwdm = fit(FM,X,y,fmargs...)
+#
+# if nocounts
+#   # forward model w/o counts
+#   fwdmnocounts = fit(FM,X_nocounts,y,fmargs...)
+#
+#   # wrap in struct
+#   CIR{BM,FM}(covars, counts, projdir, inz, bwdm, fwdm, fwdmnocounts)
+# else
+#   # wrap in struct
+#   CIR{BM,FM}(covars, counts, projdir, inz, bwdm, fwdm)
+# end
+#
+# #####################
 @time hirdf = fit(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; nocounts=true)
 @test coefbwd(hirdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirdf)[2] ≈ coef(hdmrcoefs)[2]
