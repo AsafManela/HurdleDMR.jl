@@ -512,57 +512,6 @@ X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,1; inzero=inze
 @test !(coeffwd(hirglm)[1] ≈ coeffwd(hir)[1])
 @test !(coeffwd(hirglm)[2] ≈ coeffwd(hir)[2])
 
-# ###### debug #######
-# using Juno
-# @enter fit(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; nocounts=true)
-# C = CIR{HDMR,LinearModel}
-# m = f
-# df = we8thereRatings
-# sprojdir = :Food
-# nocounts=true
-# contrasts = Dict()
-#
-# trmszero = getrhsterms(m, :h)
-# trmspos = getrhsterms(m, :c)
-# trms, inzero, inpos = mergerhsterms(trmszero,trmspos)
-#
-# # create model matrix
-# mf, mm = createmodelmatrix(trms, df, contrasts)
-#
-# # resolve projdir
-# projdir = ixprojdir(trms, sprojdir)
-#
-# # fit and wrap in DataFrameRegressionModel
-# # StatsModels.DataFrameRegressionModel(fit(C, mm.m, counts, projdir; inzero=inzero, inpos=inpos), mf, mm)
-# # @enter fit(C, mm.m, counts, projdir; inzero=inzero, inpos=inpos)
-# BM, FM = HDMR, LinearModel
-#
-# # run inverse regression
-# bwdm = fit(BM,covars,counts; inzero=inzero, inpos=inpos)
-#
-# # target variable
-# y = covars[:,projdir]
-#
-# # calculate srproj design matrices for regressions
-# # X, X_nocounts, inz = srprojX(bwdm,counts,covars,projdir)
-# coef(bwdm;select=:AICc)
-# @enter srprojX(coef(bwdm;select=:AICc)...,counts,covars,projdir)
-#
-# # forward regression model with counts
-# fwdm = fit(FM,X,y,fmargs...)
-#
-# if nocounts
-#   # forward model w/o counts
-#   fwdmnocounts = fit(FM,X_nocounts,y,fmargs...)
-#
-#   # wrap in struct
-#   CIR{BM,FM}(covars, counts, projdir, inz, bwdm, fwdm, fwdmnocounts)
-# else
-#   # wrap in struct
-#   CIR{BM,FM}(covars, counts, projdir, inz, bwdm, fwdm)
-# end
-#
-# #####################
 @time hirdf = fit(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; nocounts=true)
 @test coefbwd(hirdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirdf)[2] ≈ coef(hdmrcoefs)[2]
@@ -572,7 +521,6 @@ X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,1; inzero=inze
 @test coefbwd(hirglmdf)[2] ≈ coef(hdmrcoefs)[2]
 @test !(coeffwd(hirglmdf)[2] ≈ coeffwd(hirdf)[2])
 @test !(coeffwd(hirglmdf)[1] ≈ coeffwd(hirdf)[1])
-
 
 # CV
 @time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,projdir; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
