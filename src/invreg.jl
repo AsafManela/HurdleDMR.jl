@@ -111,7 +111,7 @@ function ixprojdir(trms::StatsModels.Terms, sprojdir::Symbol)
   ix
 end
 
-StatsModels.@delegate StatsModels.DataFrameRegressionModel.model [coeffwd, coefbwd]
+StatsModels.@delegate StatsModels.DataFrameRegressionModel.model [coeffwd, coefbwd, srproj, srprojX]
 
 """
 Predict using a fitter Counts inverse regression (CIR).
@@ -135,6 +135,21 @@ function StatsBase.predict(m::CIR,covars::AbstractMatrix{T},counts::AbstractMatr
   end
 end
 
+# Predict function that takes data frame as predictor instead of matrix
+function StatsBase.predict(mm::MM, df::AbstractDataFrame, counts::AbstractMatrix;
+  kwargs...) where {T,M<:CIR,MM<:Union{CIR,StatsModels.DataFrameRegressionModel{M,T}}}
+    # NOTE: this code is copied from StatsModels/statsmodel.jl's version of predict
+    # copy terms, removing outcome if present (ModelFrame will complain if a
+    # term is not found in the DataFrame and we don't want to remove elements with missing y)
+    newTerms = StatsModels.dropresponse!(mm.mf.terms)
+    # create new model frame/matrix
+    mf = ModelFrame(newTerms, df; contrasts = mm.mf.contrasts)
+    newX = ModelMatrix(mf).m
+    yp = predict(mm, newX, counts; kwargs...)
+    out = missings(eltype(yp), size(df, 1))
+    out[mf.msng] = yp
+    return(out)
+end
 # # when the backward model is an HDMR we need to make sure we didn't drop a colinear zpos
 # function StatsBase.predict(m::C,covars::AbstractMatrix{T},counts::AbstractMatrix{V};
 #   nocounts=false) where {T<:AbstractFloat,V,BM<:HDMR,FM,C<:CIR{BM,FM}}

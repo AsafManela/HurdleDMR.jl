@@ -9,49 +9,80 @@ import HurdleDMR; @everywhere using HurdleDMR
 using CSV, GLM, DataFrames, Distributions
 we8thereCounts = CSV.read(joinpath(Pkg.dir("HurdleDMR"),"test","data","dmr_we8thereCounts.csv.gz"))
 counts = sparse(convert(Matrix{Float64},we8thereCounts))
-covars = convert(Matrix{Float64},CSV.read(joinpath(Pkg.dir("HurdleDMR"),"test","data","dmr_we8thereRatings.csv.gz")))
+covarsdf = CSV.read(joinpath(Pkg.dir("HurdleDMR"),"test","data","dmr_we8thereRatings.csv.gz"))
+covars = convert(Matrix{Float64},covarsdf)
 terms = map(string,names(we8thereCounts))
 
+## To fit a hurdle distribtued multiple regression (hdmr):
+m = hdmr(covars, counts; inpos=[1,3], inzero=1:5)
+
+# or with a dataframe and formula
+mf = @model(h ~ Food + Service + Value + Atmosphere + Overall, c ~ Food + Value)
+m = fit(HDMR, mf, covarsdf, counts)
+# where the h ~ equation is the model for zeros (hurdle crossing) and c ~ is the model for positive counts
+
+# in either case we can get the coefficients matrix for each variable + intercept as usual with
+coefspos, coefszero = coef(m)
+
+# By default we only return the AICc maximizing coefficients.
+# To also get back the entire regulatrization paths, run
+paths = fit(HDMRPaths, mf, covarsdf, counts)
+
+coef(paths; select=:all)
+
+# To get a sufficient reduction projection in direction of Food
+z = srproj(m,counts,1,1)
+
+# Counts inverse regression (cir) allows us to predict a covariate with the counts and other covariates
+# Here we use hdmr for the backward regression and another model for the forward regression
+# This can be accomplished with a single command, by fitting a CIR{HDMR,FM} where the forward model is FM <: RegressionModel
+cir = fit(CIR{HDMR,LinearModel},mf,covarsdf,counts,:Food; nocounts=true)
+# where the argument nocounts=true means we also fit a benchmark model without counts
+
+# we can get the forward and backward model coefficients with
+coefbwd(cir)
+coeffwd(cir)
+
+# the fitted model can be used to predict Food with new data
+yhat = predict(cir, covarsdf[1:10,:], counts[1:10,:])
+
+# and we can also predict only with the other covariates, which in this case
+# is just a linear regression
+yhat_nocounts = predict(hir, covarsdf[1:10,:], counts[1:10,:]; nocounts=true)
+
 # To fit a distribtued multinomial regression (dmr):
-coefs = HurdleDMR.dmr(covars, counts)
+m = dmr(covars, counts)
 
-# To use the dmr coefficients for a forward regression:
-projdir = 1
-X, X_nocounts = HurdleDMR.srprojX(coefs,counts,covars,projdir)
-y = covars[:,projdir]
+# or with a dataframe and formula
+m = fit(DMR, @model(c ~ Food + Service + Value + Atmosphere + Overall), covarsdf, counts)
 
-# benchmark model w/o text
-insamplelm_nocounts = lm(X_nocounts,y)
-yhat_nocounts = predict(insamplelm_nocounts,X_nocounts)
+# in either case we can get the coefficients matrix for each variable + intercept as usual with
+coef(m)
 
-# dmr model w/ text
-insamplelm = lm(X,y)
-yhat = predict(insamplelm,X)
+# By default we only return the AICc maximizing coefficients.
+# To also get back the entire regulatrization paths, run
+mf = @model(c ~ Food + Service + Value + Atmosphere + Overall)
+paths = fit(DMRPaths, mf, covarsdf, counts)
 
-## To fit a hurdle distribtued multinomial regression (hdmr):
-inzero = 1:size(covars,2)
-inpos = [1,3]
+# we can now select, for example the coefficients that minimize CV mse (takes a while)
+coef(paths; select=:CVmin)
 
-# covariates that go into the model for positive counts
-covarspos = covars[:,inpos]
+# To get a sufficient reduction projection in direction of Food
+z = srproj(m,counts,1)
 
-# covariates that go into the hurdle crossing model for indicators
-covarszero = covars[:,inzero]
+# A multinomial inverse regression (mnir) uses dmr for the backward regression and another model for the forward regression
+# This can be accomplished with a single command, by fitting a CIR{DMR,FM} where FM is the forward RegressionModel
+mnir = fit(CIR{DMR,LinearModel},mf,covarsdf,counts,:Food)
 
-# run the backward regression
-coefspos, coefszero = HurdleDMR.hdmr(covarszero, counts; covarspos=covarspos)
+# we can get the forward and backward model coefficients with
+coefbwd(mnir)
+coeffwd(mnir)
 
-## We can now use the hdmr coefficients for a forward regression:
-# collapse counts into low dimensional SR projection + covars
-X, X_nocounts, includezpos = HurdleDMR.srprojX(coefspos, coefszero, counts, covars, projdir; inpos=inpos, inzero=inzero)
+# the fitted model can be used to predict Food with new data
+yhat = predict(mnir, covarsdf[1:10,:], counts[1:10,:])
 
-# benchmark model w/o text
-insamplelm_nocounts = lm(X_nocounts,y)
-yhat_nocounts = predict(insamplelm_nocounts,X_nocounts)
-
-# dmr model w/ text
-insamplelm = lm(X,y)
-yhat = predict(insamplelm,X)
+# Suppose instead we want to predict a discrete variable, then perhaps use a Poisson GLM as follows
+mnir = fit(CIR{DMR,GeneralizedLinearModel},mf,covarsdf,counts,:Food,Poisson())
 
 
 
@@ -95,18 +126,3 @@ colon(1,1,3)
 j == 3:3
 
 # clean_folder("/home/amanela/.julia/v0.4")
-
-A = spzeros(Float64,4,5)
-convert(SharedArray, A)
-A = zeros(Float64,4,5)
-@time convert(SharedArray{Float64}, A)
-@time convert(SharedArray, A)
-
-function fun(x; kwargs...)
-  kwargs
-end
-kwargs = fun(3;b=1,c=2)
-kwargsdict = Dict(kwargs)
-haskey(kwargsdict,:b)
-kwargsdict[:a]
-getindex(kwargsdict,:b)
