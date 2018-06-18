@@ -10,7 +10,8 @@ rmse(args...) = sqrt(mse(args...))
 # rmse(y::V,yhat::V) where {T<:AbstractVector,V<:AbstractVector{T}} = rmse(vcat(y...),vcat(yhat...))
 σmse(y::V,yhat::V) where {T<:AbstractVector,V<:AbstractVector{T}} = std(mse.(y,yhat)) / sqrt(length(y)-1)
 σrmse(y::V,yhat::V) where {T<:AbstractVector,V<:AbstractVector{T}} = σmse(y,yhat) / (2rmse(y,yhat))
-σΔmse(y::V,yhat::V,yhat_nocounts::V) where {T<:AbstractVector,V<:AbstractVector{T}} = std(mse.(y,yhat) .- mse.(y,yhat_nocounts)) / sqrt(length(y)-1)
+σΔmse(y::V,yhat1::V,yhat2::V) where {T<:AbstractVector,V<:AbstractVector{T}} = std(mse.(y,yhat1) .- mse.(y,yhat2)) / sqrt(length(y)-1)
+σΔrmse(y::V,yhat1::V,yhat2::V) where {T<:AbstractVector,V<:AbstractVector{T}} = std(rmse.(y,yhat1) .- rmse.(y,yhat2)) / sqrt(length(y)-1)
 
 
 # non-random K-fold that simply splits into consequtive blocks of data
@@ -133,7 +134,7 @@ end
 
 CVStats(T::Type) = CVStats{T}(zeros(T,18)...)
 
-function CVStats{T}(d::CVData{T})
+function CVStats{T}(d::CVData{T}; root=false)
 
   s = CVStats(T)
 
@@ -143,23 +144,33 @@ function CVStats{T}(d::CVData{T})
   s.oos_r2_nocounts = r2(d.oos_ys,d.oos_yhats_nocounts)
   s.oos_r2 = r2(d.oos_ys,d.oos_yhats)
 
-  s.ins_mse_nocounts = mse(d.ins_ys,d.ins_yhats_nocounts)
-  s.ins_mse = mse(d.ins_ys,d.ins_yhats)
-  s.oos_mse_nocounts = mse(d.oos_ys,d.oos_yhats_nocounts)
-  s.oos_mse = mse(d.oos_ys,d.oos_yhats)
+  if root
+    msefn = rmse
+    σmsefn = σrmse
+    σΔmsefn = σΔrmse
+  else
+    msefn = mse
+    σmsefn = σmse
+    σΔmsefn = σΔmse
+  end
 
-  s.ins_σmse_nocounts = σmse(d.ins_ys,d.ins_yhats_nocounts)
-  s.ins_σmse = σmse(d.ins_ys,d.ins_yhats)
-  s.oos_σmse_nocounts = σmse(d.oos_ys,d.oos_yhats_nocounts)
-  s.oos_σmse = σmse(d.oos_ys,d.oos_yhats)
+  s.ins_mse_nocounts = msefn(d.ins_ys,d.ins_yhats_nocounts)
+  s.ins_mse = msefn(d.ins_ys,d.ins_yhats)
+  s.oos_mse_nocounts = msefn(d.oos_ys,d.oos_yhats_nocounts)
+  s.oos_mse = msefn(d.oos_ys,d.oos_yhats)
+
+  s.ins_σmse_nocounts = σmsefn(d.ins_ys,d.ins_yhats_nocounts)
+  s.ins_σmse = σmsefn(d.ins_ys,d.ins_yhats)
+  s.oos_σmse_nocounts = σmsefn(d.oos_ys,d.oos_yhats_nocounts)
+  s.oos_σmse = σmsefn(d.oos_ys,d.oos_yhats)
 
   # mse changes
   s.oos_change_mse = s.oos_mse - s.oos_mse_nocounts
   s.ins_change_mse = s.ins_mse - s.ins_mse_nocounts
   s.oos_change_r2 = s.oos_r2 - s.oos_r2_nocounts
   s.ins_change_r2 = s.ins_r2 - s.ins_r2_nocounts
-  s.oos_σchange_mse = σΔmse(d.oos_ys,d.oos_yhats,d.oos_yhats_nocounts)
-  s.ins_σchange_mse = σΔmse(d.ins_ys,d.ins_yhats,d.ins_yhats_nocounts)
+  s.oos_σchange_mse = σΔmsefn(d.oos_ys,d.oos_yhats,d.oos_yhats_nocounts)
+  s.ins_σchange_mse = σΔmsefn(d.ins_ys,d.ins_yhats,d.ins_yhats_nocounts)
 
   # # vec and transpose are unnecessary, but for code sanity
   # vec([oos_rmse oos_rmse_nocounts oos_pct_change_rmse
