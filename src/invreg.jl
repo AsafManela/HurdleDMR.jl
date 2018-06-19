@@ -3,18 +3,18 @@ Counts inverse regression (CIR) model supports both multinomial and hurdle inver
 and holds both the inverse and forward regression model estimates
 """
 struct CIR{BM<:DCR,FM<:RegressionModel} <: RegressionModel
-  covars::AbstractMatrix     # n×p covariates matrix
-  counts::AbstractMatrix     # n×d counts (document-term) matrix
+  # covars::AbstractMatrix     # n×p covariates matrix
+  # counts::AbstractMatrix     # n×d counts (document-term) matrix
   projdir::Int               # projection direction is the index of covariate representing the response
   inz::Vector{Int}           # indices of Z=srproj(counts) included in srprojX after dropping colinear ones on call to srprojX!
   bwdm::BM                   # inverse regression model: counts ~ X
   fwdm::FM                   # forward regression model: y ~ srproj(counts) + X
   fwdmnocounts::FM           # forward regression model w/o counts: y ~ X
 
-  CIR{BM,FM}(covars::AbstractMatrix{T}, counts::AbstractMatrix{V}, projdir::Int, inz::Vector{Int}, bwdm::BM, fwdm::FM) where {T<:AbstractFloat,V,BM<:DCR,FM<:RegressionModel} =
-    new(covars, counts, projdir, inz, bwdm, fwdm)
-  CIR{BM,FM}(covars::AbstractMatrix{T}, counts::AbstractMatrix{V}, projdir::Int, inz::Vector{Int}, bwdm::BM, fwdm::FM, fwdmnocounts::FM) where {T<:AbstractFloat,V,BM<:DCR,FM<:RegressionModel} =
-    new(covars, counts, projdir, inz, bwdm, fwdm, fwdmnocounts)
+  CIR{BM,FM}(projdir::Int, inz::Vector{Int}, bwdm::BM, fwdm::FM) where {BM<:DCR,FM<:RegressionModel} =
+    new(projdir, inz, bwdm, fwdm)
+  CIR{BM,FM}(projdir::Int, inz::Vector{Int}, bwdm::BM, fwdm::FM, fwdmnocounts::FM) where {BM<:DCR,FM<:RegressionModel} =
+    new(projdir, inz, bwdm, fwdm, fwdmnocounts)
 end
 
 """
@@ -45,10 +45,10 @@ function StatsBase.fit(::Type{C},covars::AbstractMatrix{T},counts::AbstractMatri
     fwdmnocounts = fit(FM,X_nocounts,y,fmargs...)
 
     # wrap in struct
-    CIR{BM,FM}(covars, counts, projdir, inz, bwdm, fwdm, fwdmnocounts)
+    CIR{BM,FM}(projdir, inz, bwdm, fwdm, fwdmnocounts)
   else
     # wrap in struct
-    CIR{BM,FM}(covars, counts, projdir, inz, bwdm, fwdm)
+    CIR{BM,FM}(projdir, inz, bwdm, fwdm)
   end
 end
 

@@ -3,6 +3,34 @@ using HurdleDMR
 
 @testset "crossvalidation" begin
 
+skf = SerialKfold(4, 2)
+@test collect(skf) == [[3,4],[1,2]]
+
+skf = SerialKfold(5, 2)
+@test collect(skf) == [[3,4,5],[1,2,5]]
+
+skf = LeaveOutSample(6, 2)
+@test collect(skf) == [[1,2,3]]
+
+skf = LeaveOutSample(5, 2)
+@test collect(skf) == [[1,2,3]]
+
+skf = LeaveOutSample(5, 2; forward=false)
+@test collect(skf) == [[3,4,5]]
+
+skf = LeaveOutSample(5, 10; testlength=4)
+@test collect(skf) == [[1]]
+
+@test_throws ErrorException LeaveOutSample(5, 0; testlength=5)
+
+srand(14)
+skf = LeaveOutSample(5, 2; random=true)
+@test collect(skf) == [[2,3,5]]
+
+srand(14)
+skf = LeaveOutSample(5, 2; testlength=3, random=true)
+@test collect(skf) == [[2,5]]
+
 resultstats = [CVStats(Float64), CVStats(Float64)]
 @test typeof(resultstats) <: AbstractArray{T} where {T <: CVType}
 @test typeof(resultstats[1]) <: CVType{Float64}

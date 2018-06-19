@@ -22,7 +22,7 @@ immutable SerialKfold <: CrossValGenerator
     foldlength::Int
 
     function SerialKfold(n::Int, k::Int)
-        2 <= k <= n || error("The value of k must be in [2, length(a)].")
+        2 <= k <= n || error("The value of k must be in [2, n].")
         new(n, k, round(Int,n/k))
     end
 end
@@ -31,6 +31,36 @@ Base.length(c::SerialKfold) = c.k
 Base.start(c::SerialKfold) = 1
 Base.next(c::SerialKfold, i::Int) = (vcat(1:(i-1)*c.foldlength,i*c.foldlength+1:c.n) , i+1)
 Base.done(c::SerialKfold, i::Int) = (i > c.k)
+# vcat(1:0,3:10)
+# collect(SerialKfold(13,3))
+
+# non-random K-fold that simply splits into consequtive blocks of data
+# useful for time-series CV
+immutable LeaveOutSample <: CrossValGenerator
+  n::Int
+  testlength::Int
+  random::Bool
+  forward::Bool
+
+  function LeaveOutSample(n::Int, k::Int=2; testlength::Int=round(Int,n/k), random=false, forward=true)
+    1 <= testlength < n || error("The value of testlength ($testlength) must be in [1, n-1].")
+    new(n, testlength, random, forward)
+  end
+end
+
+Base.length(c::LeaveOutSample) = 1
+Base.start(c::LeaveOutSample) = 1
+function Base.next(c::LeaveOutSample, i::Int)
+  trainlength = c.n-c.testlength
+  if c.random
+    sample(1:c.n, trainlength; replace=false, ordered=true), i+1
+  elseif c.forward
+    collect(1:trainlength), i+1
+  else
+    collect(c.n-trainlength+1:c.n), i+1
+  end
+end
+Base.done(c::LeaveOutSample, i::Int) = (i > 1)
 # vcat(1:0,3:10)
 # collect(SerialKfold(13,3))
 
