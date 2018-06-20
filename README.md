@@ -3,7 +3,7 @@
 <!-- [![Build Status](https://travis-ci.org/simonster/Lasso.jl.svg?branch=master)](https://travis-ci.org/simonster/Lasso.jl)
 [![Coverage Status](https://coveralls.io/repos/simonster/Lasso.jl/badge.svg?branch=master)](https://coveralls.io/r/simonster/Lasso.jl?branch=master) -->
 
-HurdledMR.jl is a Julia implementation of the Hurdle Distributed Multiple Regression (HDMR), as described in:
+HurdleDMR.jl is a Julia implementation of the Hurdle Distributed Multiple Regression (HDMR), as described in:
 
 Kelly, Bryan, Asaf Manela, and Alan Moreira (2018). Text Selection. Working paper
 

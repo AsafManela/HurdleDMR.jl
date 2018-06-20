@@ -6,6 +6,7 @@ using Reexport, GLM.FPVector, GLM.FP, StatsBase
 @reexport using GLM, StatsBase
 using Lasso
 
+"Hurdle returned object"
 mutable struct Hurdle <: RegressionModel
   mzero::RegressionModel  # model for zeros
   mpos::RegressionModel   # model for positive counts
@@ -13,6 +14,7 @@ mutable struct Hurdle <: RegressionModel
   fittedpos::Bool         # whether the model for positives was fitted
 end
 
+"Returns an (offsetzero, offsetpos) tuple of offset vector"
 function setoffsets{T}(y::AbstractVector{T}, ixpos::Vector{Int64}, offset::AbstractVector, offsetzero::AbstractVector, offsetpos::AbstractVector)
     # set offsets
     if length(offset) != 0
@@ -31,7 +33,8 @@ function setoffsets{T}(y::AbstractVector{T}, ixpos::Vector{Int64}, offset::Abstr
     offsetzero, offsetpos
 end
 
-function setIy{T}(y::AbstractVector{T})
+"Returns positives indicators for y"
+function getIy{T}(y::AbstractVector{T})
     # find positive y entries
     ixpos = find(y)
 
@@ -42,6 +45,7 @@ function setIy{T}(y::AbstractVector{T})
     ixpos, Iy
 end
 
+"Fits the model for zeros Iy ~ X"
 function fitzero{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{M},
   X::AbstractMatrix{T}, Iy::V,
   dzero::UnivariateDistribution,
@@ -93,6 +97,7 @@ function fitzero{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{M},
   mzero, fittedzero
 end
 
+"Fits the model for positives ypos ~ Xpos"
 function fitpos{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{M},
   Xpos::AbstractMatrix{T}, ypos::V,
   dpos::UnivariateDistribution,
@@ -142,6 +147,44 @@ function fitpos{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{M},
   mpos, fittedpos
 end
 
+"""
+    fit(Hurdle,M,X,y; Xpos=Xpos, <keyword arguments>)
+
+Fit a Hurdle (Mullahy, 1986) of count vector y on X with potentially another
+covariates matrix Xpos used to model positive counts.
+
+# Example with GLM:
+```julia
+  m = fit(Hurdle,GeneralizedLinearModel,X,y; Xpos=Xpos)
+  yhat = predict(m, X)
+```
+
+# Example with Lasso regularization:
+```julia
+  m = fit(Hurdle,GammaLassoPath,X,y; Xpos=Xpos)
+  yhat = predict(m, X; select=:AICc)
+```
+
+# Arguments
+- `M::RegressionModel`
+- `counts` n-by-d matrix of counts (usually sparse)
+- `dzero::UnivariateDistribution = Binomial()` distribution for zeros model
+- `dpos::UnivariateDistribution = PositivePoisson()` distribution for positives model
+- `lzero::Link=canonicallink(dzero)` link function for zeros model
+- `lpos::Link=canonicallink(dpos)` link function for positives model
+
+# Keywords
+- `Xpos::Union{AbstractMatrix{T},Void} = nothing` covariates matrix for positives
+  model or nothing to use X for both parts
+- `dofit::Bool = true` fit the model or just construct its shell
+- `wts::V = ones(y)` observation weights
+- `offsetzero::AbstractVector = similar(y, 0)` offsets for zeros model
+- `offsetpos::AbstractVector = similar(y, 0)` offsets for positives model
+- `offset::AbstractVector = similar(y, 0)` offsets for both model parts
+- `verbose::Bool=true`
+- `showwarnings::Bool=false`
+- `fitargs...` additional keyword arguments passed along to fit(M,...)
+"""
 function StatsBase.fit{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{Hurdle},::Type{M},
   X::AbstractMatrix{T}, y::V,
   dzero::UnivariateDistribution = Binomial(),
@@ -158,7 +201,7 @@ function StatsBase.fit{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{Hurdle},::Ty
   showwarnings::Bool = false,
   fitargs...)
 
-  ixpos, Iy = setIy(y)
+  ixpos, Iy = getIy(y)
 
   offsetzero, offsetpos = setoffsets(y, ixpos, offset, offsetzero, offsetpos)
 
@@ -178,6 +221,17 @@ function StatsBase.fit{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{Hurdle},::Ty
   Hurdle(mzero,mpos,fittedzero,fittedpos)
 end
 
+"""
+    fit(Hurdle,M,f,df; fpos=Xpos, <keyword arguments>)
+
+Takes dataframe and two formulas, one for each model part. Otherwise same arguments
+as [`fit(::Hurdle)`](@ref)
+
+# Example
+```julia
+  fit(Hurdle,GeneralizedLinearModel,@formula(y ~ x1*x2), df; fpos=@formula(y ~ x1*x2+x3))
+```
+"""
 function StatsBase.fit{M<:RegressionModel}(::Type{Hurdle},::Type{M},
                                       f::Formula,
                                       df::AbstractDataFrame,
@@ -199,7 +253,7 @@ function StatsBase.fit{M<:RegressionModel}(::Type{Hurdle},::Type{M},
   mmzero = ModelMatrix(mfzero)
   y = model_response(mfzero)
 
-  ixpos, Iy = setIy(y)
+  ixpos, Iy = getIy(y)
 
   offsetzero, offsetpos = setoffsets(y, ixpos, offset, offsetzero, offsetpos)
 

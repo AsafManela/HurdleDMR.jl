@@ -18,18 +18,33 @@ struct CIR{BM<:DCR,FM<:RegressionModel} <: RegressionModel
 end
 
 """
-Fit a Counts inverse regression (CIR).
-Set nocounts=true to also fit a benchmark model without counts
-example:
+    fit(CIR{BM,FM},covars,counts,projdir[,fmargs...]; <keyword arguments>)
+
+Fit a Counts Inverse Regression (CIR) of covars[:,projdir] ~ counts + covars[:,~projdir].
+
+CIR involves three steps:
+  1. Fit a backward regression model BM<:DCR: counts ~ covars
+  2. Calculate an sufficient reduction projection in direction projdir
+  3. Fit a forward regression model FM<:RegressionModel:
+    covars[:,projdir] ~ srproj(counts) + covars[:,~projdir]
+
+# Example:
+```julia
   m = fit(CIR{DMR,LinearModel}, covars, counts, 1; nocounts=true)
   yhat = predict(m, covars, counts)
   yhatnc = predict(m, covars, counts; nocounts=true)
+```
+
+# Arguments
+- `fmargs...` optional arguments passed along to the forward regression model.
+- `nocounts::Bool=false` whether to also fit a benchmark model without counts
+- `bmkwargs...` keyword arguments passed along to the backward regression model
 """
 function StatsBase.fit(::Type{C},covars::AbstractMatrix{T},counts::AbstractMatrix{V},projdir::Int, fmargs...;
-  nocounts=false, dcrkwargs...) where {T<:AbstractFloat,V,BM<:DCR,FM<:RegressionModel,C<:CIR{BM,FM}}
+  nocounts=false, bmkwargs...) where {T<:AbstractFloat,V,BM<:DCR,FM<:RegressionModel,C<:CIR{BM,FM}}
 
   # run inverse regression
-  bwdm = fit(BM,covars,counts; dcrkwargs...)
+  bwdm = fit(BM,covars,counts; bmkwargs...)
 
   # target variable
   y = covars[:,projdir]
@@ -53,14 +68,22 @@ function StatsBase.fit(::Type{C},covars::AbstractMatrix{T},counts::AbstractMatri
 end
 
 """
-Fit a Multinomial inverse regression (MNIR).
-Set nocounts=true to also fit a benchmark model without counts
-example:
+    fit(CIR{DMR,FM},m,df,counts,projdir[,fmargs...]; <keyword arguments>)
+
+Version of fit(CIR{DMR,FM}...) that takes a @model() and a dataframe instead of a covars
+matrix, and a projdir::Symbol specifies the dependent variable. See also fit(CIR...).
+
+# Example:
+```julia
   m = fit(CIR{DMR,LinearModel}, @model(c~x1+x2), df, counts, :x1; nocounts=true)
-  where c~ is the model for counts.
-  x1 (projdir) is the variable to predict.
+```
+where `c~` is the model for counts.
+`x1` (`projdir`) is the variable to predict.
+We can then predict with a dataframe as well
+```julia
   yhat = predict(m, df, counts)
   yhatnc = predict(m, df, counts; nocounts=true)
+```
 """
 function StatsBase.fit(::Type{C}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix, sprojdir::Symbol, fmargs...;
   contrasts::Dict = Dict(), kwargs...) where {BM<:DMR,FM<:RegressionModel,C<:CIR{BM,FM}}
@@ -78,14 +101,22 @@ function StatsBase.fit(::Type{C}, m::Model, df::AbstractDataFrame, counts::Abstr
 end
 
 """
-Fit a Hurdle inverse regression (HIR).
-Set nocounts=true to also fit a benchmark model without counts
-example:
+    fit(CIR{HDMR,FM},m,df,counts,projdir[,fmargs...]; <keyword arguments>)
+
+Version of fit(CIR{HDMR,FM}...) that takes a @model() and a dataframe instead of a covars
+matrix, and a projdir::Symbol specifies the dependent variable. See also fit(CIR...).
+
+# Example:
+```julia
   m = fit(CIR{HDMR,LinearModel}, @model(h~x1+x2, c~x1), df, counts, :x1; nocounts=true)
-  where h~ is the model for zeros, c~ is the model for positives.
-  x1 (projdir) is the variable to predict.
+```
+where `h~` is the model for zeros, `c~` is the model for positives.
+`x1` (`projdir`) is the variable to predict.
+We can then predict with a dataframe as well
+```julia
   yhat = predict(m, df, counts)
   yhatnc = predict(m, df, counts; nocounts=true)
+```
 """
 function StatsBase.fit(::Type{C}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix, sprojdir::Symbol, fmargs...;
   contrasts::Dict = Dict(), kwargs...) where {BM<:HDMR,FM<:RegressionModel,C<:CIR{BM,FM}}
@@ -104,7 +135,7 @@ function StatsBase.fit(::Type{C}, m::Model, df::AbstractDataFrame, counts::Abstr
   StatsModels.DataFrameRegressionModel(fit(C, mm.m, counts, projdir, fmargs...; inzero=inzero, inpos=inpos, kwargs...), mf, mm)
 end
 
-# find column number of sprojdir
+"Find column number of sprojdir"
 function ixprojdir(trms::StatsModels.Terms, sprojdir::Symbol)
   ix = findfirst(trms.terms,sprojdir)
   @assert ix > 0 "$sprojdir not found in provided dataframe"
@@ -114,8 +145,10 @@ end
 StatsModels.@delegate StatsModels.DataFrameRegressionModel.model [coeffwd, coefbwd, srproj, srprojX]
 
 """
-Predict using a fitter Counts inverse regression (CIR).
-Set nocounts=true to predict using a benchmark model without counts.
+Predict using a fitted Counts inverse regression (CIR) given new covars and counts.
+
+# Keywords
+- Set `nocounts=true` to predict using a benchmark model without counts.
 """
 function StatsBase.predict(m::CIR,covars::AbstractMatrix{T},counts::AbstractMatrix{V};
   nocounts=false) where {T<:AbstractFloat,V}
@@ -135,7 +168,10 @@ function StatsBase.predict(m::CIR,covars::AbstractMatrix{T},counts::AbstractMatr
   end
 end
 
-# Predict function that takes data frame as predictor instead of matrix
+"""
+Predict using a fitted Counts inverse regression (CIR) given new covars dataframe
+and counts. See also [`predict(::CIR)`](@ref).
+"""
 function StatsBase.predict(mm::MM, df::AbstractDataFrame, counts::AbstractMatrix;
   kwargs...) where {T,M<:CIR,MM<:Union{CIR,StatsModels.DataFrameRegressionModel{M,T}}}
     # NOTE: this code is copied from StatsModels/statsmodel.jl's version of predict
