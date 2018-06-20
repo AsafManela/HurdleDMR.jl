@@ -49,7 +49,7 @@ function dmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstract
 
   nlpaths = convert(Vector{Nullable{GammaLassoPath}},mapfn(tryfitgl,countscols))
 
-  DMRPaths{T,V}(counts, covars, intercept, nlpaths, n, d, p)
+  DMRPaths(nlpaths, intercept, n, d, p)
 end
 
 function poisson_regression!{T<:AbstractFloat,V}(coefs::AbstractMatrix{T}, j::Int64, covars::AbstractMatrix{T},counts::AbstractMatrix{V}; kwargs...)
@@ -78,55 +78,56 @@ function dmr{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatri
 end
 
 "Abstract Distributed Counts Regression (DCR) returned object"
-abstract type DCR{T<:AbstractFloat,V} <: RegressionModel end
+abstract type DCR <: RegressionModel end
 
 "Abstract DMR returned object"
-abstract type DMR{T<:AbstractFloat,V} <: DCR{T,V} end
+abstract type DMR <: DCR end
 
 """
 Relatively heavy object used to return results when we care about the regulatrization paths.
-It is returned whenever we use a remote cluster.
 """
-struct DMRPaths{T<:AbstractFloat,V} <: DMR{T,V}
-  counts::AbstractMatrix{V}     # n×d counts (document-term) matrix
-  covars::AbstractMatrix{T}     # n×p covariates matrix
-  intercept::Bool               # whether to include an intercept in each Poisson regression
+struct DMRPaths <: DMR
   nlpaths::Vector{Nullable{GammaLassoPath}} # independent Poisson GammaLassoPath for each phrase
+  intercept::Bool               # whether to include an intercept in each Poisson regression
                                 # (only kept with remote cluster, not with local cluster)
   n::Int64                      # number of observations. May be lower than provided after removing all zero obs.
   d::Int64                      # number of categories (terms/words/phrases)
   p::Int64                      # number of covariates
 
-  DMRPaths{T,V}(counts::AbstractMatrix{V}, covars::AbstractMatrix{T}, intercept::Bool,
-    nlpaths::Vector{Nullable{GammaLassoPath}}, n::Int64, d::Int64, p::Int64) where {T<:AbstractFloat,V} =
-    new(counts, covars, intercept, nlpaths, n, d, p)
+  DMRPaths(nlpaths::Vector{Nullable{GammaLassoPath}}, intercept::Bool,
+    n::Int64, d::Int64, p::Int64) =
+    new(nlpaths, intercept, n, d, p)
 end
 
 """
 Relatively light object used to return results when we only care about estimated coefficients.
-It is returned whenever we use a local cluster.
 """
-struct DMRCoefs{T<:AbstractFloat,V} <: DMR{T,V}
-  coefs::AbstractMatrix{T}      # model coefficients
+struct DMRCoefs <: DMR
+  coefs::AbstractMatrix         # model coefficients
   intercept::Bool               # whether to include an intercept in each Poisson regression
   n::Int64                      # number of observations. May be lower than provided after removing all zero obs.
   d::Int64                      # number of categories (terms/words/phrases)
   p::Int64                      # number of covariates
 
-  DMRCoefs{T,V}(coefs::AbstractMatrix{T}, intercept::Bool, n::Int64, d::Int64, p::Int64) where {T<:AbstractFloat,V} =
+  DMRCoefs(coefs::AbstractMatrix, intercept::Bool, n::Int64, d::Int64, p::Int64) =
     new(coefs, intercept, n, d, p)
+
+  function DMRCoefs(m::DMRPaths)
+    coefs = coef(m;select=:AICc)
+    new(coefs, m.intercept, m.n, m.d, m.p)
+  end
 end
 
 # version that returns just the coefficients
-function StatsBase.fit(::Type{D}, covars::AbstractMatrix{T}, counts::AbstractMatrix{V};
-  kwargs...) where {T<:AbstractFloat, V, D<:DMR}
+function StatsBase.fit(::Type{D}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
+  kwargs...) where {T<:AbstractFloat, D<:DMR}
 
   dmr(covars, counts; kwargs...)
 end
 
 # version that returns the entire regulatrization paths
-function StatsBase.fit(::Type{DMRPaths}, covars::AbstractMatrix{T}, counts::AbstractMatrix{V};
-  kwargs...) where {T<:AbstractFloat, V}
+function StatsBase.fit(::Type{DMRPaths}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
+  kwargs...) where {T<:AbstractFloat}
 
   dmrpaths(covars, counts; kwargs...)
 end
@@ -142,6 +143,7 @@ StatsModels.@delegate StatsModels.DataFrameRegressionModel.model [hasintercept, 
 # c must be specified on the lhs to indicate the model for counts.
 function StatsBase.fit(::Type{T}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix;
   contrasts::Dict = Dict(), kwargs...) where {T<:DMR}
+
   # parse and merge rhs terms
   trms = getrhsterms(m, :c)
 
@@ -251,7 +253,7 @@ function dmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts:
     end
   end
 
-  DMRCoefs{T,V}(coefs, intercept, n, d, p)
+  DMRCoefs(coefs, intercept, n, d, p)
 end
 
 """
@@ -260,8 +262,7 @@ This version does not share memory across workers, so may be more efficient for 
 function dmr_remote_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
           parallel,verbose,showwarnings,intercept; kwargs...)
   paths = dmrpaths(covars, counts; parallel=parallel, verbose=verbose, showwarnings=showwarnings, intercept=intercept, kwargs...)
-  coefs = coef(paths;select=:AICc)
-  DMRCoefs{T,V}(coefs, intercept, paths.n, paths.d, paths.p)
+  DMRCoefs(paths)
 end
 
 dropnull{T<:Nullable}(v::Vector{T}) = v[.!isnull.(v)]

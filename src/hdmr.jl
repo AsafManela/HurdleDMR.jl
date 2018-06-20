@@ -3,62 +3,56 @@
 ##############################################################
 
 "Abstract HDMR returned object"
-abstract type HDMR{T<:AbstractFloat,V} <: DCR{T,V} end
+abstract type HDMR <: DCR end
 
 """
 Relatively heavy object used to return results when we care about the regulatrization paths.
-It is returned whenever we use a remote cluster.
 """
-struct HDMRPaths{T<:AbstractFloat,V} <: HDMR{T,V}
-  counts::AbstractMatrix{V}     # n×d counts (document-term) matrix
-  covars::AbstractMatrix{T}     # n×p covariates matrix for zeros or both model
-  intercept::Bool               # whether to include an intercept in each Poisson regression
+struct HDMRPaths <: HDMR
   nlpaths::Vector{Nullable{Hurdle}} # independent Hurdle{GammaLassoPath} for each phrase
+  intercept::Bool               # whether to include an intercept in each Poisson regression
                                 # (only kept with remote cluster, not with local cluster)
   n::Int64                      # number of observations. May be lower than provided after removing all zero obs.
   d::Int64                      # number of categories (terms/words/phrases)
   inpos                         # indices of covars columns included in positives model
   inzero                        # indices of covars columns included in zeros model
 
-  HDMRPaths{T,V}(counts::AbstractMatrix{V}, covars::AbstractMatrix{T}, intercept::Bool,
-    nlpaths::Vector{Nullable{Hurdle}}, n::Int64, d::Int64,
-    inpos, inzero) where {T<:AbstractFloat,V} =
-    new(counts, covars, intercept, nlpaths, n, d, inpos, inzero)
+  HDMRPaths(nlpaths::Vector{Nullable{Hurdle}}, intercept::Bool, n::Int64, d::Int64, inpos, inzero) =
+    new(nlpaths, intercept, n, d, inpos, inzero)
 end
 
 """
 Relatively light object used to return results when we only care about estimated coefficients.
-It is returned whenever we use a local cluster.
 """
-struct HDMRCoefs{T<:AbstractFloat,V} <: HDMR{T,V}
-  coefspos::AbstractMatrix{T}   # positives model coefficients
-  coefszero::AbstractMatrix{T}  # zeros model coefficients
+struct HDMRCoefs <: HDMR
+  coefspos::AbstractMatrix      # positives model coefficients
+  coefszero::AbstractMatrix     # zeros model coefficients
   intercept::Bool               # whether to include an intercept in each Poisson regression
   n::Int64                      # number of observations. May be lower than provided after removing all zero obs.
   d::Int64                      # number of categories (terms/words/phrases)
   inpos                         # indices of covars columns included in positives model
   inzero                        # indices of covars columns included in zeros model
 
-  HDMRCoefs{T,V}(coefspos::AbstractMatrix{T}, coefszero::AbstractMatrix{T}, intercept::Bool,
-    n::Int64, d::Int64, inpos, inzero) where {T<:AbstractFloat,V} =
+  HDMRCoefs(coefspos::AbstractMatrix, coefszero::AbstractMatrix, intercept::Bool,
+    n::Int64, d::Int64, inpos, inzero) =
     new(coefspos, coefszero, intercept, n, d, inpos, inzero)
 
-  function HDMRCoefs{T,V}(m::HDMRPaths{T,V}) where {T<:AbstractFloat,V}
+  function HDMRCoefs(m::HDMRPaths)
     coefspos, coefszero = coef(m;select=:AICc)
     new(coefspos, coefszero, m.intercept, m.n, m.d, m.inpos, m.inzero)
   end
 end
 
 # version that returns just the coefficients
-function StatsBase.fit(::Type{H}, covars::AbstractMatrix{T}, counts::AbstractMatrix{V};
-  kwargs...) where {T<:AbstractFloat, V, H<:HDMR}
+function StatsBase.fit(::Type{H}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
+  kwargs...) where {T<:AbstractFloat, H<:HDMR}
 
   hdmr(covars,counts; kwargs...)
 end
 
 # version that returns the entire regulatrization paths
-function StatsBase.fit(::Type{HDMRPaths}, covars::AbstractMatrix{T}, counts::AbstractMatrix{V};
-  kwargs...) where {T<:AbstractFloat, V}
+function StatsBase.fit(::Type{HDMRPaths}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
+  kwargs...) where {T<:AbstractFloat}
 
   hdmrpaths(covars, counts; kwargs...)
 end
@@ -166,7 +160,7 @@ function hdmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstrac
 
   nlpaths = convert(Vector{Nullable{Hurdle}},mapfn(tryfith,countscols))
 
-  HDMRPaths{T,V}(counts, covars, intercept, nlpaths, n, d, inpos, inzero)
+  HDMRPaths(nlpaths, intercept, n, d, inpos, inzero)
 end
 
 function incovars(covars,inpos,inzero)
@@ -276,7 +270,7 @@ function hdmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts
     end
   end
 
-  HDMRCoefs{T,V}(coefspos, coefszero, intercept, n, d, inpos, inzero)
+  HDMRCoefs(coefspos, coefszero, intercept, n, d, inpos, inzero)
 end
 
 """
@@ -285,7 +279,7 @@ This version does not share memory across workers, so may be more efficient for 
 function hdmr_remote_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
           inpos,inzero,intercept,parallel,verbose,showwarnings; kwargs...)
   paths = hdmrpaths(covars, counts; inpos=inpos, inzero=inzero, parallel=parallel, verbose=verbose, showwarnings=showwarnings, kwargs...)
-  HDMRCoefs{T,V}(paths)
+  HDMRCoefs(paths)
 end
 
 function StatsBase.coef(m::HDMRCoefs; select=:AICc)
