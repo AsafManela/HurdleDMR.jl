@@ -1,5 +1,5 @@
-using Documenter
 using HurdleDMR
+using Documenter
 
 makedocs(
     modules = [HurdleDMR]
