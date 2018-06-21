@@ -18,9 +18,9 @@ struct CIR{BM<:DCR,FM<:RegressionModel} <: RegressionModel
 end
 
 """
-    fit(CIR{BM,FM},covars,counts,projdir[,fmargs...]; <keyword arguments>)
+    fit(::CIR{BM,FM},covars,counts,projdir[,fmargs...]; <keyword arguments>)
 
-Fit a Counts Inverse Regression (CIR) of covars[:,projdir] ~ counts + covars[:,~projdir].
+Fit a Counts Inverse Regression (CIR) of `covars[:,projdir] ~ counts + covars[:,~projdir]`.
 
 CIR involves three steps:
   1. Fit a backward regression model BM<:DCR: counts ~ covars
@@ -36,7 +36,12 @@ CIR involves three steps:
 ```
 
 # Arguments
-- `fmargs...` optional arguments passed along to the forward regression model.
+- `covars` n-by-p matrix of covariates
+- `counts` n-by-d matrix of counts (usually sparse)
+- `projdir` index of covars column used as dependent variable in forward model
+- `fmargs...` optional arguments passed along to the forward regression model
+
+# Keywords
 - `nocounts::Bool=false` whether to also fit a benchmark model without counts
 - `bmkwargs...` keyword arguments passed along to the backward regression model
 """

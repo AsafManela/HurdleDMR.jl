@@ -1,21 +1,32 @@
 using MLBase, StatsBase, DataFrames
 
 # performance evaluation stats
+"Mean squared error"
 mse(y::V,yhat::V) where {T<:Number,V<:AbstractVector{T}} = mean(abs2.(y-yhat))
 mse(y::V,yhat::V) where {T<:AbstractVector,V<:AbstractVector{T}} = mse(vcat(y...),vcat(yhat...))
+
+"Root-mean squared error"
+rmse(args...) = sqrt(mse(args...))
+
 StatsBase.r2(y::V,yhat::V) where {T<:Number,V<:AbstractVector{T}} = 1-sum(abs2,y-yhat)/sum(abs2,y.-mean(y))
 StatsBase.r2(y::V,yhat::V) where {T<:AbstractVector,V<:AbstractVector{T}} = r2(vcat(y...),vcat(yhat...))
-rmse(args...) = sqrt(mse(args...))
-# rmse(y::V,yhat::V) where {T<:Number,V<:AbstractVector{T}} = sqrt(mean(abs2.(y-yhat)))
-# rmse(y::V,yhat::V) where {T<:AbstractVector,V<:AbstractVector{T}} = rmse(vcat(y...),vcat(yhat...))
+
+"Standard error of mean squared error"
 σmse(y::V,yhat::V) where {T<:AbstractVector,V<:AbstractVector{T}} = std(mse.(y,yhat)) / sqrt(length(y)-1)
+
+"Standard error of root-mean squared error"
 σrmse(y::V,yhat::V) where {T<:AbstractVector,V<:AbstractVector{T}} = σmse(y,yhat) / (2rmse(y,yhat))
+
+"Standard error of difference in mean squared error between yhat1 and yhat2"
 σΔmse(y::V,yhat1::V,yhat2::V) where {T<:AbstractVector,V<:AbstractVector{T}} = std(mse.(y,yhat1) .- mse.(y,yhat2)) / sqrt(length(y)-1)
+
+"Standard error of difference in root-mean squared error between yhat1 and yhat2"
 σΔrmse(y::V,yhat1::V,yhat2::V) where {T<:AbstractVector,V<:AbstractVector{T}} = std(rmse.(y,yhat1) .- rmse.(y,yhat2)) / sqrt(length(y)-1)
 
-
-# non-random K-fold that simply splits into consequtive blocks of data
-# useful for time-series CV
+"""
+Non-random K-fold generator that simply splits into consequtive blocks of data.
+Useful for time-series data.
+"""
 immutable SerialKfold <: CrossValGenerator
     n::Int
     k::Int
@@ -34,8 +45,7 @@ Base.done(c::SerialKfold, i::Int) = (i > c.k)
 # vcat(1:0,3:10)
 # collect(SerialKfold(13,3))
 
-# non-random K-fold that simply splits into consequtive blocks of data
-# useful for time-series CV
+"Splits the sample into one train and one test subsamples."
 immutable LeaveOutSample <: CrossValGenerator
   n::Int
   testlength::Int
@@ -75,6 +85,7 @@ struct CVDataRow{T} <: CVType{T}
   oos_yhat_nocounts::AbstractVector{T}
 end
 
+"Container for cross validation y and yhats"
 mutable struct CVData{T} <: CVType{T}
   ins_ys::Vector{AbstractVector{T}}
   oos_ys::Vector{AbstractVector{T}}
@@ -108,7 +119,7 @@ function Base.append!(d::CVData, r::CVData)
   d
 end
 
-
+"Container for CV summary statistics"
 mutable struct CVStats{T} <: CVType{T}
   oos_mse::T
   oos_mse_nocounts::T
@@ -162,8 +173,10 @@ function DataFrames.DataFrame(v::Vector{T}) where {T <: CVType}
     vcat(DataFrames.DataFrame.(v)...)
 end
 
+"Constructs an empty CVStats with elment type `T`"
 CVStats(T::Type) = CVStats{T}(zeros(T,18)...)
 
+"Converts CVData into several summary statistics"
 function CVStats{T}(d::CVData{T}; root=false)
 
   s = CVStats(T)
@@ -202,21 +215,18 @@ function CVStats{T}(d::CVData{T}; root=false)
   s.oos_σchange_mse = σΔmsefn(d.oos_ys,d.oos_yhats,d.oos_yhats_nocounts)
   s.ins_σchange_mse = σΔmsefn(d.ins_ys,d.ins_yhats,d.ins_yhats_nocounts)
 
-  # # vec and transpose are unnecessary, but for code sanity
-  # vec([oos_rmse oos_rmse_nocounts oos_pct_change_rmse
-  #      ins_rmse ins_rmse_nocounts ins_pct_change_rmse
-  #      oos_r2 oos_r2_nocounts oos_pct_change_r2
-  #      ins_r2 ins_r2_nocounts ins_pct_change_r2]')'
-
   s
 end
 
-function initcv(seed,gentype,n,k)
-  # seed so that all different specs use same set of folds
-  srand(seed)
+function initcv(gen,seed,gentype,n,k)
+  # instantiate generator if not specified directly
+  if gen == nothing
+    # seed so that all different specs use same set of folds
+    srand(seed)
 
-  # fold generator
-  gen = gentype(n,k)
+    # fold generator
+    gen = gentype(n,k)
+  end
 
   # allocate space
   cvd = CVData(Float64)
@@ -224,16 +234,45 @@ function initcv(seed,gentype,n,k)
   gen, cvd
 end
 
+"""
+    cv(::CIR,covars,counts,projdir[,fmargs...]; <keyword arguments>)
+
+Cross-validates a Counts Inverse Regression (CIR) of
+  `covars[:,projdir] ~ counts + covars[:,~projdir]`. See also [`fit(::CIR)`](@ref).
+
+
+# Example with Lasso regularization:
+```julia
+  cvdata = cv(CIR{HDMR,LinearModel},covars,counts,1; k=5, gentype=MLBase.Kfold, seed=123)
+  CVStats(cvdata)
+```
+
+# Arguments
+- `covars` n-by-p matrix of covariates
+- `counts` n-by-d matrix of counts (usually sparse)
+- `projdir` index of covars column used as dependent variable in forward model
+- `fmargs...` optional arguments passed along to the forward regression model
+
+# Keywords
+- `gentype=Kfold` cross validation fold generator [`CrossValGenerator`](@ref)
+- `k=10` number of folds
+- `seed=13` random seed for generating folds
+- `gen=nothing` if specified, uses this instantiated cross validation fold generator
+  and disregards `gentype`, `k`, and `seed`
+- `dcrkwargs...` additional keyword arguments passed along to backward regression model
+"""
 function cv(::Type{C},covars::AbstractMatrix{T},counts::AbstractMatrix{V},projdir::Int, fmargs...;
-  k=10, gentype=Kfold, seed=13,
+  gentype=Kfold, k=10, seed=13, gen=nothing,
   dcrkwargs...) where {T<:AbstractFloat,V,BM<:DCR,FM<:RegressionModel,C<:CIR{BM,FM}}
 
   # dims
   n,p = size(covars)
-  # ixnotdir = 1:p .!= projdir
 
-  # init
-  gen, cvd = initcv(seed,gentype,n,k)
+  #init
+  gen, cvd = initcv(gen,seed,gentype,n,k)
+
+  # k may have changed in init if gen was specified directly
+  k = length(gen)
 
   # run cv
   for (i, ixtrain) in enumerate(gen)

@@ -229,8 +229,9 @@ zlmnocounts = lm(hcat(ones(n,1),covars[:,2:end]),covars[:,1])
 @test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,2:end])) ≈ predict(mnirdf,covars[1:10,:],counts[1:10,:]; nocounts=true)
 
 # CV
-@time cvstats13 = cv(CIR{DMR,LinearModel},covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ)
-@time cvstats13b = cv(CIR{DMR,LinearModel},f,we8thereRatings,smallcounts,:Food; k=2, gentype=MLBase.Kfold, γ=γ)
+srand(13)
+@time cvstats13 = cv(CIR{DMR,LinearModel},covars,smallcounts,1; gen=MLBase.Kfold(size(covars,1),2), γ=γ)
+@time cvstats13b = cv(CIR{DMR,LinearModel},f,we8thereRatings,smallcounts,:Food; k=2, gentype=MLBase.Kfold, seed=13, γ=γ)
 @test isequal(cvstats13,cvstats13b)
 
 cvstats14 = cv(CIR{DMR,LinearModel},covars,smallcounts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)

@@ -156,13 +156,13 @@ covariates matrix Xpos used to model positive counts.
 # Example with GLM:
 ```julia
   m = fit(Hurdle,GeneralizedLinearModel,X,y; Xpos=Xpos)
-  yhat = predict(m, X)
+  yhat = predict(m, X; Xpos=Xpos)
 ```
 
 # Example with Lasso regularization:
 ```julia
   m = fit(Hurdle,GammaLassoPath,X,y; Xpos=Xpos)
-  yhat = predict(m, X; select=:AICc)
+  yhat = predict(m, X; Xpos=Xpos, select=:AICc)
 ```
 
 # Arguments
@@ -296,6 +296,20 @@ end
 #   destA
 # end
 
+"""
+    coef(m::Hurdle; <keyword arguments>)
+
+Returns the AICc optimal coefficient matrices fitted the Hurdle.
+
+# Example:
+```julia
+  m = fit(Hurdle,GeneralizedLinearModel,X,y; Xpos=Xpos)
+  coefspos, coefszero = coef(m)
+```
+
+# Keywords
+- `kwargs...` are passed along to two coef() calls on the two model parts.
+"""
 function StatsBase.coef(hurdle::Hurdle; kwargs...)
   czero = coef(hurdle.mzero; kwargs...)
   cpos = coef(hurdle.mpos; kwargs...)
@@ -309,7 +323,33 @@ function StatsBase.coef(hurdle::Hurdle; kwargs...)
   cpos,czero
 end
 
-## Prediction function for GLMs
+"""
+    predict(m,X; Xpos=Xpos, <keyword arguments>)
+
+Predict using a fitted Hurdle given new X (and potentially Xpos).
+
+# Example with GLM:
+```julia
+  m = fit(Hurdle,GeneralizedLinearModel,X,y; Xpos=Xpos)
+  yhat = predict(m, X; Xpos=Xpos)
+```
+
+# Example with Lasso regularization:
+```julia
+  m = fit(Hurdle,GammaLassoPath,X,y; Xpos=Xpos)
+  yhat = predict(m, X; Xpos=Xpos, select=:AICc)
+```
+
+# Arguments
+- `m::Hurdle` fitted Hurdle model
+- `X` n-by-p matrix of covariates of same dimensions used to fit m.
+
+# Keywords
+- `Xpos::Union{AbstractMatrix{T},Void} = nothing` covariates matrix for positives
+  model or nothing to use X for both parts
+- `kwargs...` additional keyword arguments passed along to predict() for each
+  of the two model parts.
+"""
 function StatsBase.predict{T<:AbstractFloat}(hurdle::Hurdle, X::AbstractMatrix{T};
   Xpos::AbstractMatrix{T} = X,
   offsetzero::AbstractVector = Array{T}(0),

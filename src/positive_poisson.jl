@@ -2,8 +2,6 @@
 # Positive Poisson GLM
 ###################################################################
 
-# # Pkg.add("LambertW")
-# Pkg.clone("https://github.com/robertdj/LambertW.jl.git")
 using LambertW
 
 ###################################################################

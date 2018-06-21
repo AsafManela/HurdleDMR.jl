@@ -1,10 +1,19 @@
-# Model here is inspired by matthieugomez/FixedEffectModels.jl package
+"""
+  Model(expr, parts::Vector{Formula})
+
+Representation of a multipart model composed of a vector of Formula's.
+It is inspired by the [https://github.com/matthieugomez/FixedEffectModels.jl](FixedEffectModels.jl) package
+"""
 struct Model
   expr
   parts::Vector{Formula}
 end
 
-"@model(formulas...) takes a sequence of formulas and parses them in a n-part model"
+"""
+    @model(formula1, formula2, ...)
+
+Parses a sequence of comma-separated Formula's representing a multipart model.
+"""
 macro model(args...)
   Expr(:call, :model_helper, (esc(Base.Meta.quot(a)) for a in args)...)
 end
@@ -54,26 +63,37 @@ function mergerhsterms(a::StatsModels.Terms, b::StatsModels.Terms)
   newt, ina, inb
 end
 
-function getpart(m::Model, lhs::Symbol, clearlhs=true)
-  ix = findfirst(p->p.lhs==lhs,m.parts)
-  @assert ix > 0 "The model is missing a formula with $lhs on its left-hand-side."
-  f = m.parts[ix]
-  if clearlhs
-    f = copy(f)
-    f.lhs = nothing
-  end
-  f
-end
+# """
+#   getpart(m, lhs[, clearlhs=true])
+#
+# Returns part of model `m` with left-hand-side symbol `lhs`
+# """
+# function getpart(m::Model, lhs::Symbol, clearlhs=true)
+#   ix = findfirst(p->p.lhs==lhs,m.parts)
+#   @assert ix > 0 "The model is missing a formula with $lhs on its left-hand-side."
+#   f = m.parts[ix]
+#   if clearlhs
+#     f = copy(f)
+#     f.lhs = nothing
+#   end
+#   f
+# end
+#
+# function getformula(f::Formula, lhs::Symbol, clearlhs=true)
+#   @assert f.lhs == lhs "The model is missing a formula with $lhs on its left-hand-side."
+#   if clearlhs
+#     f = copy(f)
+#     f.lhs = nothing
+#   end
+#   f
+# end
 
-function getformula(f::Formula, lhs::Symbol, clearlhs=true)
-  @assert f.lhs == lhs "The model is missing a formula with $lhs on its left-hand-side."
-  if clearlhs
-    f = copy(f)
-    f.lhs = nothing
-  end
-  f
-end
+"""
+  getformula(m, lhs[, clearlhs=true])
 
+Returns the formula of the part of model `m` with left-hand-side symbol `lhs`,
+clearing its lhs.
+"""
 function getformula(m::Model, lhs::Symbol, clearlhs=true)
   ix = findfirst(p->p.lhs==lhs,m.parts)
   @assert ix > 0 "The model is missing a formula with $lhs on its left-hand-side."
@@ -85,11 +105,19 @@ function getformula(m::Model, lhs::Symbol, clearlhs=true)
   f
 end
 
+"""
+  getrhsterms(m, lhs[, clearlhs=true])
+
+Returns the right-hand-side Terms of the part of model `m` with left-hand-side
+symbol `lhs`.
+"""
 function getrhsterms(args...)
   f = getformula(args...)
   StatsModels.Terms(f)
 end
 
+# Replicates functionality in StatsModels, so if it changes there it would have
+# to change here too.
 function createmodelmatrix(trms, df, contrasts)
   # StatsModels.drop_intercept(T) && (trms.intercept = true)
   trms.intercept = true

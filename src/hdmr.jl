@@ -125,7 +125,7 @@ end
 """
     coef(m::HDMRCoefs)
 
-Returns the AICc optimal coefficients matrix fitted with HDMR.
+Returns the AICc optimal coefficient matrices fitted with HDMR.
 
 # Example:
 ```julia

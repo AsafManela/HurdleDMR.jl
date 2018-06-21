@@ -195,7 +195,8 @@ zlmnocounts = lm(hcat(ones(n,1),covars[:,2:end]),covars[:,1])
 @test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,2:end])) ≈ predict(hir,covars[1:10,:],counts[1:10,:]; nocounts=true)
 
 # CV
-@time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
+srand(13)
+@time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,1; gen=MLBase.Kfold(size(covars,1),2), γ=γ)
 @time cvstats13b = cv(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; k=2, gentype=MLBase.Kfold, γ=γ)
 @test isapprox(cvstats13,cvstats13b)
 
@@ -350,7 +351,8 @@ X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,3; inpos=inpos
 @test !(coeffwd(hirglmdf)[1] ≈ coeffwd(hirdf)[1])
 
 # CV
-@time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,1; inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
+srand(13)
+@time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,1; inpos=inpos, gen=MLBase.Kfold(size(covars,1),2), γ=γ)
 @time cvstats13b = cv(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; k=2, gentype=MLBase.Kfold, γ=γ)
 @test isapprox(cvstats13,cvstats13b)
 
@@ -523,7 +525,8 @@ X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,1; inzero=inze
 @test !(coeffwd(hirglmdf)[1] ≈ coeffwd(hirdf)[1])
 
 # CV
-@time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,projdir; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ)
+srand(13)
+@time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,projdir; inzero=inzero, inpos=inpos, gen=MLBase.Kfold(size(covars,1),2), γ=γ)
 @time cvstats13b = cv(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; k=2, gentype=MLBase.Kfold, γ=γ)
 @test cvstats13 ≈ cvstats13b
 
