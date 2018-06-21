@@ -22,7 +22,7 @@ import HurdleDMR; @everywhere using HurdleDMR
 # we8thereCounts = DataFrame(rcopy(R"as.matrix(we8thereCounts)"))
 # we8thereRatings = rcopy(R"we8thereRatings")
 # we8thereTerms = rcopy(R"we8thereCounts@Dimnames$Terms")
-# names!(we8thereCounts,map(Symbol,we8thereTerms))
+# names!(we8thereCounts,broadcast(Symbol,we8thereTerms))
 #
 # R"cl <- makeCluster(2,type=\"FORK\")"
 # R"fits <- dmr(cl, we8thereRatings, we8thereCounts, gamma=$γ, verb=0)"

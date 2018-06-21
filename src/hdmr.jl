@@ -174,8 +174,8 @@ function StatsBase.coef(m::HDMRPaths; select=:AICc)
   # establish maximum path lengths
   nλzero = nλpos = 0
   if size(nonnullpaths,1) > 0
-    nλzero = maximum(map(nlpath->size(nlpath.value.mzero)[2],nonnullpaths))
-    nλpos = maximum(map(nlpath->size(nlpath.value.mpos)[2],nonnullpaths))
+    nλzero = maximum(broadcast(nlpath->size(nlpath.value.mzero)[2],nonnullpaths))
+    nλpos = maximum(broadcast(nlpath->size(nlpath.value.mpos)[2],nonnullpaths))
   end
 
   nλ = max(nλzero,nλpos)
@@ -277,7 +277,7 @@ function hdmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstrac
     mapfn = pmap
   else
     verbose && info("serial hurdle run on a single node")
-    mapfn = map
+    mapfn = broadcast
   end
 
   nlpaths = convert(Vector{Nullable{Hurdle}},mapfn(tryfith,countscols))

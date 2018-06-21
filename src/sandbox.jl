@@ -11,7 +11,7 @@ we8thereCounts = CSV.read(joinpath(Pkg.dir("HurdleDMR"),"test","data","dmr_we8th
 counts = sparse(convert(Matrix{Float64},we8thereCounts))
 covarsdf = CSV.read(joinpath(Pkg.dir("HurdleDMR"),"test","data","dmr_we8thereRatings.csv.gz"))
 covars = convert(Matrix{Float64},covarsdf)
-terms = map(string,names(we8thereCounts))
+terms = broadcast(string,names(we8thereCounts))
 
 ## To fit a hurdle distribtued multiple regression (hdmr):
 m = hdmr(covars, counts; inpos=[1,3], inzero=1:5)

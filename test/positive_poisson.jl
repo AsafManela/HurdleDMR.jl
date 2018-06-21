@@ -271,7 +271,7 @@ coefsGLP = vec(coef(glpfit;select=:AICc))
 # using Gadfly
 # Δf=f*1
 # fs=-100f:Δf:100f
-# devfs=map(f->devf(b0,newcoef,m,cd,f),fs)
+# devfs=broadcast(f->devf(b0,newcoef,m,cd,f),fs)
 # plot(layer(x=fs,y=devfs,Geom.line),layer(x=[0],y=[objold],Geom.point))
 # r.var
 # #

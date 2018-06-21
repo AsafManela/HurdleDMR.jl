@@ -12,7 +12,7 @@ import HurdleDMR; @everywhere using HurdleDMR
 
 we8thereCounts = CSV.read(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"))
 we8thereRatings = CSV.read(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"))
-we8thereTerms = map(string,names(we8thereCounts))
+we8thereTerms = broadcast(string,names(we8thereCounts))
 
 # covars = we8thereRatings[:,[:Overall]]
 covars = we8thereRatings[:,:]

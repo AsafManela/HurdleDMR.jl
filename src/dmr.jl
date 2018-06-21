@@ -165,7 +165,7 @@ function StatsBase.coef(m::DMRPaths; select=:AICc)
   # establish maximum path lengths
   nλ = 0
   if size(nonnullpaths,1) > 0
-    nλ = maximum(map(nlpath->size(nlpath.value)[2],nonnullpaths))
+    nλ = maximum(broadcast(nlpath->size(nlpath.value)[2],nonnullpaths))
   end
 
   # allocate space
@@ -339,7 +339,7 @@ function dmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstract
     mapfn = pmap
   else
     verbose && info("serial poisson run on a single node")
-    mapfn = map
+    mapfn = broadcast
   end
 
   nlpaths = convert(Vector{Nullable{GammaLassoPath}},mapfn(tryfitgl,countscols))
