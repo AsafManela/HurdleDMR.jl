@@ -119,28 +119,6 @@ function Base.append!(d::CVData, r::CVData)
   d
 end
 
-"Container for CV summary statistics"
-mutable struct CVStats{T} <: CVType{T}
-  oos_mse::T
-  oos_mse_nocounts::T
-  oos_change_mse::T
-  oos_σmse::T
-  oos_σmse_nocounts::T
-  oos_σchange_mse::T
-  ins_mse::T
-  ins_mse_nocounts::T
-  ins_change_mse::T
-  ins_σmse::T
-  ins_σmse_nocounts::T
-  ins_σchange_mse::T
-  oos_r2::T
-  oos_r2_nocounts::T
-  oos_change_r2::T
-  ins_r2::T
-  ins_r2_nocounts::T
-  ins_change_r2::T
-end
-
 "Params are equal if all their fields are equal"
 function Base.isequal(x::T,y::T) where {T <: CVType}
   all(broadcast(field->isequal(getfield(x,field),getfield(y,field)),fieldnames(T)))
@@ -161,62 +139,56 @@ function Base.hash(a::T, h::UInt=zero(UInt)) where {T <: CVType}
   recursiveh
 end
 
-"Create a DataFrame from a CVType instance"
-function DataFrames.DataFrame(x::T) where {T <: CVType}
-  fnames = fieldnames(T)
-  fvalues = [[getfield(x,f)] for f = fnames]
-  DataFrames.DataFrame(fvalues,fnames)
-end
+"""
+    cvstats(D, cvdata; stats=[:rmse, :r2])
 
-"Create a DataFrame from a vector of CVTypes"
-function DataFrames.DataFrame(v::Vector{T}) where {T <: CVType}
-    vcat(DataFrames.DataFrame.(v)...)
-end
+Create a dictionary with fit statistics (mse, rmse, r2) from `CVData`.
 
-"Constructs an empty CVStats with elment type `T`"
-CVStats(T::Type) = CVStats{T}(zeros(T,18)...)
+# Example
+```julia
+  s = cvstats(OrderedDict, cvdata; stats=[:mse])
+  s[:oos_mse]
+```
 
-"Converts CVData into several summary statistics"
-function CVStats{T}(d::CVData{T}; root=false)
+# Keywords
+- `stats::Vector{Symbol}` one or more of `:mse`, `:rmse`, or `:r2`
+"""
+function cvstats(::Type{D}, d::CVData; stats=[:rmse, :r2]) where {D<:Associative}
 
-  s = CVStats(T)
+  # df = DataFrame(stat=Symbol[], value=Float64[])
+  s = D{Symbol,Float64}()
 
-  # we kept the entire vectors of y/yhats so we can calculate r2s correctly
-  s.ins_r2_nocounts = r2(d.ins_ys,d.ins_yhats_nocounts)
-  s.ins_r2 = r2(d.ins_ys,d.ins_yhats)
-  s.oos_r2_nocounts = r2(d.oos_ys,d.oos_yhats_nocounts)
-  s.oos_r2 = r2(d.oos_ys,d.oos_yhats)
+  for smse in intersect(stats, [:rmse,:mse])
+    msefn = eval(smse)
+    σmsefn = eval(Symbol(:σ,smse))
+    σΔmsefn = eval(Symbol(:σΔ,smse))
 
-  if root
-    msefn = rmse
-    σmsefn = σrmse
-    σΔmsefn = σΔrmse
-  else
-    msefn = mse
-    σmsefn = σmse
-    σΔmsefn = σΔmse
+    for ios in [:ins, :oos]
+      for cnc in ["", "_nocounts"]
+        s[Symbol(ios,"_",smse,cnc)] = msefn(getfield(d,Symbol(ios,"_ys")), getfield(d,Symbol(ios,"_yhats",cnc)))
+        s[Symbol(ios,"_σ",smse,cnc)] = σmsefn(getfield(d,Symbol(ios,"_ys")), getfield(d,Symbol(ios,"_yhats",cnc)))
+      end
+
+      s[Symbol(ios,"_change_",smse)] = s[Symbol(ios,"_",smse)] - s[Symbol(ios,"_",smse,"_nocounts")]
+      s[Symbol(ios,"_σchange_",smse)] = σΔmsefn(getfield(d,Symbol(ios,"_ys")), getfield(d,Symbol(ios,"_yhats")), getfield(d,Symbol(ios,"_yhats_nocounts")))
+    end
   end
 
-  s.ins_mse_nocounts = msefn(d.ins_ys,d.ins_yhats_nocounts)
-  s.ins_mse = msefn(d.ins_ys,d.ins_yhats)
-  s.oos_mse_nocounts = msefn(d.oos_ys,d.oos_yhats_nocounts)
-  s.oos_mse = msefn(d.oos_ys,d.oos_yhats)
+  if contains(==, stats, :r2)
+    for ios in [:ins, :oos]
+      for cnc in ["", "_nocounts"]
+        s[Symbol(ios,"_r2",cnc)] = r2(getfield(d,Symbol(ios,"_ys")), getfield(d,Symbol(ios,"_yhats",cnc)))
+      end
 
-  s.ins_σmse_nocounts = σmsefn(d.ins_ys,d.ins_yhats_nocounts)
-  s.ins_σmse = σmsefn(d.ins_ys,d.ins_yhats)
-  s.oos_σmse_nocounts = σmsefn(d.oos_ys,d.oos_yhats_nocounts)
-  s.oos_σmse = σmsefn(d.oos_ys,d.oos_yhats)
-
-  # mse changes
-  s.oos_change_mse = s.oos_mse - s.oos_mse_nocounts
-  s.ins_change_mse = s.ins_mse - s.ins_mse_nocounts
-  s.oos_change_r2 = s.oos_r2 - s.oos_r2_nocounts
-  s.ins_change_r2 = s.ins_r2 - s.ins_r2_nocounts
-  s.oos_σchange_mse = σΔmsefn(d.oos_ys,d.oos_yhats,d.oos_yhats_nocounts)
-  s.ins_σchange_mse = σΔmsefn(d.ins_ys,d.ins_yhats,d.ins_yhats_nocounts)
+      s[Symbol(ios,"_change_r2")] = s[Symbol(ios,"_r2")] - s[Symbol(ios,"_r2_nocounts")]
+    end
+  end
 
   s
 end
+
+"When no dictionary type is specified, uses a simple Dict"
+cvstats(d::CVData; kwargs...) = cvstats(Dict, d::CVData; kwargs...)
 
 function initcv(gen,seed,gentype,n,k)
   # instantiate generator if not specified directly

@@ -1,4 +1,4 @@
-using Base.Test
+using Base.Test, DataStructures
 using HurdleDMR
 
 @testset "crossvalidation" begin
@@ -30,11 +30,6 @@ skf = LeaveOutSample(5, 2; random=true)
 srand(14)
 skf = LeaveOutSample(5, 2; testlength=3, random=true)
 @test collect(skf) == [[2,5]]
-
-resultstats = [CVStats(Float64), CVStats(Float64)]
-@test typeof(resultstats) <: AbstractArray{T} where {T <: CVType}
-@test typeof(resultstats[1]) <: CVType{Float64}
-@test typeof(DataFrame(resultstats)) <: DataFrame
 
 cvd0 = CVData(Float64)
 cvd1 = CVData{Float64}([[] for i=1:6]...)
@@ -88,41 +83,49 @@ oosr2_nocounts1 = 1.0 - sum(abs2,oosϵs_nocounts)/sum(abs2,ys.-mean(ys))
 @test oosϵs ≈ vcat(cvd1.ins_ys...) - vcat(cvd1.oos_yhats...)
 @test oosϵs_nocounts ≈ vcat(cvd1.ins_ys...) - vcat(cvd1.oos_yhats_nocounts...)
 
-# @enter CVStats(cvd1)
-s1 = CVStats(cvd1)
-@test s1.oos_mse ≈ oosmse1
-@test s1.oos_mse_nocounts ≈ oosmse_nocounts1
-@test s1.oos_σmse ≈ oosσmse1
-@test s1.oos_σmse_nocounts ≈ oosσmse_nocounts1
-@test s1.oos_change_mse ≈ oosmse1 - oosmse_nocounts1
-@test s1.oos_σchange_mse ≈ oosσΔmse1
-@test s1.ins_mse ≈ insmse1
-@test s1.ins_mse_nocounts ≈ insmse_nocounts1
-@test s1.ins_σmse ≈ insσmse1
-@test s1.ins_σmse_nocounts ≈ insσmse_nocounts1
-@test s1.ins_change_mse ≈ insmse1 - insmse_nocounts1
-@test s1.ins_σchange_mse ≈ insσΔmse1
-@test s1.oos_r2 ≈ oosr21
-@test s1.oos_r2_nocounts ≈ oosr2_nocounts1
-@test s1.ins_r2 ≈ insr21
-@test s1.ins_r2_nocounts ≈ insr2_nocounts1
+s1 = cvstats(OrderedDict,cvd1; stats=[:mse, :r2])
+@test s1[:oos_mse] ≈ oosmse1
+@test s1[:oos_mse_nocounts] ≈ oosmse_nocounts1
+@test s1[:oos_σmse] ≈ oosσmse1
+@test s1[:oos_σmse_nocounts] ≈ oosσmse_nocounts1
+@test s1[:oos_change_mse] ≈ oosmse1 - oosmse_nocounts1
+@test s1[:oos_σchange_mse] ≈ oosσΔmse1
+@test s1[:ins_mse] ≈ insmse1
+@test s1[:ins_mse_nocounts] ≈ insmse_nocounts1
+@test s1[:ins_σmse] ≈ insσmse1
+@test s1[:ins_σmse_nocounts] ≈ insσmse_nocounts1
+@test s1[:ins_change_mse] ≈ insmse1 - insmse_nocounts1
+@test s1[:ins_σchange_mse] ≈ insσΔmse1
+@test s1[:oos_r2] ≈ oosr21
+@test s1[:oos_r2_nocounts] ≈ oosr2_nocounts1
+@test s1[:ins_r2] ≈ insr21
+@test s1[:ins_r2_nocounts] ≈ insr2_nocounts1
+@test_throws KeyError s1[:oos_rmse]
 
-s1 = CVStats(cvd1; root=true)
-@test s1.oos_mse ≈ oosrmse1
-@test s1.oos_mse_nocounts ≈ sqrt(oosmse_nocounts1)
-@test s1.oos_σmse ≈ oosσmse1 / (2*sqrt(oosmse1))
-@test s1.oos_σmse_nocounts ≈ oosσmse_nocounts1  / (2*sqrt(oosmse_nocounts1))
-@test s1.oos_change_mse ≈ sqrt(oosmse1) - sqrt(oosmse_nocounts1)
-@test s1.oos_σchange_mse ≈ oosσΔrmse1
-@test s1.ins_mse ≈ insrmse1
-@test s1.ins_mse_nocounts ≈ insrmse_nocounts1
-@test s1.ins_σmse ≈ insσrmse1
-@test s1.ins_σmse_nocounts ≈ insσrmse_nocounts1
-@test s1.ins_change_mse ≈ insrmse1 - insrmse_nocounts1
-@test s1.ins_σchange_mse ≈ insσΔrmse1
-@test s1.oos_r2 ≈ oosr21
-@test s1.oos_r2_nocounts ≈ oosr2_nocounts1
-@test s1.ins_r2 ≈ insr21
-@test s1.ins_r2_nocounts ≈ insr2_nocounts1
+s1 = cvstats(OrderedDict,cvd1; stats=[:rmse, :r2])
+@test s1[:oos_rmse] ≈ oosrmse1
+@test s1[:oos_rmse_nocounts] ≈ sqrt(oosmse_nocounts1)
+@test s1[:oos_σrmse] ≈ oosσmse1 / (2*sqrt(oosmse1))
+@test s1[:oos_σrmse_nocounts] ≈ oosσmse_nocounts1  / (2*sqrt(oosmse_nocounts1))
+@test s1[:oos_change_rmse] ≈ sqrt(oosmse1) - sqrt(oosmse_nocounts1)
+@test s1[:oos_σchange_rmse] ≈ oosσΔrmse1
+@test s1[:ins_rmse] ≈ insrmse1
+@test s1[:ins_rmse_nocounts] ≈ insrmse_nocounts1
+@test s1[:ins_σrmse] ≈ insσrmse1
+@test s1[:ins_σrmse_nocounts] ≈ insσrmse_nocounts1
+@test s1[:ins_change_rmse] ≈ insrmse1 - insrmse_nocounts1
+@test s1[:ins_σchange_rmse] ≈ insσΔrmse1
+@test s1[:oos_r2] ≈ oosr21
+@test s1[:oos_r2_nocounts] ≈ oosr2_nocounts1
+@test s1[:ins_r2] ≈ insr21
+@test s1[:ins_r2_nocounts] ≈ insr2_nocounts1
+
+@test_nowarn DataFrame(s1)
+
+# without specifying return type
+s2 = cvstats(cvd1; stats=[:rmse, :r2])
+for k in keys(s1)
+  @test s1[k] == s2[k]
+end
 
 end
