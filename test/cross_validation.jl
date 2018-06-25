@@ -32,21 +32,24 @@ skf = LeaveOutSample(5, 2; testlength=3, random=true)
 @test collect(skf) == [[2,5]]
 
 cvd0 = CVData(Float64)
-cvd1 = CVData{Float64}([[] for i=1:6]...)
-@test hash(cvd0) == hash(cvd1)
+cvd1 = CVData([Float64[] for i=1:6]...)
+@test hash(cvd0) != hash(cvd1)
 
 cvd2 = CVData(Float64)
-cvd12 = CVData{Float64}([[] for i=1:6]...)
+cvd12 = CVData([Float64[] for i=1:6]...)
 append!(cvd1,cvd2)
 @test hash(cvd1) == hash(cvd12)
 
-cvd1 = CVData{Float64}([[[1.0,2.0]] for i=1:6]...)
-cvd2 = CVData{Float64}([[[3.0,4.0,5.0]] for i=1:6]...)
-cvd12 = CVData{Float64}([[[1.0,2.0],[3.0,4.0,5.0]] for i=1:6]...)
+cvd1 = CVData([[[1.0,2.0]] for i=1:6]...)
+cvd1b = CVData([[1.0,2.0] for i=1:6]...)
+@test hash(cvd1) == hash(cvd1b)
+
+cvd2 = CVData([[[3.0,4.0,5.0]] for i=1:6]...)
+cvd12 = CVData([[[1.0,2.0],[3.0,4.0,5.0]] for i=1:6]...)
 append!(cvd1,cvd2)
 @test hash(cvd1) == hash(cvd12)
 
-cvd1 = CVData{Float64}([[[1.0,2.0,3.0].+0.5ϵ,[4.0,5.0,6.0].+ϵ] for ϵ=(0.1*[0,0,0.5,0.6,0.9,1.0])]...)
+cvd1 = CVData([[[1.0,2.0,3.0].+0.5ϵ,[4.0,5.0,6.0].+ϵ] for ϵ=(0.1*[0,0,0.5,0.6,0.9,1.0])]...)
 ys = collect(1.0:6.0)
 insϵs = -0.1*0.5*vcat(0.5*ones(3),ones(3))
 insϵs_nocounts = -0.1*0.9*vcat(0.5*ones(3),ones(3))

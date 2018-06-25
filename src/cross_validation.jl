@@ -85,6 +85,8 @@ struct CVDataRow{T} <: CVType{T}
   oos_yhat_nocounts::AbstractVector{T}
 end
 
+const VV{T} = Vector{Vector{T}}
+
 "Container for cross validation y and yhats"
 mutable struct CVData{T} <: CVType{T}
   ins_ys::Vector{AbstractVector{T}}
@@ -93,11 +95,19 @@ mutable struct CVData{T} <: CVType{T}
   oos_yhats::Vector{AbstractVector{T}}
   ins_yhats_nocounts::Vector{AbstractVector{T}}
   oos_yhats_nocounts::Vector{AbstractVector{T}}
+
+  CVData(::Type{T}) where T = new{T}(VV{T}(),VV{T}(),VV{T}(),VV{T}(),VV{T}(),VV{T}())
+
+  # Constructor taking a a vector of results vector
+  CVData(ins_ys::VV{T},oos_ys::VV{T},ins_yhats::VV{T},oos_yhats::VV{T},
+    ins_yhats_nocounts::VV{T},oos_yhats_nocounts::VV{T}) where T =
+    new{T}(ins_ys,oos_ys,ins_yhats,oos_yhats,ins_yhats_nocounts,oos_yhats_nocounts)
+
+  # Constructor taking a single results vector
+  CVData(ins_y::V,oos_y::V,ins_yhat::V,oos_yhat::V,
+    ins_yhat_nocounts::V,oos_yhat_nocounts::V) where {T, V<:AbstractVector{T}} =
+    new{T}([ins_y],[oos_y],[ins_yhat],[oos_yhat],[ins_yhat_nocounts],[oos_yhat_nocounts])
 end
-
-const VV{T} = Vector{Vector{T}}
-
-CVData(::Type{T}) where T = CVData{T}(VV{T}(),VV{T}(),VV{T}(),VV{T}(),VV{T}(),VV{T}())
 
 function Base.append!(d::CVData, r::CVDataRow)
   push!(d.ins_ys,r.ins_y)
