@@ -91,6 +91,7 @@ coefficients other than the AICc optimal ones. Same arguments as
 [`fit(::HDMR)`](@ref).
 """
 function StatsBase.fit(::Type{HDMRPaths}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
+  local_cluster=false, # ignored. will always assume remote_cluster
   kwargs...) where {T<:AbstractFloat}
 
   hdmrpaths(covars, counts; kwargs...)
@@ -219,6 +220,41 @@ function StatsBase.coef(m::HDMRPaths; select=:AICc)
   end
 
   coefspos, coefszero
+end
+
+"""
+    predict(m,newcovars; <keyword arguments>)
+
+Predict counts using a fitted HDMRPaths object and given newcovars.
+
+# Example:
+```julia
+  m = fit(HDMRPaths,covars,counts)
+  newcovars = covars[1:10,:]
+  countshat = predict(m, newcovars; select=:AICc)
+```
+
+# Arguments
+- `m::HDMRPaths` fitted DMRPaths model (HDMRCoefs currently not supported)
+- `newcovars` n-by-p matrix of covariates of same dimensions used to fit m.
+
+# Keywords
+- `select=:AICc` See [`coef(::RegularizationPath)`](@ref).
+- `kwargs...` additional keyword arguments passed along to predict() for each
+  category j=1..size(counts,2)
+"""
+function StatsBase.predict(m::HDMRPaths, newcovars::AbstractMatrix{T};
+  select=:AICc, kwargs...) where {T<:AbstractFloat}
+
+  covarspos, covarszero = incovars(newcovars,m.inpos,m.inzero)
+
+  _predict(m,covarszero;Xpos=covarspos,select=select,kwargs...)
+end
+
+function StatsBase.predict(m::M, newcovars::AbstractMatrix{T};
+  select=:AICc, kwargs...) where {T<:AbstractFloat, M<:HDMR}
+
+  error("Predict(m::HDMR,...) can currently only be evaluated for HDMRPaths structs returned from fit(HDMRPaths,...)")
 end
 
 "Number of covariates used for HDMR estimation of zeros model"

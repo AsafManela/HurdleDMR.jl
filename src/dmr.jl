@@ -88,6 +88,7 @@ the entire regulatrization paths, which may be useful for plotting or picking
 coefficients other than the AICc optimal ones. Same arguments as [`fit(::DMR)`](@ref).
 """
 function StatsBase.fit(::Type{DMRPaths}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
+  local_cluster=false, # ignored. will always assume remote_cluster
   kwargs...) where {T<:AbstractFloat}
 
   dmrpaths(covars, counts; kwargs...)
@@ -380,3 +381,61 @@ StatsModels.drop_intercept(::Type{T}) where {T<:DCR} = true
 
 # delegate f(m::DataFrameRegressionModel,...) to f(m.model,...)
 StatsModels.@delegate StatsModels.DataFrameRegressionModel.model [hasintercept, Distributions.ncategories, ncovars, ncoefs, ncovarszero, ncovarspos, ncoefszero, ncoefspos]
+
+"""
+    predict(m,newcovars; <keyword arguments>)
+
+Predict counts using a fitted DMRPaths object and given newcovars.
+
+# Example:
+```julia
+  m = fit(DMRPaths,covars,counts)
+  newcovars = covars[1:10,:]
+  countshat = predict(m, newcovars; select=:AICc)
+```
+
+# Arguments
+- `m::DMRPaths` fitted DMRPaths model (DMRCoefs currently not supported)
+- `newcovars` n-by-p matrix of covariates of same dimensions used to fit m.
+
+# Keywords
+- `select=:AICc` See [`coef(::RegularizationPath)`](@ref).
+- `kwargs...` additional keyword arguments passed along to predict() for each
+  category j=1..size(counts,2)
+"""
+function StatsBase.predict(m::DMRPaths, newcovars::AbstractMatrix{T};
+  select=:AICc, kwargs...) where {T<:AbstractFloat}
+
+  _predict(m,newcovars;select=select,kwargs...)
+end
+
+# internal mothod used by both dmr and hdmr
+function _predict(m, newcovars::AbstractMatrix{T};
+  select=:AICc, kwargs...) where {T<:AbstractFloat}
+
+  @assert select != :all "select cannot be :all and must choose a particular segment (e.g. select=:AICc)"
+
+  # dimensions
+  newn = size(newcovars,1)
+
+  # offset does not matter here because we rescale in the end
+  newoffset = zeros(T,size(newcovars,1))
+
+  η = zeros(T,newn,m.d)
+  for j=1:m.d
+    path = m.nlpaths[j]
+    if !isnull(path)
+      η[:,j] = predict(path.value,newcovars;offset=newoffset, select=select, kwargs...)
+    end
+  end
+
+  scale!(one(T)./vec(sum(η,2)),η)
+
+  η
+end
+
+function StatsBase.predict(m::M, newcovars::AbstractMatrix{T};
+  select=:AICc, kwargs...) where {T<:AbstractFloat, M<:DMR}
+
+  error("Predict(m::DMR,...) can currently only be evaluated for DMRPaths structs returned from fit(DMRPaths,...)")
+end
