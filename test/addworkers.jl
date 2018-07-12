@@ -1,7 +1,8 @@
 #BLAS.set_num_threads(1) # this one should have worked but did not
 ENV["OPENBLAS_NUM_THREADS"] = 1 # prevents thrashing by pmap + blas
 
-const nw = Sys.CPU_CORES-2
+# travis-ci limits to 4 or so
+const nw = 4# Sys.CPU_CORES-2
 if nworkers() < nw
     if nworkers() > 1
         info("Removing existing parallel workers for tests...")
