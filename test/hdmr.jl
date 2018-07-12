@@ -1,6 +1,6 @@
 include("testutils.jl")
 
-using Base.Test, Gadfly, Distributions
+using Base.Test, Distributions
 
 include("addworkers.jl")
 
@@ -29,6 +29,8 @@ srand(13)
 counts = round.(10*sprand(n,d,0.3))
 covars=convert(Array{T,2},covars)
 covarspos=convert(Array{T,2},covarspos)
+
+newcovars = covars[1:10,:]
 
 npos,ppos = size(covarspos)
 d = size(counts,2)
@@ -65,6 +67,7 @@ coefsHppos2, coefsHpzero2 = coef(hdmrcoefs2)
 @time hdmrcoefs2 = fit(HDMRCoefs, covars, counts; parallel=true, local_cluster=false)
 @test coef(hdmrcoefs2)[1] ≈ coefsHppos2
 @test coef(hdmrcoefs2)[2] ≈ coefsHpzero2
+@test_throws ErrorException predict(hdmrcoefs2,newcovars)
 
 @time hdmrpaths3 = fit(HDMRPaths, covars, counts; parallel=true, verbose=true)
 coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
@@ -75,6 +78,8 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 @test p == ncovarspos(hdmrpaths3)
 @test p == ncovarszero(hdmrpaths3)
 @test size(hdmrpaths3.nlpaths,1) == 100
+η = predict(hdmrpaths3,newcovars)
+@test sum(η,2) ≈ ones(size(η,1))
 
 # # # hurdle dmr serial
 # @time hdmrcoefs3 = hdmr(covars, counts; parallel=false)
@@ -89,10 +94,13 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 @time hdmrcoefsdf = fit(HDMRCoefs, f, we8thereRatings, counts; parallel=true, verbose=true)
 @test coef(hdmrcoefsdf)[1] == coefsHppos
 @test coef(hdmrcoefsdf)[2] ≈ coefsHpzero
+@test_throws ErrorException predict(hdmrcoefsdf,newcovars)
 
 @time hdmrpathsdf = fit(HDMRPaths, f, we8thereRatings, counts; parallel=true, verbose=true)
 @test coef(hdmrpathsdf)[1] == coefsHppos3
 @test coef(hdmrpathsdf)[2] ≈ coefsHpzero3
+@test predict(hdmrpathsdf,newcovars) ≈ η
+
 
 # test posindic used by srproj
 m = rand(Poisson(0.1),30,500)
@@ -250,6 +258,8 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 @test ppos == ncovarspos(hdmrpaths3)
 @test p == ncovarszero(hdmrpaths3)
 @test size(hdmrpaths3.nlpaths,1) == 100
+η = predict(hdmrpaths3,newcovars)
+@test sum(η,2) ≈ ones(size(η,1))
 
 # # # hurdle dmr serial
 # @time hdmrcoefs3 = hdmr(covars, counts; covarspos=covarspos, parallel=false)
@@ -264,10 +274,12 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 @time hdmrcoefsdf = fit(HDMRCoefs, f, we8thereRatings, counts; parallel=true, verbose=true)
 @test coef(hdmrcoefsdf)[1] == coefsHppos
 @test coef(hdmrcoefsdf)[2] ≈ coefsHpzero
+@test_throws ErrorException predict(hdmrcoefsdf,newcovars)
 
 @time hdmrpathsdf = fit(HDMRPaths, f, we8thereRatings, counts; parallel=true, verbose=true)
 @test coef(hdmrpathsdf)[1] == coefsHppos3
 @test coef(hdmrpathsdf)[2] ≈ coefsHpzero3
+@test predict(hdmrpathsdf,newcovars) ≈ η
 
 zHpos = srproj(coefsHppos, counts)
 @test size(zHpos) == (n,ppos+1)
@@ -418,6 +430,8 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 @test ppos == ncovarspos(hdmrpaths3)
 @test pzero == ncovarszero(hdmrpaths3)
 @test size(hdmrpaths3.nlpaths,1) == 100
+η = predict(hdmrpaths3,newcovars)
+@test sum(η,2) ≈ ones(size(η,1))
 
 # # hurdle dmr serial
 # @time hdmrcoefs3 = hdmr(covarszero, counts; covarspos=covarspos, parallel=false)
@@ -438,6 +452,7 @@ hdmrcoefsdf.model.inzero
 @test d == ncategories(hdmrcoefsdf)
 @test ppos == ncovarspos(hdmrcoefsdf)
 @test pzero == ncovarszero(hdmrcoefsdf)
+@test_throws ErrorException predict(hdmrcoefsdf,newcovars)
 
 @time hdmrpathsdf = fit(HDMRPaths, f, we8thereRatings, counts; parallel=true, verbose=true)
 @test coef(hdmrpathsdf)[1] ≈ coefsHppos3
@@ -446,6 +461,7 @@ hdmrcoefsdf.model.inzero
 @test d == ncategories(hdmrpathsdf)
 @test ppos == ncovarspos(hdmrpathsdf)
 @test pzero == ncovarszero(hdmrpathsdf)
+@test predict(hdmrpathsdf,newcovars) ≈ η
 
 zHpos = srproj(coefsHppos, counts)
 @test size(zHpos) == (n,ppos+1)
@@ -544,20 +560,13 @@ end
 zcounts = deepcopy(counts)
 zcounts[:,2] = zeros(n)
 zcounts[:,3] = ones(n)
-# sum(iszero.(zcounts[:,nzj]))
-# find(var(zcounts,1) .== 0)
 
 # make sure we are not adding all zero obseravtions
 m = sum(zcounts,2)
 @test sum(m .== 0) == 0
 
-# rows,cols = 40000,30000
-# @time S = SharedMatrix{Float64}(rows,cols; init=nothing)
-# @time A = convert(SharedMatrix{Float64},Matrix{Float64}(rows,cols))
-
 # hurdle dmr parallel local cluster
-# hdmr(covars, zcounts[:,2:3]; parallel=false, showwarnings=true, verbose=true)
-@time hdmrcoefs = hdmr(covars, zcounts; parallel=true, showwarnings=true, verbose=false)
+@time hdmrcoefs = fit(HDMR,covars, zcounts; parallel=true, showwarnings=true, verbose=false)
 coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test size(coefsHppos) == (p+1, d)
 @test size(coefsHpzero) == (p+1, d)
@@ -567,10 +576,14 @@ coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test coefsHpzero[:,3] == zeros(p+1)
 
 # hurdle dmr parallel remote cluster
-@time hdmrcoefs2 = hdmr(covars, zcounts; parallel=true, local_cluster=false)
+@time hdmrcoefs2 = fit(HDMRPaths,covars, zcounts; parallel=true, local_cluster=false)
 coefsHppos2, coefsHpzero2 = coef(hdmrcoefs)
 @test coefsHppos ≈ coefsHppos2
 @test coefsHpzero ≈ coefsHpzero
+η = predict(hdmrcoefs2,newcovars)
+@test sum(η,2) ≈ ones(size(newcovars,1))
+@test η[:,2] == zeros(size(newcovars,1))
+@test η[:,3] ≈ ones(size(newcovars,1))*0.745 atol=0.001
 
 end
 
@@ -589,7 +602,7 @@ m = sum(zcounts,2)
 @test sum(m .== 0) == 0
 
 # hurdle dmr parallel local cluster
-@time hdmrcoefs = hdmr(covars, zcounts; parallel=true)
+@time hdmrcoefs = fit(HDMR,covars, zcounts; parallel=true)
 coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test size(coefsHppos) == (p+1, d)
 @test size(coefsHpzero) == (p+1, d)
@@ -599,73 +612,15 @@ coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test coefsHpzero[:,3] == zeros(p+1)
 
 # hurdle dmr parallel remote cluster
-@time hdmrcoefs2 = hdmr(covars, zcounts; parallel=true, local_cluster=false)
+@time hdmrcoefs2 = fit(HDMRPaths,covars, zcounts; parallel=true, local_cluster=false)
 coefsHppos2, coefsHpzero2 = coef(hdmrcoefs2)
 @test coefsHppos ≈ coefsHppos2
-@test coefsHpzero ≈ coefsHpzero
+@test coefsHpzero ≈ coefsHpzero2
+
+# just checking the fit(HDMRPaths...) ignore local_cluster
+@time hdmrcoefs3 = fit(HDMRPaths,covars, zcounts; parallel=true, local_cluster=true)
+coefsHppos3, coefsHpzero3 = coef(hdmrcoefs3)
+@test coefsHppos2 == coefsHppos3
+@test coefsHpzero2 == coefsHpzero3
 
 end
-
-###########################################################
-# Development
-###########################################################
-# reload("HurdleDMR")
-
-
-###########################################################
-# End Development
-###########################################################
-
-# # exception analysis code:
-# (obj,objold,path,f,newcoef,oldcoef,b0,oldb0,b0diff,coefdiff,scratchmu,cd,r,α,curλ)=(0,0,[],0,[],[],0,0,0,[],[],[],[],0,0)
-# ex=[]
-# try
-#   coefsH = dmr(covars, counts; hurdle=true, parallel=false, verbose=true)
-# catch e
-#   # if typeof(e) == Lasso.ConvergenceException
-#   #   (obj,objold,path,f,newcoef,oldcoef,b0,oldb0,b0diff,coefdiff,scratchmu,cd,r,α,curλ) = e.debugvars
-#   #   m = path.m
-#   #   warn(e.msg)
-#   #   nothing
-#   if typeof(e) <: ErrorException
-#     warn("caught exception $e")
-#     ex=e
-#   else
-#     ex=e
-#   end
-# end
-# typeof(ex) == Base.LinAlg.PosDefException
-# coefsH
-#
-# path.m.rr
-# ex.msg
-# fieldnames(ex)
-# rr = path.m.rr
-# pp = path.m.pp
-
-#   end
-# end #do facts
-
-# @time b0serial, coefsserial = dmr(covars, counts; γ=γ, nlocal_workers=1, irls_maxiter=2000)
-# using ProfileView
-# Profile.init(delay=0.001)
-# Profile.clear()
-# @profile b0, coefs = dmr(covars, counts; irls_maxiter=2000);
-# ProfileView.view()
-# # Profile.print()
-#
-# size(b0)
-# size(coefs)
-# [b0 coefs']'
-#
-
-# N = 10000
-# @time A = SharedMatrix{Float64}(N,2N)
-# rand!(A)
-# @time Av = view(A,:,1:2:2N)
-# @time Ag = getindex(A,:,1:2:2N)
-# @time inv(Av)
-# @time inv(Ag)
-
-#
-# rmprocs(workers())

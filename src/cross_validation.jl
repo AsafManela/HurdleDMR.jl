@@ -1,5 +1,3 @@
-using MLBase, StatsBase, DataFrames
-
 # performance evaluation stats
 "Mean squared error"
 mse(y::V,yhat::V) where {T<:Number,V<:AbstractVector{T}} = mean(abs2.(y-yhat))

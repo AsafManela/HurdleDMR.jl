@@ -2,10 +2,6 @@
 # hurdle
 #############################################
 
-using Reexport, GLM.FPVector, GLM.FP, StatsBase
-@reexport using GLM, StatsBase
-using Lasso
-
 "Hurdle returned object"
 mutable struct Hurdle <: RegressionModel
   mzero::RegressionModel  # model for zeros

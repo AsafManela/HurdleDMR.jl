@@ -1,6 +1,6 @@
 include("testutils.jl")
 
-using Base.Test, Gadfly, Distributions
+using Base.Test, Distributions
 
 include("addworkers.jl")
 

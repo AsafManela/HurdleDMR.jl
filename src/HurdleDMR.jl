@@ -2,18 +2,15 @@ __precompile__()
 
 module HurdleDMR
 
-using Lasso, GLM.FPVector, DataFrames, Reexport
+using Lasso, StatsBase, StatsModels, DataFrames, LambertW, MLBase, GLM.FPVector, GLM.FP
 
-@reexport using GLM, StatsBase, Distributions, StatsModels
-
-export dmr, dmrpaths, hdmr, hdmrpaths, fit, coef, srproj, srprojX, @~, mcdmr, posindic
-export DCR, DMR, HDMR, DMRCoefs, DMRPaths, HDMRCoefs, HDMRPaths, @model, Model
-export CIR, predict, coeffwd, coefbwd
-export hasintercept, ncategories, nobs, ncoefs, ncovars, ncovarszero, ncovarspos, ncoefszero, ncoefspos
-export Hurdle, PositivePoisson, LogProductLogLink, logpdf_exact, logpdf_approx
-export cv, cvstats, SerialKfold, LeaveOutSample
-export CVType, CVData, CVDataRow
-
+export dmr, dmrpaths, hdmr, hdmrpaths, fit, coef, srproj, srprojX, @~, mcdmr, posindic,
+  DCR, DMR, HDMR, DMRCoefs, DMRPaths, HDMRCoefs, HDMRPaths, @model, Model,
+  CIR, predict, coeffwd, coefbwd,
+  hasintercept, ncategories, nobs, ncoefs, ncovars, ncovarszero, ncovarspos, ncoefszero, ncoefspos,
+  Hurdle, PositivePoisson, LogProductLogLink, logpdf_exact, logpdf_approx,
+  cv, cvstats, SerialKfold, LeaveOutSample,
+  CVType, CVData, CVDataRow
 
 ##############################################
 # hurdle glm model involves

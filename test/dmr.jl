@@ -1,10 +1,10 @@
 include("testutils.jl")
 
-using Base.Test, Gadfly, Distributions
+using Base.Test, Distributions
 
 include("addworkers.jl")
 
-using CSV, GLM, DataFrames, LassoPlot
+using CSV, GLM, DataFrames
 
 import HurdleDMR; @everywhere using HurdleDMR
 
@@ -30,12 +30,15 @@ import HurdleDMR; @everywhere using HurdleDMR
 # coefsRdistrom = rcopy(R"as.matrix(coef(fits))")
 # zRdistrom = rcopy(R"as.matrix(srproj(fits,we8thereCounts))")
 # z1Rdistrom = rcopy(R"as.matrix(srproj(fits,we8thereCounts,1))")
+# predictRdistrom = rcopy(R"as.matrix(predict(fits,we8thereRatings[1:10,],type=\"response\"))")
+#
 #
 # CSV.write(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"),we8thereCounts)
 # CSV.write(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"),we8thereRatings)
 # CSV.write(joinpath(testdir,"data","dmr_coefsRdistrom.csv.gz"),DataFrame(full(coefsRdistrom)))
 # CSV.write(joinpath(testdir,"data","dmr_zRdistrom.csv.gz"),DataFrame(zRdistrom))
 # CSV.write(joinpath(testdir,"data","dmr_z1Rdistrom.csv.gz"),DataFrame(z1Rdistrom))
+# CSV.write(joinpath(testdir,"data","dmr_predictRdistrom.csv.gz"),DataFrame(predictRdistrom))
 
 we8thereCounts = CSV.read(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"))
 we8thereRatings = CSV.read(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"))
@@ -43,6 +46,7 @@ we8thereTerms = broadcast(string,names(we8thereCounts))
 coefsRdistrom = sparse(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","dmr_coefsRdistrom.csv.gz"))))
 zRdistrom = convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","dmr_zRdistrom.csv.gz")))
 z1Rdistrom = convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","dmr_z1Rdistrom.csv.gz")))
+predictRdistrom = convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","dmr_predictRdistrom.csv.gz")))
 
 # covars = we8thereRatings[:,[:Overall]]
 covars = we8thereRatings[:,:]
@@ -62,6 +66,8 @@ srand(13)
 smallcounts = round.(10*sprand(n,smalld,0.3))
 
 covars=convert(Array{T,2},covars)
+newcovars = covars[1:10,:]
+
 # covarspos=convert(Array{T,2},covarspos)
 #
 # npos,ppos = size(covarspos)
@@ -97,21 +103,10 @@ coefs2 = coef(dmrcoefs2)
 @time dmrPaths = dmrpaths(covars, counts; γ=γ, λminratio=0.01, verbose=false)
 @time dmrPaths2 = fit(DMRPaths, covars, counts; γ=γ, λminratio=0.01, verbose=false)
 @test coef(dmrPaths) == coef(dmrPaths2)
+@test coef(dmrPaths) ≈ coefs
 @test n > nobs(dmrPaths)
 @test d == ncategories(dmrPaths)
 @test p == ncovars(dmrPaths)
-
-paths = dmrPaths.nlpaths
-# these terms require the full counts data, but we use only first 100 for quick testing
-# plotterms=["first_date","chicken_wing","ate_here", "good_food","food_fabul","terribl_servic"]
-plotterms=we8thereTerms[1:6]
-plotix=[find(we8thereTerms.==term)[1]::Int64 for term=plotterms]
-plotterms==we8thereTerms[plotix]
-plots=permutedims(convert(Matrix{Gadfly.Plot},reshape([plot(paths[plotix[i]].value,Guide.title(plotterms[i]);select=:AICc,x=:logλ) for i=1:length(plotterms)],2,3)), [2,1])
-filename = joinpath(testdir,"plots","we8there.svg")
-# # TODO: uncomment after Gadfly get's its get_stroke_vector bug fixed
-# draw(SVG(filename,9inch,11inch),Gadfly.gridstack(plots))
-# @test isfile(filename)
 
 @time z = srproj(coefs, counts)
 @time zb = srproj(dmrcoefs, counts)
@@ -127,6 +122,12 @@ r21 = adjr2(lm1)
 @test coefs ≈ full(coefsRdistrom) rtol=rtol
 # println("rdist(coefs,coefsRdistrom)=$(rdist(coefs,coefsRdistrom))")
 
+η = predict(dmrPaths,newcovars)
+@test η ≈ predictRdistrom rtol=rtol
+@test sum(η,2) ≈ ones(size(newcovars,1))
+
+@test_throws ErrorException predict(dmrcoefs,newcovars)
+
 @test z ≈ zRdistrom rtol=rtol
 # println("rdist(z,zRdistrom)=$(rdist(z,zRdistrom))")
 
@@ -136,8 +137,6 @@ r23 = adjr2(lm3)
 
 @test r21 ≈ r23 rtol=rtol
 # println("rdist(r21,r23)=$(rdist(r21,r23))")
-
-# Rdistrom.dmrplots(fits.gamlrs[plotix],we8thereTerms[plotix])
 
 # project in a single direction
 @time z1 = srproj(coefs, counts, 1)
@@ -271,78 +270,3 @@ zcoefs2 = coef(dmrzcoefs2)
 @test zcoefs2 ≈ zcoefs2
 
 end
-
-#########################################################################3
-# profile cv
-#########################################################################3
-
-# # NOTE: to run this and get the profile, do not add any parallel workers
-# # this makes it slow (about 350 secs) and may miss some serialization costs
-# # but I don't know how to profile all the workers too ...
-# @time cvstats13 = cv(CIR{DMR,LinearModel},covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ)
-# using ProfileView
-# Profile.init(delay=0.001)
-# Profile.clear()
-# @profile cvstats13 = cv(CIR{DMR,LinearModel},covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ);
-# ProfileView.view()
-# # ProfileView.svgwrite(joinpath(tempdir(),"profileview.svg"))
-# # Profile.print()
-
-#########################################################################3
-# chicken wing focus
-#########################################################################3
-# j = plotix[2]
-# path = paths[j]
-# pathseg=collect(1:length(path.λ))
-# path.λ
-# pathaicc=aicc(path)
-# pathdf=df(path)
-# pathdeviance=deviance(path)*n
-# path.λ[1]*0.01
-# pathcoef=vec(coef(path)[2,:])
-#
-# ixinpath = pathseg
-#
-# gamlrmu=fits.mu
-# μ ≈ gamlrmu
-#
-# gamlr = fits.gamlrs[j]
-# gamlrObj = gamlr.Robj
-# gamlrseg=collect(1:100)[ixinpath]
-# gamlrλ=gamlr.attributes["lambda"][ixinpath]
-# gamlraicc=rcopy(R"AICc($gamlrObj)")[ixinpath]
-# gamlrdf=gamlr.attributes["df"][ixinpath]
-# gamlrdeviance=gamlr.attributes["deviance"][ixinpath]
-# gamlr.attributes
-# gamlrcoef=vec(full(coef(gamlr)[2,:]))[ixinpath]
-#
-# gamlrλ[1] ≈ path.λ[1]
-# gamlrdeviance[1] ≈ pathdeviance[1]
-# gamlrλ[1]*0.01 ≈ gamlrλ[end]
-#
-# [path.λ gamlrλ[ixinpath]]
-# [pathdf gamlrdf[ixinpath]]
-# [pathdeviance gamlrdeviance[ixinpath]]
-# [pathaicc gamlraicc[ixinpath]]
-#
-# findmin(pathaicc)
-# findmin(gamlraicc)
-#
-# codes=vcat(repmat([:Julia],length(path.λ)),repmat([:R],length(gamlrλ)))
-# seg=vcat(pathseg,gamlrseg)
-# λs=vcat(path.λ,gamlrλ)
-# aiccs=vcat(pathaicc,gamlraicc)
-# dfs=vcat(pathdf,gamlrdf)
-# deviances=vcat(pathdeviance,gamlrdeviance)
-# coefs = vcat(pathcoef,gamlrcoef)
-#
-# plotdf = DataFrame(code=codes,seg=seg,λ=λs,logλ=log(λs),aicc=aiccs,df=dfs,deviance=deviances,β=coefs)
-# plot(plotdf,x=:logλ,y=:df,color=:code)
-# plot(plotdf,x=:logλ,y=:aicc,color=:code)
-# plot(plotdf,x=:seg,y=:logλ,color=:code)
-# plot(path;selectedvars=:all,x=:logλ)
-# meltedplotdf = melt(plotdf,[:code,:λ,:seg,:logλ])
-# plot(meltedplotdf,x=:logλ,y=:value,xgroup=:variable,color=:code,
-#      Geom.subplot_grid(Geom.line),free_y_axis=true)
-
-# rmprocs(workers())
