@@ -2,7 +2,7 @@ include("testutils.jl")
 
 using HurdleDMR
 
-using Base.Test, GLM, Lasso, DataFrames
+using GLM, Lasso, DataFrames
 
 @testset "PositivePoisson" begin
 λ0=3.4

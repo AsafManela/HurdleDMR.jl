@@ -1,4 +1,4 @@
-using Base.Test, DataStructures
+using DataStructures
 using HurdleDMR
 
 @testset "crossvalidation" begin
