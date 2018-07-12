@@ -1,7 +1,7 @@
 # HurdleDMR
 
-<!-- [![Build Status](https://travis-ci.org/simonster/Lasso.jl.svg?branch=master)](https://travis-ci.org/simonster/Lasso.jl)
-[![Coverage Status](https://coveralls.io/repos/simonster/Lasso.jl/badge.svg?branch=master)](https://coveralls.io/r/simonster/Lasso.jl?branch=master) -->
+<!-- [![Build Status](https://travis-ci.org/AsafManela/HurdleDMR.jl.svg?branch=master)](https://travis-ci.org/AsafManela/HurdleDMR.jl)
+[![Coverage Status](https://coveralls.io/repos/AsafManela/HurdleDMR.jl/badge.svg?branch=master)](https://coveralls.io/r/AsafManela/HurdleDMR.jl?branch=master) -->
 
 HurdleDMR.jl is a Julia implementation of the Hurdle Distributed Multiple Regression (HDMR), as described in:
 
@@ -14,7 +14,9 @@ It includes a Julia implementation of the Distributed Multinomial Regression (DM
 Install the HurdleDMR package
 ```julia
 Pkg.clone("https://github.com/AsafManela/HurdleDMR.jl")
+Pkg.clone("https://github.com/AsafManela/Lasso.jl")
 ```
+(You may get warnings about other missing packages. Just add those too.)
 
 Add parallel workers and make package available to workers
 ```julia
