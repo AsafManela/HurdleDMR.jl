@@ -4,7 +4,7 @@ using Distributions
 
 include("addworkers.jl")
 
-using CSV, GLM, DataFrames, LassoPlot
+using CSV, GLM, DataFrames
 
 import HurdleDMR; @everywhere using HurdleDMR
 
