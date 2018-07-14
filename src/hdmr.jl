@@ -12,12 +12,12 @@ struct HDMRPaths <: HDMR
   nlpaths::Vector{Nullable{Hurdle}} # independent Hurdle{GammaLassoPath} for each phrase
   intercept::Bool               # whether to include an intercept in each Poisson regression
                                 # (only kept with remote cluster, not with local cluster)
-  n::Int64                      # number of observations. May be lower than provided after removing all zero obs.
-  d::Int64                      # number of categories (terms/words/phrases)
+  n::Int                      # number of observations. May be lower than provided after removing all zero obs.
+  d::Int                      # number of categories (terms/words/phrases)
   inpos                         # indices of covars columns included in positives model
   inzero                        # indices of covars columns included in zeros model
 
-  HDMRPaths(nlpaths::Vector{Nullable{Hurdle}}, intercept::Bool, n::Int64, d::Int64, inpos, inzero) =
+  HDMRPaths(nlpaths::Vector{Nullable{Hurdle}}, intercept::Bool, n::Int, d::Int, inpos, inzero) =
     new(nlpaths, intercept, n, d, inpos, inzero)
 end
 
@@ -28,13 +28,13 @@ struct HDMRCoefs <: HDMR
   coefspos::AbstractMatrix      # positives model coefficients
   coefszero::AbstractMatrix     # zeros model coefficients
   intercept::Bool               # whether to include an intercept in each Poisson regression
-  n::Int64                      # number of observations. May be lower than provided after removing all zero obs.
-  d::Int64                      # number of categories (terms/words/phrases)
+  n::Int                      # number of observations. May be lower than provided after removing all zero obs.
+  d::Int                      # number of categories (terms/words/phrases)
   inpos                         # indices of covars columns included in positives model
   inzero                        # indices of covars columns included in zeros model
 
   HDMRCoefs(coefspos::AbstractMatrix, coefszero::AbstractMatrix, intercept::Bool,
-    n::Int64, d::Int64, inpos, inzero) =
+    n::Int, d::Int, inpos, inzero) =
     new(coefspos, coefszero, intercept, n, d, inpos, inzero)
 
   function HDMRCoefs(m::HDMRPaths)
@@ -343,7 +343,7 @@ function incovars(covars,inpos,inzero)
 end
 
 "Fits a regularized hurdle regression counts[:,j] ~ covars saving the coefficients in coefs[:,j]"
-function hurdle_regression!{T<:AbstractFloat,V}(coefspos::AbstractMatrix{T}, coefszero::AbstractMatrix{T}, j::Int64, covars::AbstractMatrix{T},counts::AbstractMatrix{V},
+function hurdle_regression!{T<:AbstractFloat,V}(coefspos::AbstractMatrix{T}, coefszero::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V},
             inpos, inzero;
             offset::AbstractVector=similar(y, 0),
             kwargs...)
@@ -391,7 +391,7 @@ function hdmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts
 
   covars, counts, μ, n = shifters(covars, counts, showwarnings)
 
-  function tryfith!(coefspos::AbstractMatrix{T}, coefszero::AbstractMatrix{T}, j::Int64, covars::AbstractMatrix{T},counts::AbstractMatrix{V}, inpos, inzero; kwargs...)
+  function tryfith!(coefspos::AbstractMatrix{T}, coefszero::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V}, inpos, inzero; kwargs...)
     try
       hurdle_regression!(coefspos, coefszero, j, covars, counts, inpos, inzero; kwargs...)
     catch e

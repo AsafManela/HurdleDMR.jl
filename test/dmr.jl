@@ -1,16 +1,3 @@
-include("testutils.jl")
-
-using Distributions
-
-include("addworkers.jl")
-
-using CSV, GLM, DataFrames
-
-import HurdleDMR; @everywhere using HurdleDMR
-
-# uncomment following for debugging and comment the previous @everywhere line. then use reload after making changes
-# reload("HurdleDMR")
-
 γ = 1.0
 
 # # uncomment to generate R benchmark

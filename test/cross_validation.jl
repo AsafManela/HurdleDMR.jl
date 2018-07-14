@@ -1,5 +1,4 @@
 using DataStructures
-using HurdleDMR
 
 @testset "crossvalidation" begin
 

@@ -163,7 +163,6 @@ Create a dictionary with fit statistics (mse, rmse, r2) from `CVData`.
 """
 function cvstats(::Type{D}, d::CVData; stats=[:rmse, :r2]) where {D<:Associative}
 
-  # df = DataFrame(stat=Symbol[], value=Float64[])
   s = D{Symbol,Float64}()
 
   for smse in intersect(stats, [:rmse,:mse])

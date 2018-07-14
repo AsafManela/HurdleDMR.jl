@@ -15,12 +15,12 @@ struct DMRPaths <: DMR
   nlpaths::Vector{Nullable{GammaLassoPath}} # independent Poisson GammaLassoPath for each phrase
   intercept::Bool               # whether to include an intercept in each Poisson regression
                                 # (only kept with remote cluster, not with local cluster)
-  n::Int64                      # number of observations. May be lower than provided after removing all zero obs.
-  d::Int64                      # number of categories (terms/words/phrases)
-  p::Int64                      # number of covariates
+  n::Int                      # number of observations. May be lower than provided after removing all zero obs.
+  d::Int                      # number of categories (terms/words/phrases)
+  p::Int                      # number of covariates
 
   DMRPaths(nlpaths::Vector{Nullable{GammaLassoPath}}, intercept::Bool,
-    n::Int64, d::Int64, p::Int64) =
+    n::Int, d::Int, p::Int) =
     new(nlpaths, intercept, n, d, p)
 end
 
@@ -30,11 +30,11 @@ Relatively light object used to return DMR results when we only care about estim
 struct DMRCoefs <: DMR
   coefs::AbstractMatrix         # model coefficients
   intercept::Bool               # whether to include an intercept in each Poisson regression
-  n::Int64                      # number of observations. May be lower than provided after removing all zero obs.
-  d::Int64                      # number of categories (terms/words/phrases)
-  p::Int64                      # number of covariates
+  n::Int                      # number of observations. May be lower than provided after removing all zero obs.
+  d::Int                      # number of categories (terms/words/phrases)
+  p::Int                      # number of covariates
 
-  DMRCoefs(coefs::AbstractMatrix, intercept::Bool, n::Int64, d::Int64, p::Int64) =
+  DMRCoefs(coefs::AbstractMatrix, intercept::Bool, n::Int, d::Int, p::Int) =
     new(coefs, intercept, n, d, p)
 
   function DMRCoefs(m::DMRPaths)
@@ -267,7 +267,7 @@ function dmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts:
 
   covars, counts, μ, n = shifters(covars, counts, showwarnings)
 
-  function tryfitgl!(coefs::AbstractMatrix{T}, j::Int64, covars::AbstractMatrix{T},counts::AbstractMatrix{V}; kwargs...)
+  function tryfitgl!(coefs::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V}; kwargs...)
     try
       poisson_regression!(coefs, j, covars, counts; kwargs...)
     catch e
@@ -349,7 +349,7 @@ function dmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstract
 end
 
 "Fits a regularized poisson regression counts[:,j] ~ covars saving the coefficients in coefs[:,j]"
-function poisson_regression!{T<:AbstractFloat,V}(coefs::AbstractMatrix{T}, j::Int64, covars::AbstractMatrix{T},counts::AbstractMatrix{V}; kwargs...)
+function poisson_regression!{T<:AbstractFloat,V}(coefs::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V}; kwargs...)
   cj = vec(full(counts[:,j]))
   path = fit(GammaLassoPath,covars,cj,Poisson(),LogLink(); kwargs...)
   # coefs[:,j] = vcat(coef(path;select=:AICc)...)

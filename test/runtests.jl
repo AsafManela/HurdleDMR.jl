@@ -4,6 +4,16 @@ else
     using Test
 end
 
+include("testutils.jl")
+
+using Distributions
+
+include("addworkers.jl")
+
+using CSV, GLM, Lasso, DataFrames
+
+import HurdleDMR; @everywhere using HurdleDMR
+
 include("positive_poisson.jl")
 include("hurdle.jl")
 include("dmr.jl")

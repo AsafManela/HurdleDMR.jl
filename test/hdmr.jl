@@ -1,49 +1,34 @@
-include("testutils.jl")
-
-using Distributions
-
-include("addworkers.jl")
-
-using CSV, GLM, DataFrames
-
-import HurdleDMR; @everywhere using HurdleDMR
-
-# reload("HurdleDMR")
-
-we8thereCounts = CSV.read(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"))
-we8thereRatings = CSV.read(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"))
-we8thereTerms = broadcast(string,names(we8thereCounts))
-
-# covars = we8thereRatings[:,[:Overall]]
-covars = we8thereRatings[:,:]
-n,p = size(covars)
+n = 100
+p = 3
+d = 4
 inzero = 1:p
+inpos = 2:p
+ppos = p-1
 
-inpos = [1,3]
-covarspos = we8thereRatings[:,inpos]
-
-T = Float64
-# counts=sparse(convert(Matrix{T},we8thereCounts))
-d = 100
 srand(13)
-counts = round.(10*sprand(n,d,0.3))
-covars=convert(Array{T,2},covars)
-covarspos=convert(Array{T,2},covarspos)
+m = 1+rand(Poisson(5),n)
+covars = rand(n,p)
+ηfn(vi) = exp.([0 + i*sum(vi) for i=1:d])
+q = [ηfn(covars[i,:]) for i=1:n]
+scale!.(q,ones(n)./sum.(q))
+@assert sum.(q) ≈ ones(n)
+c = broadcast((qi,mi)->rand(Multinomial(mi, qi)),q,m)
+@assert sum.(c) == m
+counts = convert(SparseMatrixCSC{Float64,Int},hcat(c...)')
 
+# fit(GeneralizedLinearModel,covars,c,Multinomial(4,2))
 newcovars = covars[1:10,:]
 
-npos,ppos = size(covarspos)
-d = size(counts,2)
-γ=1.0
+covarsdf = DataFrame(covars,[:v1, :v2, :vy])
+
+# γ = 1.0
 
 ###########################################################
 # hurdle with covarspos == covarszero
 ###########################################################
 @testset "hurdle-dmr with covarspos == covarszero" begin
 
-f = @model(h ~ Food + Service + Value + Atmosphere + Overall, c ~ Food + Service + Value + Atmosphere + Overall)
-
-# reload("HurdleDMR")
+f = @model(h ~ v1 + v2 + vy, c ~ v1 + v2 + vy)
 
 # hurdle dmr parallel local cluster
 @time hdmrcoefs = hdmr(covars, counts; parallel=true, verbose=true)
@@ -77,26 +62,26 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 @test d == ncategories(hdmrpaths3)
 @test p == ncovarspos(hdmrpaths3)
 @test p == ncovarszero(hdmrpaths3)
-@test size(hdmrpaths3.nlpaths,1) == 100
+@test size(hdmrpaths3.nlpaths,1) == d
 η = predict(hdmrpaths3,newcovars)
 @test sum(η,2) ≈ ones(size(η,1))
 
 # # # hurdle dmr serial
-# @time hdmrcoefs3 = hdmr(covars, counts; parallel=false)
-# coefsHspos, coefsHszero = coef(hdmrcoefs3)
-# @test coefsHppos ≈ coefsHspos
-# @test coefsHpzero ≈ coefsHszero
-# @time hdmrcoefs3 = fit(HDMRCoefs, covars, counts; parallel=false)
-# @test coef(hdmrcoefs3)[1] ≈ coefsHspos
-# @test coef(hdmrcoefs3)[2] ≈ coefsHszero
+@time hdmrcoefs3 = hdmr(covars, counts; parallel=false)
+coefsHspos, coefsHszero = coef(hdmrcoefs3)
+@test coefsHppos ≈ coefsHspos
+@test coefsHpzero ≈ coefsHszero
+@time hdmrcoefs3 = fit(HDMRCoefs, covars, counts; parallel=false)
+@test coef(hdmrcoefs3)[1] ≈ coefsHspos
+@test coef(hdmrcoefs3)[2] ≈ coefsHszero
 
 # using a dataframe and formula
-@time hdmrcoefsdf = fit(HDMRCoefs, f, we8thereRatings, counts; parallel=true, verbose=true)
+@time hdmrcoefsdf = fit(HDMRCoefs, f, covarsdf, counts; parallel=true, verbose=true)
 @test coef(hdmrcoefsdf)[1] == coefsHppos
 @test coef(hdmrcoefsdf)[2] ≈ coefsHpzero
 @test_throws ErrorException predict(hdmrcoefsdf,newcovars)
 
-@time hdmrpathsdf = fit(HDMRPaths, f, we8thereRatings, counts; parallel=true, verbose=true)
+@time hdmrpathsdf = fit(HDMRPaths, f, covarsdf, counts; parallel=true, verbose=true)
 @test coef(hdmrpathsdf)[1] == coefsHppos3
 @test coef(hdmrpathsdf)[2] ≈ coefsHpzero3
 @test predict(hdmrpathsdf,newcovars) ≈ η
@@ -162,7 +147,7 @@ X2b, X2_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,1; includem=fa
 @test includezposb == includezposb
 
 X3, X3_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,3; includem=true)
-@test X3_nocounts == [ones(n) covars[:,[1,2,4,5]]]
+@test X3_nocounts == [ones(n) covars[:,setdiff(1:p,[3])]]
 @test X3 == [X3_nocounts Z3]
 X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,3; includem=true)
 @test X3 == X3b
@@ -174,17 +159,17 @@ X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,3; includem=tr
 @test coefbwd(hir)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hir)[2] ≈ coef(hdmrcoefs)[2]
 
-@time hirglm = fit(CIR{HDMR,GeneralizedLinearModel},covars,counts,1,Poisson(); nocounts=true)
+@time hirglm = fit(CIR{HDMR,GeneralizedLinearModel},covars,counts,1,Beta(),IdentityLink(); nocounts=true)
 @test coefbwd(hirglm)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirglm)[2] ≈ coef(hdmrcoefs)[2]
 @test !(coeffwd(hirglm)[1] ≈ coeffwd(hir)[1])
 @test !(coeffwd(hirglm)[2] ≈ coeffwd(hir)[2])
 
-@time hirdf = fit(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; nocounts=true)
+@time hirdf = fit(CIR{HDMR,LinearModel},f,covarsdf,counts,:Food; nocounts=true)
 @test coefbwd(hirdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirdf)[2] ≈ coef(hdmrcoefs)[2]
 @test coeffwd(hirdf) ≈ coeffwd(hir)
-@time hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,we8thereRatings,counts,:Food,Poisson(); nocounts=true)
+@time hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:Food,Poisson(); nocounts=true)
 @test coefbwd(hirglmdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirglmdf)[2] ≈ coef(hdmrcoefs)[2]
 @test !(coeffwd(hirglmdf)[2] ≈ coeffwd(hirdf)[2])
@@ -205,13 +190,13 @@ zlmnocounts = lm(hcat(ones(n,1),covars[:,2:end]),covars[:,1])
 # CV
 srand(13)
 @time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,1; gen=MLBase.Kfold(size(covars,1),2), γ=γ)
-@time cvstats13b = cv(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; k=2, gentype=MLBase.Kfold, γ=γ)
+@time cvstats13b = cv(CIR{HDMR,LinearModel},f,covarsdf,counts,:Food; k=2, gentype=MLBase.Kfold, γ=γ)
 @test isapprox(cvstats13,cvstats13b)
 
 @time cvstats14 = cv(CIR{HDMR,LinearModel},covars,counts,1; k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
 @test !(isapprox(cvstats13,cvstats14))
 
-cvstats13glm = cv(CIR{HDMR,GeneralizedLinearModel},f,we8thereRatings,counts,:Food,Poisson(); k=2, gentype=MLBase.Kfold, γ=γ)
+cvstats13glm = cv(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:Food,Poisson(); k=2, gentype=MLBase.Kfold, γ=γ)
 @test !(isapprox(cvstats13,cvstats13glm))
 
 @time cvstatsSerialKfold = cv(CIR{HDMR,LinearModel},covars,counts,1; k=3, gentype=SerialKfold, γ=γ)
@@ -271,12 +256,12 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 # @test coef(hdmrcoefs3)[2] ≈ coefsHszero
 
 # using a dataframe and formula
-@time hdmrcoefsdf = fit(HDMRCoefs, f, we8thereRatings, counts; parallel=true, verbose=true)
+@time hdmrcoefsdf = fit(HDMRCoefs, f, covarsdf, counts; parallel=true, verbose=true)
 @test coef(hdmrcoefsdf)[1] == coefsHppos
 @test coef(hdmrcoefsdf)[2] ≈ coefsHpzero
 @test_throws ErrorException predict(hdmrcoefsdf,newcovars)
 
-@time hdmrpathsdf = fit(HDMRPaths, f, we8thereRatings, counts; parallel=true, verbose=true)
+@time hdmrpathsdf = fit(HDMRPaths, f, covarsdf, counts; parallel=true, verbose=true)
 @test coef(hdmrpathsdf)[1] == coefsHppos3
 @test coef(hdmrpathsdf)[2] ≈ coefsHpzero3
 @test predict(hdmrpathsdf,newcovars) ≈ η
@@ -352,11 +337,11 @@ X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,3; inpos=inpos
 @test !(coeffwd(hirglm)[1] ≈ coeffwd(hir)[1])
 @test !(coeffwd(hirglm)[2] ≈ coeffwd(hir)[2])
 
-@time hirdf = fit(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; nocounts=true)
+@time hirdf = fit(CIR{HDMR,LinearModel},f,covarsdf,counts,:Food; nocounts=true)
 @test coefbwd(hirdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirdf)[2] ≈ coef(hdmrcoefs)[2]
 @test coeffwd(hirdf) ≈ coeffwd(hir)
-@time hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,we8thereRatings,counts,:Food,Poisson(); nocounts=true)
+@time hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:Food,Poisson(); nocounts=true)
 @test coefbwd(hirglmdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirglmdf)[2] ≈ coef(hdmrcoefs)[2]
 @test !(coeffwd(hirglmdf)[2] ≈ coeffwd(hirdf)[2])
@@ -365,13 +350,13 @@ X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,3; inpos=inpos
 # CV
 srand(13)
 @time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,1; inpos=inpos, gen=MLBase.Kfold(size(covars,1),2), γ=γ)
-@time cvstats13b = cv(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; k=2, gentype=MLBase.Kfold, γ=γ)
+@time cvstats13b = cv(CIR{HDMR,LinearModel},f,covarsdf,counts,:Food; k=2, gentype=MLBase.Kfold, γ=γ)
 @test isapprox(cvstats13,cvstats13b)
 
 @time cvstats14 = cv(CIR{HDMR,LinearModel},covars,counts,1; inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ, seed=14)
 @test !(isapprox(cvstats13,cvstats14))
 
-cvstats13glm = cv(CIR{HDMR,GeneralizedLinearModel},f,we8thereRatings,counts,:Food,Poisson(); k=2, gentype=MLBase.Kfold, γ=γ)
+cvstats13glm = cv(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:Food,Poisson(); k=2, gentype=MLBase.Kfold, γ=γ)
 @test !(isapprox(cvstats13,cvstats13glm))
 
 @time cvstatsSerialKfold = cv(CIR{HDMR,LinearModel},covars,counts,1; inpos=inpos, k=3, gentype=SerialKfold, γ=γ)
@@ -392,7 +377,7 @@ trmszero = HurdleDMR.getrhsterms(f, :h)
 trmspos = HurdleDMR.getrhsterms(f, :c)
 trms, inzero, inpos = HurdleDMR.mergerhsterms(trmszero,trmspos)
 
-covars = convert(Matrix{Float64},we8thereRatings[:,trms.terms])
+covars = convert(Matrix{Float64},covarsdf[:,trms.terms])
 pzero = length(inzero)
 ppos = length(inpos)
 
@@ -443,7 +428,7 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 # @test coef(hdmrcoefs3)[2] ≈ coefsHszero
 
 # using a dataframe and formula
-@time hdmrcoefsdf = fit(HDMRCoefs, f, we8thereRatings, counts; parallel=true, verbose=true)
+@time hdmrcoefsdf = fit(HDMRCoefs, f, covarsdf, counts; parallel=true, verbose=true)
 hdmrcoefsdf.model.inpos
 hdmrcoefsdf.model.inzero
 @test coef(hdmrcoefsdf)[1] ≈ coefsHppos
@@ -454,7 +439,7 @@ hdmrcoefsdf.model.inzero
 @test pzero == ncovarszero(hdmrcoefsdf)
 @test_throws ErrorException predict(hdmrcoefsdf,newcovars)
 
-@time hdmrpathsdf = fit(HDMRPaths, f, we8thereRatings, counts; parallel=true, verbose=true)
+@time hdmrpathsdf = fit(HDMRPaths, f, covarsdf, counts; parallel=true, verbose=true)
 @test coef(hdmrpathsdf)[1] ≈ coefsHppos3
 @test coef(hdmrpathsdf)[2] ≈ coefsHpzero3
 @test n == nobs(hdmrpathsdf)
@@ -530,11 +515,11 @@ X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,1; inzero=inze
 @test !(coeffwd(hirglm)[1] ≈ coeffwd(hir)[1])
 @test !(coeffwd(hirglm)[2] ≈ coeffwd(hir)[2])
 
-@time hirdf = fit(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; nocounts=true)
+@time hirdf = fit(CIR{HDMR,LinearModel},f,covarsdf,counts,:Food; nocounts=true)
 @test coefbwd(hirdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirdf)[2] ≈ coef(hdmrcoefs)[2]
 @test coeffwd(hirdf) ≈ coeffwd(hir)
-@time hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,we8thereRatings,counts,:Food,Poisson(); nocounts=true)
+@time hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:Food,Poisson(); nocounts=true)
 @test coefbwd(hirglmdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirglmdf)[2] ≈ coef(hdmrcoefs)[2]
 @test !(coeffwd(hirglmdf)[2] ≈ coeffwd(hirdf)[2])
@@ -543,7 +528,7 @@ X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,1; inzero=inze
 # CV
 srand(13)
 @time cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,projdir; inzero=inzero, inpos=inpos, gen=MLBase.Kfold(size(covars,1),2), γ=γ)
-@time cvstats13b = cv(CIR{HDMR,LinearModel},f,we8thereRatings,counts,:Food; k=2, gentype=MLBase.Kfold, γ=γ)
+@time cvstats13b = cv(CIR{HDMR,LinearModel},f,covarsdf,counts,:Food; k=2, gentype=MLBase.Kfold, γ=γ)
 @test cvstats13 ≈ cvstats13b
 
 @time cvstats14 = cv(CIR{HDMR,LinearModel},covars,counts,projdir; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, γ=γ, seed=14)

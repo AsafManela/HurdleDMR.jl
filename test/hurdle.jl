@@ -1,9 +1,3 @@
-include("testutils.jl")
-
-using CSV, Base.Test, Lasso, DataFrames
-
-using HurdleDMR
-
 # code to generate R benchmark
 # using RCall
 # R"if(!require(pscl)){install.packages(\"pscl\");library(pscl)}"

@@ -1,15 +1,3 @@
-include("testutils.jl")
-
-using Distributions
-
-include("addworkers.jl")
-
-using CSV, GLM, DataFrames
-
-import HurdleDMR; @everywhere using HurdleDMR
-# uncomment following for debugging and comment the previous @everywhere line. then use reload after making changes
-# reload("HurdleDMR")
-
 we8thereCounts = CSV.read(joinpath(testdir,"data","dmr_we8thereCounts.csv.gz"))
 we8thereRatings = CSV.read(joinpath(testdir,"data","dmr_we8thereRatings.csv.gz"))
 we8thereTerms = broadcast(string,names(we8thereCounts))

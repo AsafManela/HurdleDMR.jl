@@ -11,7 +11,7 @@ mutable struct Hurdle <: RegressionModel
 end
 
 "Returns an (offsetzero, offsetpos) tuple of offset vector"
-function setoffsets{T}(y::AbstractVector{T}, ixpos::Vector{Int64}, offset::AbstractVector, offsetzero::AbstractVector, offsetpos::AbstractVector)
+function setoffsets(y::AbstractVector, ixpos::Vector{Int}, offset::AbstractVector, offsetzero::AbstractVector, offsetpos::AbstractVector)
     # set offsets
     if length(offset) != 0
       if length(offsetpos) == 0
@@ -30,7 +30,7 @@ function setoffsets{T}(y::AbstractVector{T}, ixpos::Vector{Int64}, offset::Abstr
 end
 
 "Returns positives indicators for y"
-function getIy{T}(y::AbstractVector{T})
+function getIy(y::AbstractVector{T}) where {T}
     # find positive y entries
     ixpos = find(y)
 
@@ -42,7 +42,7 @@ function getIy{T}(y::AbstractVector{T})
 end
 
 "Fits the model for zeros Iy ~ X"
-function fitzero{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{M},
+function fitzero(::Type{M},
   X::AbstractMatrix{T}, Iy::V,
   dzero::UnivariateDistribution,
   lzero::Link,
@@ -51,7 +51,7 @@ function fitzero{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{M},
   offsetzero::AbstractVector,
   verbose::Bool,
   showwarnings::Bool,
-  fitargs...)
+  fitargs...) where {M<:RegressionModel,T<:FP,V<:FPVector}
 
   # fit zero model to entire sample
   mzero = nothing
@@ -94,7 +94,7 @@ function fitzero{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{M},
 end
 
 "Fits the model for positives ypos ~ Xpos"
-function fitpos{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{M},
+function fitpos(::Type{M},
   Xpos::AbstractMatrix{T}, ypos::V,
   dpos::UnivariateDistribution,
   lpos::Link,
@@ -103,7 +103,7 @@ function fitpos{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{M},
   offsetpos::AbstractVector,
   verbose::Bool,
   showwarnings::Bool,
-  fitargs...)
+  fitargs...) where {M<:RegressionModel,T<:FP,V<:FPVector}
 
   # fit truncated counts model to positive subsample
   mpos=nothing
@@ -181,7 +181,7 @@ covariates matrix Xpos used to model positive counts.
 - `showwarnings::Bool=false`
 - `fitargs...` additional keyword arguments passed along to fit(M,...)
 """
-function StatsBase.fit{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{Hurdle},::Type{M},
+function StatsBase.fit(::Type{Hurdle},::Type{M},
   X::AbstractMatrix{T}, y::V,
   dzero::UnivariateDistribution = Binomial(),
   dpos::UnivariateDistribution = PositivePoisson(),
@@ -195,7 +195,7 @@ function StatsBase.fit{M<:RegressionModel,T<:FP,V<:FPVector}(::Type{Hurdle},::Ty
   offset::AbstractVector = similar(y, 0),
   verbose::Bool = false,
   showwarnings::Bool = false,
-  fitargs...)
+  fitargs...) where {M<:RegressionModel,T<:FP,V<:FPVector}
 
   ixpos, Iy = getIy(y)
 
@@ -228,22 +228,22 @@ as [`fit(::Hurdle)`](@ref)
   fit(Hurdle,GeneralizedLinearModel,@formula(y ~ x1*x2), df; fpos=@formula(y ~ x1*x2+x3))
 ```
 """
-function StatsBase.fit{M<:RegressionModel}(::Type{Hurdle},::Type{M},
-                                      f::Formula,
-                                      df::AbstractDataFrame,
-                                      dzero::UnivariateDistribution = Binomial(),
-                                      dpos::UnivariateDistribution = PositivePoisson(),
-                                      lzero::Link = canonicallink(dzero),
-                                      lpos::Link = canonicallink(dpos);
-                                      fpos::Formula = f,
-                                      dofit::Bool = true,
-                                      wts = ones(Float64,size(df,1)),
-                                      offsetzero = Float64[],
-                                      offsetpos = Float64[],
-                                      offset = Float64[],
-                                      verbose::Bool = false,
-                                      showwarnings::Bool = false,
-                                      fitargs...)
+function StatsBase.fit(::Type{Hurdle},::Type{M},
+                      f::Formula,
+                      df::AbstractDataFrame,
+                      dzero::UnivariateDistribution = Binomial(),
+                      dpos::UnivariateDistribution = PositivePoisson(),
+                      lzero::Link = canonicallink(dzero),
+                      lpos::Link = canonicallink(dpos);
+                      fpos::Formula = f,
+                      dofit::Bool = true,
+                      wts = ones(Float64,size(df,1)),
+                      offsetzero = Float64[],
+                      offsetpos = Float64[],
+                      offset = Float64[],
+                      verbose::Bool = false,
+                      showwarnings::Bool = false,
+                      fitargs...) where {M<:RegressionModel}
 
   mfzero = ModelFrame(f, df)
   mmzero = ModelMatrix(mfzero)
@@ -346,12 +346,12 @@ Predict using a fitted Hurdle given new X (and potentially Xpos).
 - `kwargs...` additional keyword arguments passed along to predict() for each
   of the two model parts.
 """
-function StatsBase.predict{T<:AbstractFloat}(hurdle::Hurdle, X::AbstractMatrix{T};
+function StatsBase.predict(hurdle::Hurdle, X::AbstractMatrix{T};
   Xpos::AbstractMatrix{T} = X,
   offsetzero::AbstractVector = Array{T}(0),
   offsetpos::AbstractVector = Array{T}(0),
   offset::AbstractVector=Array{T}(0),
-  kwargs...)
+  kwargs...) where {T<:AbstractFloat}
 
   # set offsets
   if length(offset) != 0

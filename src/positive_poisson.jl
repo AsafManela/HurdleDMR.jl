@@ -43,12 +43,12 @@ Distributions.rate(d::PositivePoisson) = d.λ
 ### Statistics
 Distributions.mean(d::PositivePoisson) = d.λ / (1.0-exp(-d.λ))
 
-function logfactorialapprox(n::Int)
+function logfactorialapprox(n::Integer)
   x=n+1.0::Float64
   (x-0.5)*log(x) - x + 0.5*log(2π) + 1.0/(12.0*x)
 end
 
-function logfactorial(n::Int)
+function logfactorial(n::Integer)
   if n<2
     return 0.0
   end
@@ -75,10 +75,10 @@ Distributions.pdf(d::PositivePoisson, x::Int) = d.λ^x / ((exp(d.λ)-1.0) * fact
 Distributions.logpdf(d::PositivePoisson, x::Int) = x*log(d.λ) - logexpm1(d.λ) - logfactorialapprox(x)
 
 # for comparison we define the exact logpdf for the positive poisson
-logpdf_exact(d::PositivePoisson, x::Int) = x*log(d.λ) - log(exp(d.λ)-1.0) - logfactorial(x)
+logpdf_exact(d::PositivePoisson, x::Integer) = x*log(d.λ) - log(exp(d.λ)-1.0) - logfactorial(x)
 
 # similar calculation for the regular poisson
-logpdf_approx(d::Poisson, x::Int) = x*log(d.λ) - d.λ - logfactorialapprox(x)
+logpdf_approx(d::Poisson, x::Integer) = x*log(d.λ) - d.λ - logfactorialapprox(x)
 
 ###################################################################
 # GLM.jl extensions

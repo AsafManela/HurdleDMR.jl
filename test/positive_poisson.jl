@@ -1,12 +1,6 @@
-include("testutils.jl")
-
-using HurdleDMR
-
-using GLM, Lasso, DataFrames
-
 @testset "PositivePoisson" begin
 λ0=3.4
-xs = 1:10000
+xs = 1:100:10000
 lp1=[logpdf(Poisson(λ0),x)::Float64 for x=xs]
 lp2=[HurdleDMR.logpdf_approx(Poisson(λ0),x)::Float64 for x=xs]
 @test lp1 ≈ lp2
@@ -21,14 +15,14 @@ le1big2 = broadcast(x->log(exp(x)-one(x)),big.(xs))
 @test le1 ≈ le1big
 @test le1 ≈ le1big2
 
-ηs=-10:0.1:10
+ηs=-10:1.0:10
 μs=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
 ηscheck=broadcast(μ->linkfun(LogProductLogLink(),μ),μs)
 @test ηs ≈ ηscheck
 
 loglik(y, μ) = GLM.loglik_obs(PositivePoisson(λ0), y, μ, one(y), 0)
 
-μs=1.01:0.1:1000
+μs=1.01:10.0:1000.0
 ηs=broadcast(μ->linkfun(LogProductLogLink(),μ),μs)
 μscheck=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
 @test μs ≈ μscheck
