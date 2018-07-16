@@ -1,5 +1,3 @@
-__precompile__()
-
 module HurdleDMR
 
 using Lasso, StatsBase, StatsModels, DataFrames, LambertW, MLBase, GLM.FPVector, GLM.FP
