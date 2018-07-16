@@ -204,7 +204,7 @@ Syntax:
 ```@autodocs
 Modules = [HurdleDMR]
 Order   = [:macro, :type, :function]
-Pages   = ["src/cross_validation.jl"]
+Pages   = ["src/hurdle.jl"]
 Private = false
 ```
 
