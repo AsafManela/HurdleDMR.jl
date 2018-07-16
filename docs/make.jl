@@ -18,7 +18,8 @@ makedocs(
 deploydocs(
   repo = "github.com/AsafManela/HurdleDMR.jl.git",
   target = "build",
-  julia = "nightly",
+  julia = "0.6",
+  osname = "linux",
   deps = nothing,
   make = nothing,
 )
