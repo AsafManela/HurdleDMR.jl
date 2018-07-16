@@ -16,6 +16,7 @@ import HurdleDMR; @everywhere using HurdleDMR
 
 include("positive_poisson.jl")
 include("hurdle.jl")
+include("testdata.jl")
 include("dmr.jl")
 include("hdmr.jl")
 include("multicounts.jl")

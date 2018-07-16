@@ -241,7 +241,7 @@ Cross-validates a Counts Inverse Regression (CIR) of
 - `dcrkwargs...` additional keyword arguments passed along to backward regression model
 """
 function cv(::Type{C},covars::AbstractMatrix{T},counts::AbstractMatrix{V},projdir::Int, fmargs...;
-  gentype=Kfold, k=10, seed=13, gen=nothing,
+  gentype=Kfold, k=10, seed=13, gen=nothing, verbose=true,
   dcrkwargs...) where {T<:AbstractFloat,V,BM<:DCR,FM<:RegressionModel,C<:CIR{BM,FM}}
 
   # dims
@@ -258,7 +258,7 @@ function cv(::Type{C},covars::AbstractMatrix{T},counts::AbstractMatrix{V},projdi
       ixtest = setdiff(1:n, ixtrain)
 
       # estimate dmr in train subsample
-      cir = fit(C,covars[ixtrain,:],counts[ixtrain,:],projdir,fmargs...; nocounts=true, dcrkwargs...)
+      cir = fit(C,covars[ixtrain,:],counts[ixtrain,:],projdir,fmargs...; nocounts=true, verbose=verbose, dcrkwargs...)
 
       # target variable
       ins_y = covars[ixtrain,projdir]
@@ -282,10 +282,10 @@ function cv(::Type{C},covars::AbstractMatrix{T},counts::AbstractMatrix{V},projdi
       # save results
       append!(cvd, CVDataRow(ins_y,oos_y,ins_yhat,oos_yhat,ins_yhat_nocounts,oos_yhat_nocounts))
 
-      info("estimated fold $i/$k")
+      verbose && info("estimated fold $i/$k")
   end
 
-  info("calculated aggreagate fit for $(length(cvd.ins_ys)) in-sample and $(length(cvd.oos_ys)) out-of-sample total observations (with duplication).")
+  verbose && info("calculated aggreagate fit for $(length(cvd.ins_ys)) in-sample and $(length(cvd.oos_ys)) out-of-sample total observations (with duplication).")
 
   cvd
 end

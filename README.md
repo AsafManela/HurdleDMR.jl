@@ -1,7 +1,8 @@
 # HurdleDMR
 
-<!-- [![Build Status](https://travis-ci.org/AsafManela/HurdleDMR.jl.svg?branch=master)](https://travis-ci.org/AsafManela/HurdleDMR.jl)
-[![Coverage Status](https://coveralls.io/repos/AsafManela/HurdleDMR.jl/badge.svg?branch=master)](https://coveralls.io/r/AsafManela/HurdleDMR.jl?branch=master) -->
+[![Build Status](https://travis-ci.org/AsafManela/HurdleDMR.jl.svg?branch=master)](https://travis-ci.org/AsafManela/HurdleDMR.jl)
+[![Build Status](https://ci.appveyor.com/api/projects/status/github/hurdledmr-jl)](https://ci.appveyor.com/project/AsafManela/hurdledmr-jl)
+[![Coverage Status](https://coveralls.io/repos/AsafManela/HurdleDMR.jl/badge.svg?branch=master)](https://coveralls.io/r/AsafManela/HurdleDMR.jl?branch=master)
 
 HurdleDMR.jl is a Julia implementation of the Hurdle Distributed Multiple Regression (HDMR), as described in:
 
@@ -25,24 +26,32 @@ import HurdleDMR; @everywhere using HurdleDMR
 ```
 
 Setup your data into an n-by-p covars matrix, and a (sparse) n-by-d counts matrix.
+Here we generate some random data.
 ```julia
 using CSV, GLM, DataFrames, Distributions
-we8thereCounts = CSV.read(joinpath(Pkg.dir("HurdleDMR"),"test","data","dmr_we8thereCounts.csv.gz"))
-counts = sparse(convert(Matrix{Float64},we8thereCounts))
-covarsdf = CSV.read(joinpath(Pkg.dir("HurdleDMR"),"test","data","dmr_we8thereRatings.csv.gz"))
-covars = convert(Matrix{Float64},covarsdf)
-terms = map(string,names(we8thereCounts))
+n = 100
+p = 3
+d = 4
+
+srand(13)
+m = 1+rand(Poisson(5),n)
+covars = rand(n,p)
+ηfn(vi) = exp.([0 + i*sum(vi) for i=1:d])
+q = [ηfn(covars[i,:]) for i=1:n]
+scale!.(q,ones(n)./sum.(q))
+counts = convert(SparseMatrixCSC{Float64,Int},hcat(broadcast((qi,mi)->rand(Multinomial(mi, qi)),q,m)...)')
+covarsdf = DataFrame(covars,[:vy, :v1, :v2])
 ```
 
 ### Hurdle distributed multiple regression (HDMR)
 HDMR can be fitted:
 ```julia
-m = hdmr(covars, counts; inpos=[1,3], inzero=1:5)
+m = hdmr(covars, counts; inpos=1:2, inzero=1:3)
 ```
 
 or with a dataframe and formula
 ```julia
-mf = @model(h ~ Food + Service + Value + Atmosphere + Overall, c ~ Food + Value)
+mf = @model(h ~ vy + v1 + v2, c ~ vy + v1)
 m = fit(HDMR, mf, covarsdf, counts)
 ```
 where the h ~ equation is the model for zeros (hurdle crossing) and c ~ is the model for positive counts
@@ -60,7 +69,7 @@ paths = fit(HDMRPaths, mf, covarsdf, counts)
 coef(paths; select=:all)
 ```
 
-To get a sufficient reduction projection in direction of Food
+To get a sufficient reduction projection in direction of vy
 ```julia
 z = srproj(m,counts,1,1)
 ```
@@ -70,7 +79,7 @@ Counts inverse regression allows us to predict a covariate with the counts and o
 Here we use hdmr for the backward regression and another model for the forward regression
 This can be accomplished with a single command, by fitting a CIR{HDMR,FM} where the forward model is FM <: RegressionModel
 ```julia
-cir = fit(CIR{HDMR,LinearModel},mf,covarsdf,counts,:Food; nocounts=true)
+cir = fit(CIR{HDMR,LinearModel},mf,covarsdf,counts,:vy; nocounts=true)
 ```
 where the ```nocounts=true``` means we also fit a benchmark model without counts.
 
@@ -80,7 +89,7 @@ coefbwd(cir)
 coeffwd(cir)
 ```
 
-The fitted model can be used to predict Food with new data
+The fitted model can be used to predict vy with new data
 ```julia
 yhat = predict(cir, covarsdf[1:10,:], counts[1:10,:])
 ```
@@ -98,7 +107,8 @@ m = dmr(covars, counts)
 ```
 or with a dataframe and formula
 ```julia
-m = fit(DMR, @model(c ~ Food + Service + Value + Atmosphere + Overall), covarsdf, counts)
+mf = @model(c ~ vy + v1 + v2)
+m = fit(DMR, mf, covarsdf, counts)
 ```
 in either case we can get the coefficients matrix for each variable + intercept as usual with
 ```julia
@@ -108,7 +118,6 @@ coef(m)
 By default we only return the AICc maximizing coefficients.
 To also get back the entire regulatrization paths, run
 ```julia
-mf = @model(c ~ Food + Service + Value + Atmosphere + Overall)
 paths = fit(DMRPaths, mf, covarsdf, counts)
 ```
 we can now select, for example the coefficients that minimize CV mse (takes a while)
@@ -116,7 +125,7 @@ we can now select, for example the coefficients that minimize CV mse (takes a wh
 coef(paths; select=:CVmin)
 ```
 
-To get a sufficient reduction projection in direction of Food
+To get a sufficient reduction projection in direction of vy
 ```julia
 z = srproj(m,counts,1)
 ```
@@ -124,10 +133,10 @@ z = srproj(m,counts,1)
 ### Multinomial inverse regression (MNIR)
 MNIR is a special case of CIR that uses DMR for the backward regression. This can be accomplished by fitting a CIR{DMR,FM} model
 ```julia
-mnir = fit(CIR{DMR,LinearModel},mf,covarsdf,counts,:Food)
+mnir = fit(CIR{DMR,LinearModel},mf,covarsdf,counts,:vy)
 ```
 
-The fitted model can be used to predict Food with new data
+The fitted model can be used to predict vy with new data
 ```julia
 yhat = predict(mnir, covarsdf[1:10,:], counts[1:10,:])
 ```
