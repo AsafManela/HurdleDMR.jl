@@ -343,16 +343,35 @@ function incovars(covars,inpos,inzero)
 end
 
 "Fits a regularized hurdle regression counts[:,j] ~ covars saving the coefficients in coefs[:,j]"
-function hurdle_regression!{T<:AbstractFloat,V}(coefspos::AbstractMatrix{T}, coefszero::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V},
+function hurdle_regression!(coefspos::AbstractMatrix{T}, coefszero::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V},
             inpos, inzero;
             offset::AbstractVector=similar(y, 0),
-            kwargs...)
+            kwargs...) where {T<:AbstractFloat,V}
   cj = vec(full(counts[:,j]))
   covarspos, covarszero = incovars(covars,inpos,inzero)
   # we use the same offsets for pos and zeros
   path = fit(Hurdle,GammaLassoPath,covarszero,cj; Xpos=covarspos, offsetpos=offset, offsetzero=offset, kwargs...)
   (coefspos[:,j], coefszero[:,j]) = coef(path;select=:AICc)
   nothing
+end
+
+"Wrapper for hurdle_regression! that catches exceptions in which case it sets coefs to zero"
+function tryfith!(coefspos::AbstractMatrix{T}, coefszero::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V},
+            inpos, inzero;
+            showwarnings = false,
+            kwargs...) where {T<:AbstractFloat,V}
+  try
+    hurdle_regression!(coefspos, coefszero, j, covars, counts, inpos, inzero; kwargs...)
+  catch e
+    showwarnings && warn("hurdle_regression! failed on count dimension $j with frequencies $(sort(countmap(counts[:,j]))) and will return zero coefs ($e)")
+    # redudant ASSUMING COEFS ARRAY INTIAILLY FILLED WITH ZEROS, but can happen in serial mode
+    for i=1:size(coefszero,1)
+      coefszero[i,j] = zero(T)
+    end
+    for i=1:size(coefspos,1)
+      coefspos[i,j] = zero(T)
+    end
+  end
 end
 
 "Shorthand for fit(HDMR,covars,counts). See also [`fit(::HDMR)`](@ref)"
@@ -390,21 +409,6 @@ function hdmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts
   ncoefzero = pzero + (intercept ? 1 : 0)
 
   covars, counts, μ, n = shifters(covars, counts, showwarnings)
-
-  function tryfith!(coefspos::AbstractMatrix{T}, coefszero::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V}, inpos, inzero; kwargs...)
-    try
-      hurdle_regression!(coefspos, coefszero, j, covars, counts, inpos, inzero; kwargs...)
-    catch e
-      showwarnings && warn("hurdle_regression! failed on count dimension $j with frequencies $(sort(countmap(counts[:,j]))) and will return zero coefs ($e)")
-      # redudant ASSUMING COEFS ARRAY INTIAILLY FILLED WITH ZEROS, but can happen in serial mode
-      for i=1:size(coefszero,1)
-        coefszero[i,j] = zero(T)
-      end
-      for i=1:size(coefspos,1)
-        coefspos[i,j] = zero(T)
-      end
-    end
-  end
 
   # fit separate GammaLassoPath's to each dimension of counts j=1:d and pick its min AICc segment
   if parallel

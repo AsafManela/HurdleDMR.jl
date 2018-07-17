@@ -267,18 +267,6 @@ function dmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts:
 
   covars, counts, μ, n = shifters(covars, counts, showwarnings)
 
-  function tryfitgl!(coefs::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V}; kwargs...)
-    try
-      poisson_regression!(coefs, j, covars, counts; kwargs...)
-    catch e
-      showwarnings && warn("fitgl! failed on count dimension $j with frequencies $(sort(countmap(counts[:,j]))) and will return zero coefs ($e)")
-      # redudant ASSUMING COEFS ARRAY INTIAILLY FILLED WITH ZEROS, but can be uninitialized in serial case
-      for i=1:size(coefs,1)
-        coefs[i,j] = zero(T)
-      end
-    end
-  end
-
   # fit separate GammaLassoPath's to each dimension of counts j=1:d and pick its min AICc segment
   if parallel
     verbose && info("distributed poisson run on local cluster with $(nworkers()) nodes")
@@ -349,12 +337,27 @@ function dmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstract
 end
 
 "Fits a regularized poisson regression counts[:,j] ~ covars saving the coefficients in coefs[:,j]"
-function poisson_regression!{T<:AbstractFloat,V}(coefs::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V}; kwargs...)
+function poisson_regression!(coefs::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V}; kwargs...) where {T<:AbstractFloat,V}
   cj = vec(full(counts[:,j]))
   path = fit(GammaLassoPath,covars,cj,Poisson(),LogLink(); kwargs...)
   # coefs[:,j] = vcat(coef(path;select=:AICc)...)
   coefs[:,j] = coef(path;select=:AICc)
   nothing
+end
+
+"Wrapper for poisson_regression! that catches exceptions in which case it sets coefs to zero"
+function tryfitgl!(coefs::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V};
+            showwarnings = false,
+            kwargs...) where {T<:AbstractFloat,V}
+  try
+    poisson_regression!(coefs, j, covars, counts; kwargs...)
+  catch e
+    showwarnings && warn("fitgl! failed on count dimension $j with frequencies $(sort(countmap(counts[:,j]))) and will return zero coefs ($e)")
+    # redudant ASSUMING COEFS ARRAY INTIAILLY FILLED WITH ZEROS, but can be uninitialized in serial case
+    for i=1:size(coefs,1)
+      coefs[i,j] = zero(T)
+    end
+  end
 end
 
 "Shorthand for fit(DMR,covars,counts). See also [`fit(::DMR)`](@ref)"
