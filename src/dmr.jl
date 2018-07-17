@@ -276,13 +276,13 @@ function dmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts:
     # μ = convert(SharedArray,μ) incompatible with GLM
 
     @sync @parallel for j=1:d
-      tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false, intercept=intercept, kwargs...)
+      tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false, showwarnings=showwarnings, intercept=intercept, kwargs...)
     end
   else
     verbose && info("serial poisson run on a single node")
     coefs = Matrix{T}(ncoef,d)
     for j=1:d
-      tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false, intercept=intercept, kwargs...)
+      tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false, showwarnings=showwarnings, intercept=intercept, kwargs...)
     end
   end
 

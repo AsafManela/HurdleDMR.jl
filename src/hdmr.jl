@@ -420,14 +420,14 @@ function hdmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts
     # μ = convert(SharedArray,μ) incompatible with GLM
 
     @sync @parallel for j=1:d
-      tryfith!(coefspos, coefszero, j, covars, counts, inpos, inzero; offset=μ, verbose=false, intercept=intercept, kwargs...)
+      tryfith!(coefspos, coefszero, j, covars, counts, inpos, inzero; offset=μ, verbose=false, showwarnings=showwarnings, intercept=intercept, kwargs...)
     end
   else
     verbose && info("serial hurdle run on a single node")
     coefszero = Matrix{T}(ncoefzero,d)
     coefspos = Matrix{T}(ncoefpos,d)
     for j=1:d
-      tryfith!(coefspos, coefszero, j, covars, counts, inpos, inzero; offset=μ, verbose=false, intercept=intercept, kwargs...)
+      tryfith!(coefspos, coefszero, j, covars, counts, inpos, inzero; offset=μ, verbose=false, showwarnings=showwarnings, intercept=intercept, kwargs...)
     end
   end
 
