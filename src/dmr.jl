@@ -216,8 +216,9 @@ ncoefs(m::DMR) = ncovars(m) + (hasintercept(m) ? 1 : 0)
 
 # some helpers for converting to SharedArray
 Base.convert(::Type{SharedArray}, A::SubArray) = (S = SharedArray{eltype(A)}(size(A)); copy!(S, A))
-function Base.convert(::Type{SharedArray}, A::SparseMatrixCSC)
-  S = SharedArray{eltype(A)}(size(A))
+function Base.convert(::Type{SharedArray}, A::SparseMatrixCSC{T,N}) where {T,N}
+  S = SharedArray{T}(size(A))
+  fill!(S,zero(T))
   rows = rowvals(A)
   vals = nonzeros(A)
   n, m = size(A)

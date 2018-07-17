@@ -2,8 +2,8 @@
 
 # test convert methods for SharedArray
 srand(1)
-A = sprand(5,3,0.3)
-sA = convert(SharedArray,A)
+A = sprand(100,4,0.3)
+@time sA = convert(SharedArray,A)
 @test A == sA
 
 a = view(A,:,2:3)
