@@ -73,7 +73,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "#HurdleDMR.dmrpaths-Union{Tuple{AbstractArray{T,2},AbstractArray{V,2}}, Tuple{T}, Tuple{V}} where V where T<:AbstractFloat",
+    "location": "#HurdleDMR.dmrpaths-Union{Tuple{AbstractArray{T,2},AbstractArray{T,2} where T}, Tuple{T}} where T<:AbstractFloat",
     "page": "Home",
     "title": "HurdleDMR.dmrpaths",
     "category": "method",
@@ -201,7 +201,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "#HurdleDMR.hdmrpaths-Union{Tuple{AbstractArray{T,2},AbstractArray{V,2}}, Tuple{T}, Tuple{V}} where V where T<:AbstractFloat",
+    "location": "#HurdleDMR.hdmrpaths-Union{Tuple{AbstractArray{T,2},AbstractArray{T,2} where T}, Tuple{T}} where T<:AbstractFloat",
     "page": "Home",
     "title": "HurdleDMR.hdmrpaths",
     "category": "method",
