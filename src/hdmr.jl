@@ -117,7 +117,7 @@ function StatsBase.fit(::Type{T}, m::Model, df::AbstractDataFrame, counts::Abstr
   trms, inzero, inpos = mergerhsterms(trmszero,trmspos)
 
   # create model matrix
-  mf, mm = createmodelmatrix(trms, df, contrasts)
+  mf, mm, counts = createmodelmatrix(trms, df, counts, contrasts)
 
   # fit and wrap in DataFrameRegressionModel
   StatsModels.DataFrameRegressionModel(fit(T, mm.m, counts, args...; inzero=inzero, inpos=inpos, kwargs...), mf, mm)
@@ -270,12 +270,12 @@ ncoefszero(m::HDMR) = ncovarszero(m) + (hasintercept(m) ? 1 : 0)
 ncoefspos(m::HDMR) = ncovarspos(m) + (hasintercept(m) ? 1 : 0)
 
 "Shorthand for fit(HDMRPaths,covars,counts). See also [`fit(::HDMRPaths)`](@ref)"
-function hdmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatrix{V};
+function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
       inpos=1:size(covars,2), inzero=1:size(covars,2),
       intercept=true,
       parallel=true,
       verbose=true, showwarnings=false,
-      kwargs...)
+      kwargs...) where {T<:AbstractFloat}
   # get dimensions
   n, d = size(counts)
   n1,p = size(covars)
@@ -294,7 +294,7 @@ function hdmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstrac
 
   covarspos, covarszero = incovars(covars,inpos,inzero)
 
-  function tryfith(countsj::AbstractVector{V})
+  function tryfith(countsj::AbstractVector)
     try
       # we make it dense remotely to reduce communication costs
       # we use the same offsets for pos and zeros
@@ -313,7 +313,7 @@ function hdmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstrac
     mapfn = pmap
   else
     verbose && info("serial hurdle run on a single node")
-    mapfn = broadcast
+    mapfn = map
   end
 
   nlpaths = convert(Vector{Nullable{Hurdle}},mapfn(tryfith,countscols))

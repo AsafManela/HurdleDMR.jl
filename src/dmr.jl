@@ -109,7 +109,7 @@ function StatsBase.fit(::Type{T}, m::Model, df::AbstractDataFrame, counts::Abstr
   trms = getrhsterms(m, :c)
 
   # create model matrix
-  mf, mm = createmodelmatrix(trms, df, contrasts)
+  mf, mm, counts = createmodelmatrix(trms, df, counts, contrasts)
 
   # fit and wrap in DataFrameRegressionModel
   StatsModels.DataFrameRegressionModel(fit(T, mm.m, counts; kwargs...), mf, mm)
@@ -298,11 +298,11 @@ function dmr_remote_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts
 end
 
 "Shorthand for fit(DMRPaths,covars,counts). See also [`fit(::DMRPaths)`](@ref)"
-function dmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatrix{V};
+function dmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
       intercept=true,
       parallel=true,
       verbose=true, showwarnings=false,
-      kwargs...)
+      kwargs...) where {T<:AbstractFloat}
   # get dimensions
   n, d = size(counts)
   n1,p = size(covars)
@@ -311,7 +311,7 @@ function dmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstract
 
   covars, counts, μ, n = shifters(covars, counts, showwarnings)
 
-  function tryfitgl(countsj::AbstractVector{V})
+  function tryfitgl(countsj::AbstractVector)
     try
       # we make it dense remotely to reduce communication costs
       Nullable{GammaLassoPath}(fit(GammaLassoPath,covars,full(countsj),Poisson(),LogLink(); offset=μ, verbose=false, kwargs...))
@@ -329,7 +329,7 @@ function dmrpaths{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::Abstract
     mapfn = pmap
   else
     verbose && info("serial poisson run on a single node")
-    mapfn = broadcast
+    mapfn = map
   end
 
   nlpaths = convert(Vector{Nullable{GammaLassoPath}},mapfn(tryfitgl,countscols))
@@ -341,7 +341,6 @@ end
 function poisson_regression!(coefs::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V}; kwargs...) where {T<:AbstractFloat,V}
   cj = vec(full(counts[:,j]))
   path = fit(GammaLassoPath,covars,cj,Poisson(),LogLink(); kwargs...)
-  # coefs[:,j] = vcat(coef(path;select=:AICc)...)
   coefs[:,j] = coef(path;select=:AICc)
   nothing
 end

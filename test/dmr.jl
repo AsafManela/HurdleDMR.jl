@@ -8,6 +8,7 @@ f = @model(c ~ v1 + v2 + vy)
 dmrcoefs = dmr(covars, counts; testargs...)
 coefs = coef(dmrcoefs)
 @test size(coefs) == (p+1, d)
+@test_throws ErrorException coef(dmrcoefs; select=:all)
 
 dmrcoefsb = fit(DMRCoefs, covars, counts; testargs...)
 @test coef(dmrcoefs) == coefs
@@ -16,6 +17,10 @@ dmrb = fit(DMR, covars, counts; testargs...)
 @test n == nobs(dmrcoefs)
 @test d == ncategories(dmrcoefs)
 @test p == ncovars(dmrcoefs)
+
+# serial run
+dmrcoefss = dmr(covars, counts; parallel=false, testargs...)
+@test coefs ≈ coef(dmrcoefss)
 
 # using a dataframe and list of variables
 dmrcoefsdf = fit(DMRCoefs, f, covarsdf, counts; testargs...)
@@ -29,10 +34,18 @@ coefs2 = coef(dmrcoefs2)
 dmrcoefs2 = fit(DMRCoefs, covars, counts; local_cluster=false, testargs...)
 @test coef(dmrcoefs2) == coefs2
 
+# keeping regulatrization paths
 dmrPaths = dmrpaths(covars, counts; testargs...)
 dmrPaths2 = fit(DMRPaths, covars, counts; testargs...)
+# serial paths
+dmrPathss = fit(DMRPaths, covars, counts; parallel=false, testargs...)
 @test coef(dmrPaths) == coef(dmrPaths2)
 @test coef(dmrPaths) ≈ coefs
+@test coef(dmrPathss) ≈ coefs
+coefsall = coef(dmrPaths; select=:all)
+@test size(coefsall,1) > 1
+@test size(coefsall,2) == p+1
+@test size(coefsall,3) == d
 @test n == nobs(dmrPaths)
 @test d == ncategories(dmrPaths)
 @test p == ncovars(dmrPaths)
@@ -132,16 +145,24 @@ X2jfull, X2jfull_nocounts, inz = srprojX(coefs,full(counts),covars,projdir; incl
 # Juno.@enter fit(CIR{DMR,LinearModel},covars,counts,1)
 mnir = fit(CIR{DMR,LinearModel},covars,counts,projdir; nocounts=true, testargs...)
 @test coefbwd(mnir) ≈ coef(dmrcoefs)
-mnirglm = fit(CIR{DMR,GeneralizedLinearModel},covars,counts,projdir,Gamma(); nocounts=true, testargs...)
+mnirglm = fit(CIR{DMR,GeneralizedLinearModel},covars,counts,projdir,Gamma(); nocounts=false, testargs...)
 @test coefbwd(mnirglm) ≈ coef(dmrcoefs)
 @test !(coeffwd(mnirglm) ≈ coeffwd(mnir))
+@test_throws ErrorException coeffwd(mnirglm; nocounts=true)
 @test !(predict(mnir,covars[1:10,:],counts[1:10,:]) ≈ predict(mnirglm,covars[1:10,:],counts[1:10,:]))
+@test !(predict(mnir,covars[1:10,:],counts[1:10,:]) ≈ predict(mnir,covars[1:10,:],counts[1:10,:];nocounts=true))
+@test_throws ErrorException predict(mnirglm,covars[1:10,:],counts[1:10,:];nocounts=true)
 
 mnirdf = fit(CIR{DMR,LinearModel},f,covarsdf,counts,:vy; nocounts=true, testargs...)
 @test coefbwd(mnirdf) ≈ coef(dmrcoefs)
 @test coeffwd(mnirdf) ≈ coeffwd(mnir)
-mnirglmdf = fit(CIR{DMR,GeneralizedLinearModel},f,covarsdf,counts,:vy,Gamma(); nocounts=true, testargs...)
+@test coef(mnirdf) ≈ coef(mnir)
+mnirglmdf = fit(CIR{DMR,GeneralizedLinearModel},f,covarsdf,counts,:vy,Gamma(); nocounts=false, testargs...)
 @test coefbwd(mnirglmdf) ≈ coef(dmrcoefs)
+@test_throws ErrorException coeffwd(mnirglmdf; nocounts=true)
+@test !(predict(mnirdf,covars[1:10,:],counts[1:10,:]) ≈ predict(mnirglmdf,covars[1:10,:],counts[1:10,:]))
+@test !(predict(mnirdf,covars[1:10,:],counts[1:10,:]) ≈ predict(mnirdf,covars[1:10,:],counts[1:10,:];nocounts=true))
+@test_throws ErrorException predict(mnirglmdf,covars[1:10,:],counts[1:10,:];nocounts=true)
 
 zlm = lm(hcat(ones(n,1),z1,covars[:,1:2]),covars[:,projdir])
 @test r2(zlm) ≈ r2(mnir)
@@ -187,7 +208,7 @@ find(var(zcounts,1) .== 0)
 m = sum(zcounts,2)
 @test sum(m .== 0) == 0
 
-# this one should warn on dimension 2
+# this one should warn on dimension 2 but @test_warn doen't capture the workers' warnings
 dmrzcoefs = dmr(covars, zcounts; testargs...)
 zcoefs = coef(dmrzcoefs)
 @test size(zcoefs) == (p+1, d)
@@ -196,5 +217,24 @@ zcoefs = coef(dmrzcoefs)
 dmrzcoefs2 = dmr(covars, zcounts; local_cluster=false, testargs...)
 zcoefs2 = coef(dmrzcoefs2)
 @test zcoefs2 ≈ zcoefs2
+
+# test an observation with all zeros
+zcounts = deepcopy(counts)
+zcounts[1,:] = 0.0
+m = sum(zcounts,2)
+@test sum(m .== 0) == 1
+dmrzcoefs = @test_warn "omitting 1" dmr(covars, zcounts; testargs...)
+dmrzcoefs2 = dmr(covars[2:end,:], counts[2:end,:]; testargs...)
+zcoefs3 = coef(dmrzcoefs)
+@test size(zcoefs3) == (p+1, d)
+@test nobs(dmrzcoefs) == n-1
+@test zcoefs3 == coef(dmrzcoefs2)
+
+zcovarsdf = deepcopy(covarsdf)
+zcovarsdf[1] = convert(Vector{Union{Float64,Missing}},zcovarsdf[1])
+zcovarsdf[1,1] = missing
+dmrzcoefsdf = fit(DMR, f, zcovarsdf, counts; testargs...)
+zcoefsdf = coef(dmrzcoefsdf)
+@test zcoefsdf == zcoefs3
 
 end

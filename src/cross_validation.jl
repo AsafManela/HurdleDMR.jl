@@ -296,7 +296,7 @@ function cv(::Type{C}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix, 
   trms = getrhsterms(m, :c)
 
   # create model matrix
-  mf, mm = createmodelmatrix(trms, df, contrasts)
+  mf, mm, counts = createmodelmatrix(trms, df, counts, contrasts)
 
   # resolve projdir
   projdir = ixprojdir(trms, sprojdir)
@@ -313,7 +313,7 @@ function cv(::Type{C}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix, 
   trms, inzero, inpos = mergerhsterms(trmszero,trmspos)
 
   # create model matrix
-  mf, mm = createmodelmatrix(trms, df, contrasts)
+  mf, mm, counts = createmodelmatrix(trms, df, counts, contrasts)
 
   # resolve projdir
   projdir = ixprojdir(trms, sprojdir)

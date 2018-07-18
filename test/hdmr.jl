@@ -16,6 +16,7 @@ hdmrcoefs = hdmr(covars, counts; parallel=true, testargs...)
 coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test size(coefsHppos) == (p+1, d)
 @test size(coefsHpzero) == (p+1, d)
+@test_throws ErrorException coef(hdmrcoefs; select=:all)
 
 hdmrcoefsb = fit(HDMRCoefs, covars, counts; parallel=true, testargs...)
 @test coef(hdmrcoefsb)[1] == coefsHppos
@@ -46,6 +47,13 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 @test size(hdmrpaths3.nlpaths,1) == d
 η = predict(hdmrpaths3,newcovars)
 @test sum(η,2) ≈ ones(size(η,1))
+coefsallpos, coefsallzero = coef(hdmrpaths3; select=:all)
+@test size(coefsallpos,1) > 1
+@test size(coefsallpos,2) == p+1
+@test size(coefsallpos,3) == d
+@test size(coefsallzero,1) > 1
+@test size(coefsallzero,2) == p+1
+@test size(coefsallzero,3) == d
 
 # # # hurdle dmr serial
 hdmrcoefs3 = hdmr(covars, counts; parallel=false, testargs...)
@@ -55,6 +63,12 @@ coefsHspos, coefsHszero = coef(hdmrcoefs3)
 hdmrcoefs3 = fit(HDMRCoefs, covars, counts; parallel=false, testargs...)
 @test coef(hdmrcoefs3)[1] ≈ coefsHspos
 @test coef(hdmrcoefs3)[2] ≈ coefsHszero
+
+# serial paths
+hdmrcoefs4 = hdmrpaths(covars, counts; parallel=false, testargs...)
+coefsHspos4, coefsHszero4 = coef(hdmrcoefs4)
+@test coefsHspos == coefsHspos4
+@test coefsHszero == coefsHszero4
 
 # using a dataframe and formula
 hdmrcoefsdf = fit(HDMRCoefs, f, covarsdf, counts; parallel=true, testargs...)
@@ -249,6 +263,14 @@ hdmrpathsdf = fit(HDMRPaths, f, covarsdf, counts; parallel=true, testargs...)
 @test coef(hdmrpathsdf)[1] == coefsHppos3
 @test coef(hdmrpathsdf)[2] ≈ coefsHpzero3
 @test predict(hdmrpathsdf,newcovars) ≈ η
+
+# flip inpos and inzero just once for testing ixcovars
+hdmrcoefsflip = hdmr(covars, counts; inzero=inpos, parallel=true, testargs...)
+coefsHpposf, coefsHpzerof = coef(hdmrcoefsflip)
+@test coefsHpposf ≠ coefsHppos
+@test coefsHpzerof ≠ coefsHpzero
+@test p == ncovarspos(hdmrcoefsflip)
+@test ppos == ncovarszero(hdmrcoefsflip)
 
 zHpos = srproj(coefsHppos, counts)
 @test size(zHpos) == (n,ppos+1)

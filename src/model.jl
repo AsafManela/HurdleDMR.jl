@@ -118,12 +118,15 @@ end
 
 # Replicates functionality in StatsModels, so if it changes there it would have
 # to change here too.
-function createmodelmatrix(trms, df, contrasts)
+function createmodelmatrix(trms, df, counts, contrasts)
   # StatsModels.drop_intercept(T) && (trms.intercept = true)
   trms.intercept = true
   mf = ModelFrame(trms, df, contrasts=contrasts)
   # StatsModels.drop_intercept(T) && (mf.terms.intercept = false)
   mf.terms.intercept = false
   mm = ModelMatrix(mf)
-  mf, mm
+  if !all(mf.msng)
+    counts = counts[mf.msng,:]
+  end
+  mf, mm, counts
 end
