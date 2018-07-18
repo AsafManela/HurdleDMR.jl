@@ -151,7 +151,7 @@ yhat = predict(mnir, covarsdf[1:10,:], counts[1:10,:])
 [travis-img]: https://travis-ci.org/AsafManela/HurdleDMR.jl.svg?branch=master
 [travis-url]: https://travis-ci.org/AsafManela/HurdleDMR.jl
 
-[appveyor-img]: https://ci.appveyor.com/api/projects/status/github/hurdledmr-jl?svg=true
+[appveyor-img]: https://ci.appveyor.com/api/projects/status/github/AsafManela/HurdleDMR.jl?svg=true
 [appveyor-url]: https://ci.appveyor.com/project/AsafManela/hurdledmr-jl
 
 [coveralls-img]: https://coveralls.io/repos/AsafManela/HurdleDMR.jl/badge.svg?branch=master
