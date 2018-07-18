@@ -8,7 +8,7 @@
 
 HurdleDMR.jl is a Julia implementation of the Hurdle Distributed Multiple Regression (HDMR), as described in:
 
-Kelly, Bryan, Asaf Manela, and Alan Moreira (2018). Text Selection. [Working paper](http://apps.olin.wustl.edu/faculty/manela/kmm/textselection).
+Kelly, Bryan, Asaf Manela, and Alan Moreira (2018). Text Selection. [Working paper](http://apps.olin.wustl.edu/faculty/manela/kmm/textselection/).
 
 It includes a Julia implementation of the Distributed Multinomial Regression (DMR) model of [Taddy (2015)](https://arxiv.org/abs/1311.6139).
 
