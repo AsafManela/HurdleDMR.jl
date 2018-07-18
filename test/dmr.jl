@@ -156,13 +156,14 @@ mnirglm = fit(CIR{DMR,GeneralizedLinearModel},covars,counts,projdir,Gamma(); noc
 mnirdf = fit(CIR{DMR,LinearModel},f,covarsdf,counts,:vy; nocounts=true, testargs...)
 @test coefbwd(mnirdf) ≈ coef(dmrcoefs)
 @test coeffwd(mnirdf) ≈ coeffwd(mnir)
+@test coeffwd(mnirdf) != coeffwd(mnir; nocounts=true)
 @test coef(mnirdf) ≈ coef(mnir)
 mnirglmdf = fit(CIR{DMR,GeneralizedLinearModel},f,covarsdf,counts,:vy,Gamma(); nocounts=false, testargs...)
 @test coefbwd(mnirglmdf) ≈ coef(dmrcoefs)
 @test_throws ErrorException coeffwd(mnirglmdf; nocounts=true)
-@test !(predict(mnirdf,covars[1:10,:],counts[1:10,:]) ≈ predict(mnirglmdf,covars[1:10,:],counts[1:10,:]))
-@test !(predict(mnirdf,covars[1:10,:],counts[1:10,:]) ≈ predict(mnirdf,covars[1:10,:],counts[1:10,:];nocounts=true))
-@test_throws ErrorException predict(mnirglmdf,covars[1:10,:],counts[1:10,:];nocounts=true)
+@test !(predict(mnirdf,covarsdf[1:10,:],counts[1:10,:]) ≈ predict(mnirglmdf,covarsdf[1:10,:],counts[1:10,:]))
+@test !(predict(mnirdf,covarsdf[1:10,:],counts[1:10,:]) ≈ predict(mnirdf,covarsdf[1:10,:],counts[1:10,:];nocounts=true))
+@test_throws ErrorException predict(mnirglmdf,covarsdf[1:10,:],counts[1:10,:];nocounts=true)
 
 zlm = lm(hcat(ones(n,1),z1,covars[:,1:2]),covars[:,projdir])
 @test r2(zlm) ≈ r2(mnir)
@@ -236,5 +237,10 @@ zcovarsdf[1,1] = missing
 dmrzcoefsdf = fit(DMR, f, zcovarsdf, counts; testargs...)
 zcoefsdf = coef(dmrzcoefsdf)
 @test zcoefsdf == zcoefs3
+
+zmnirdf = fit(CIR{DMR,LinearModel},f,zcovarsdf,counts,:vy; nocounts=true, testargs...)
+zyhat = predict(zmnirdf, zcovarsdf, counts)
+@test ismissing(zyhat[1])
+@test !any(ismissing,zyhat[2:end])
 
 end

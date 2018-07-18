@@ -372,6 +372,7 @@ hurdleglm = @test_warn "I(y) is all ones" fit(Hurdle,GeneralizedLinearModel,[one
 # degenerate positive counts data case 1 with only zeros
 y0or1 = zeros(y)
 @test_throws ErrorException fit(Hurdle,GammaLassoPath,X,y0or1)
+@test_throws ErrorException @test_warn "I(y) is all zerbos" fit(Hurdle,GammaLassoPath,X,y0or1; verbose=true, showwarnings=true)
 
 # degenerate positive counts data case 2
 include(joinpath(testdir,"data","degenerate_hurdle_2.jl"))

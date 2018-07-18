@@ -186,6 +186,9 @@ function StatsBase.predict(mm::MM, df::AbstractDataFrame, counts::AbstractMatrix
     # create new model frame/matrix
     mf = ModelFrame(newTerms, df; contrasts = mm.mf.contrasts)
     newX = ModelMatrix(mf).m
+    if !all(mf.msng)
+      counts = counts[mf.msng,:]
+    end
     yp = predict(mm, newX, counts; kwargs...)
     out = missings(eltype(yp), size(df, 1))
     out[mf.msng] = yp

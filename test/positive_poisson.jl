@@ -1,5 +1,13 @@
 @testset "PositivePoisson" begin
 λ0=3.4
+pp = PositivePoisson(λ0)
+@test params(pp) == (λ0,)
+@test rate(pp) == λ0
+@test mean(pp) == λ0 / (1-exp(-λ0))
+
+xs = 1:10
+@test pdf.(pp,xs) ≈ exp.(logpdf.(pp,xs)) atol=1e-4
+
 xs = 1:100:10000
 lp1=[logpdf(Poisson(λ0),x)::Float64 for x=xs]
 lp2=[HurdleDMR.logpdf_approx(Poisson(λ0),x)::Float64 for x=xs]
@@ -20,6 +28,10 @@ le1big2 = broadcast(x->log(exp(x)-one(x)),big.(xs))
 ηscheck=broadcast(μ->linkfun(LogProductLogLink(),μ),μs)
 @test ηs ≈ ηscheck
 
+μs=broadcast(η->mueta(LogProductLogLink(),η),ηs)
+μscheck=broadcast(η->inverselink(LogProductLogLink(),η)[2],ηs)
+@test μs ≈ μscheck
+
 loglik(y, μ) = GLM.loglik_obs(PositivePoisson(λ0), y, μ, one(y), 0)
 
 μs=1.01:10.0:1000.0
@@ -32,8 +44,9 @@ devresids = devresid.(PositivePoisson(λ0), ys, μs)
 @test all(isfinite,devresids)
 logliks = loglik.(ys, μs)
 @test all(isfinite,logliks)
-# i = findfirst(isinf,logliks)
-# @enter GLM.loglik_obs(PositivePoisson(λ0), ys[i], μs[i], one(ys[i]), 0)
+
+@test isinf(devresid(PositivePoisson(λ0), 3.0, 0.1))
+@test iszero(devresid(PositivePoisson(λ0), 0.3, 0.1))
 
 ys = ones(μs)
 devresids1 = devresid.(PositivePoisson(λ0), ys, μs)
