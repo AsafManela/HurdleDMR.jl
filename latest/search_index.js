@@ -373,7 +373,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Sufficient reduction projection",
     "category": "section",
-    "text": "A sufficient reduction projection summarizes the counts, much like a sufficient statistic, and is useful for reducing the d dimensional counts in a potentially much lower dimension matrix z.To get a sufficient reduction projection in direction of vy for the above examplez = srproj(m,counts,1,1)Syntax:Modules = [HurdleDMR]\nOrder   = [:macro, :type, :function]\nPages   = [\"src/srproj.jl\"]\nPrivate = false"
+    "text": "A sufficient reduction projection summarizes the counts, much like a sufficient statistic, and is useful for reducing the d dimensional counts in a potentially much lower dimension matrix z.To get a sufficient reduction projection in direction of vy for the above examplez = srproj(m,counts,1,1)Here, the first column is the SR projection from the model for positive counts, the second is the the SR projection from the model for hurdle crossing (zeros), and the third is the total count for each observation.Syntax:Modules = [HurdleDMR]\nOrder   = [:macro, :type, :function]\nPages   = [\"src/srproj.jl\"]\nPrivate = false"
 },
 
 {
@@ -574,6 +574,22 @@ var documenterSearchIndex = {"docs": [
     "title": "API / Index",
     "category": "section",
     "text": ""
+},
+
+{
+    "location": "tutorials/#",
+    "page": "Tutorials",
+    "title": "Tutorials",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "tutorials/#Tutorials-1",
+    "page": "Tutorials",
+    "title": "Tutorials",
+    "category": "section",
+    "text": "The following tutorials demonstrate how to use this package from different languages.Julia tutorial (source).\nR tutorial (source).\nPython tutorial TBD\nMatlab tutorial TBD"
 },
 
 ]}
