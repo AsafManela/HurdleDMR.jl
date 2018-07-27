@@ -183,16 +183,6 @@ Pages   = ["src/invreg.jl"]
 Private = false
 ```
 
-## Cross-validation utilities
-
-Syntax:
-```@autodocs
-Modules = [HurdleDMR]
-Order   = [:macro, :type, :function]
-Pages   = ["src/cross_validation.jl"]
-Private = false
-```
-
 ## Hurdle
 This package also provides a regularized Hurdle model (Mullahy, 1986) that can be
 fit using a fast coordinate decent algorithm, or simply by running two

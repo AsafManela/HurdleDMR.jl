@@ -177,20 +177,6 @@ zlmnocounts = lm(hcat(ones(n,1),covars[:,1:2]),covars[:,projdir])
 @test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,1:2])) ≈ predict(mnir,covars[1:10,:],counts[1:10,:]; nocounts=true)
 @test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,1:2])) ≈ predict(mnirdf,covars[1:10,:],counts[1:10,:]; nocounts=true)
 
-# CV
-srand(13)
-cvstats13 = cv(CIR{DMR,LinearModel},covars,counts,projdir; gen=MLBase.Kfold(size(covars,1),2), testargs...)
-cvstats13b = cv(CIR{DMR,LinearModel},f,covarsdf,counts,:vy; k=2, gentype=MLBase.Kfold, seed=13, testargs...)
-@test isequal(cvstats13,cvstats13b)
-
-cvstats15 = cv(CIR{DMR,LinearModel},covars,counts,1; k=2, gentype=MLBase.Kfold, seed=15, testargs...)
-@test !(isequal(cvstats13,cvstats15))
-
-cvstats13glm = cv(CIR{DMR,GeneralizedLinearModel},f,covarsdf,counts,:vy,Gamma(); k=2, gentype=MLBase.Kfold, seed=13, testargs...)
-@test !(isequal(cvstats13,cvstats13glm))
-
-cvstatsSerialKfold = cv(CIR{DMR,LinearModel},covars,counts,projdir; k=5, gentype=SerialKfold, testargs...)
-
 end
 
 #########################################################################3

@@ -1,14 +1,12 @@
 module HurdleDMR
 
-using Lasso, StatsBase, StatsModels, DataFrames, LambertW, MLBase, GLM.FPVector, GLM.FP
+using Lasso, StatsBase, StatsModels, DataFrames, LambertW, GLM.FPVector, GLM.FP
 
 export dmr, dmrpaths, hdmr, hdmrpaths, fit, coef, srproj, srprojX, @~, mcdmr, posindic,
   DCR, DMR, HDMR, DMRCoefs, DMRPaths, HDMRCoefs, HDMRPaths, @model, Model,
   CIR, predict, coeffwd, coefbwd,
   hasintercept, ncategories, nobs, ncoefs, ncovars, ncovarszero, ncovarspos, ncoefszero, ncoefspos,
-  Hurdle, PositivePoisson, LogProductLogLink, logpdf_exact, logpdf_approx,
-  cv, cvstats, SerialKfold, LeaveOutSample,
-  CVType, CVData, CVDataRow
+  Hurdle, PositivePoisson, LogProductLogLink, logpdf_exact, logpdf_approx
 
 ##############################################
 # hurdle glm model involves
@@ -24,6 +22,5 @@ include("hdmr.jl")
 include("srproj.jl")
 include("invreg.jl")
 include("multicounts.jl")
-include("cross_validation.jl")
 
 end

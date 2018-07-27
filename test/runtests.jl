@@ -14,11 +14,12 @@ using CSV, GLM, Lasso, DataFrames
 
 import HurdleDMR; @everywhere using HurdleDMR
 
-include("helpers.jl")
-include("positive_poisson.jl")
-include("hurdle.jl")
-include("testdata.jl")
-include("dmr.jl")
-include("hdmr.jl")
-include("multicounts.jl")
-include("cross_validation.jl")
+@testset "HurdleDMR" begin
+  include("helpers.jl")
+  include("positive_poisson.jl")
+  include("hurdle.jl")
+  include("testdata.jl")
+  include("dmr.jl")
+  include("hdmr.jl")
+  include("multicounts.jl")
+end

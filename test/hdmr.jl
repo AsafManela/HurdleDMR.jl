@@ -179,21 +179,6 @@ zlmnocounts = lm(hcat(ones(n,1),covars[:,1:2]),covars[:,projdir])
 @test adjr2(zlmnocounts) ≈ adjr2(hir; nocounts=true)
 @test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,1:2])) ≈ predict(hir,covars[1:10,:],counts[1:10,:]; nocounts=true)
 
-# CV
-srand(13)
-cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,projdir; gen=MLBase.Kfold(size(covars,1),2), testargs...)
-cvstats13b = cv(CIR{HDMR,LinearModel},f,covarsdf,counts,:vy; k=2, gentype=MLBase.Kfold, testargs...)
-@test isapprox(cvstats13,cvstats13b)
-
-cvstats15 = cv(CIR{HDMR,LinearModel},covars,counts,projdir; k=2, gentype=MLBase.Kfold, seed=15, testargs...)
-@test !(isapprox(cvstats13,cvstats15))
-
-cvstats13glm = cv(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:vy,Gamma(); k=2, gentype=MLBase.Kfold, testargs...)
-@test !(isapprox(cvstats13,cvstats13glm))
-
-cvstatsSerialKfold = cv(CIR{HDMR,LinearModel},covars,counts,projdir; k=3, gentype=SerialKfold, testargs...)
-@test_throws DimensionMismatch isapprox(cvstats13,cvstatsSerialKfold)
-
 end
 
 ####################################################################
@@ -353,21 +338,6 @@ hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:vy,Gamma(); n
 @test !(coeffwd(hirglmdf)[2] ≈ coeffwd(hirdf)[2])
 @test !(coeffwd(hirglmdf)[1] ≈ coeffwd(hirdf)[1])
 
-# CV
-srand(13)
-cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,projdir; inpos=inpos, gen=MLBase.Kfold(size(covars,1),2), testargs...)
-cvstats13b = cv(CIR{HDMR,LinearModel},f,covarsdf,counts,:vy; k=2, gentype=MLBase.Kfold, testargs...)
-@test isapprox(cvstats13,cvstats13b)
-
-cvstats15 = cv(CIR{HDMR,LinearModel},covars,counts,projdir; inpos=inpos, k=2, gentype=MLBase.Kfold, seed=15, testargs...)
-@test !(isapprox(cvstats13,cvstats15))
-
-cvstats13glm = cv(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:vy,Gamma(); k=2, gentype=MLBase.Kfold, testargs...)
-@test !(isapprox(cvstats13,cvstats13glm))
-
-cvstatsSerialKfold = cv(CIR{HDMR,LinearModel},covars,counts,projdir; inpos=inpos, k=3, gentype=SerialKfold, testargs...)
-@test_throws DimensionMismatch isapprox(cvstats13,cvstatsSerialKfold)
-
 end
 
 ########################################################################
@@ -526,18 +496,6 @@ hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:vy,Gamma(); n
 @test coefbwd(hirglmdf)[2] ≈ coef(hdmrcoefs)[2]
 @test !(coeffwd(hirglmdf)[2] ≈ coeffwd(hirdf)[2])
 @test !(coeffwd(hirglmdf)[1] ≈ coeffwd(hirdf)[1])
-
-# CV
-srand(13)
-cvstats13 = cv(CIR{HDMR,LinearModel},covars,counts,projdir; inzero=inzero, inpos=inpos, gen=MLBase.Kfold(size(covars,1),2), testargs...)
-cvstats13b = cv(CIR{HDMR,LinearModel},f,covarsdf,counts,:vy; k=2, gentype=MLBase.Kfold, testargs...)
-@test cvstats13 ≈ cvstats13b
-
-cvstats15 = cv(CIR{HDMR,LinearModel},covars,counts,projdir; inzero=inzero, inpos=inpos, k=2, gentype=MLBase.Kfold, seed=15, testargs...)
-@test !(isequal(cvstats13,cvstats15))
-
-cvstatsSerialKfold = cv(CIR{HDMR,LinearModel},covars,counts,projdir; inzero=inzero, inpos=inpos, k=3, gentype=SerialKfold, testargs...)
-@test_throws DimensionMismatch isapprox(cvstats13,cvstatsSerialKfold)
 
 end
 
