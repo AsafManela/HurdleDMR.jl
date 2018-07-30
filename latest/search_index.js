@@ -317,7 +317,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "HurdleDMR.srproj",
     "category": "function",
-    "text": "srproj calculates the MNIR Sufficient Reduction projection from text counts on to the attribute dimensions of interest (covars in mnlm). In particular, for counts C, with row sums m, and mnlm coefficients φ_j corresponding to attribute j, z_j = C\'φ_j/m is the SR projection in the direction of j. The MNIR paper explains how V=[v_1 ... v_K], your original covariates/attributes, are independent of text counts C given SR projections Z=[z_1 ... z_K].\n\n\n\n"
+    "text": "srproj calculates the MNIR Sufficient Reduction projection from text counts on to the attribute dimensions of interest (covars in mnlm). In particular, for counts C, with row sums m, and mnlm coefficients φ_j corresponding to attribute j, z_j = C\'φ_j/m is the SR projection in the direction of j. The MNIR paper explains how V=[v_1 ... v_K], your original covariates/attributes, are independent of text counts C given SR projections Z=[z_1 ... z_K]. dir == nothing returns projections in all directions.\n\n\n\n"
 },
 
 {
@@ -325,7 +325,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "HurdleDMR.srproj",
     "category": "method",
-    "text": "srproj calculates the MNIR Sufficient Reduction projection from text counts on to the attribute dimensions of interest (covars in mnlm). In particular, for counts C, with row sums m, and mnlm coefficients φ_j corresponding to attribute j, z_j = C\'φ_j/m is the SR projection in the direction of j. The MNIR paper explains how V=[v_1 ... v_K], your original covariates/attributes, are independent of text counts C given SR projections Z=[z_1 ... z_K].\n\n\n\n"
+    "text": "srproj calculates the MNIR Sufficient Reduction projection from text counts on to the attribute dimensions of interest (covars in mnlm). In particular, for counts C, with row sums m, and mnlm coefficients φ_j corresponding to attribute j, z_j = C\'φ_j/m is the SR projection in the direction of j. The MNIR paper explains how V=[v_1 ... v_K], your original covariates/attributes, are independent of text counts C given SR projections Z=[z_1 ... z_K]. dir == nothing returns projections in all directions.\n\n\n\n"
 },
 
 {
@@ -341,7 +341,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "HurdleDMR.srproj",
     "category": "method",
-    "text": "srproj for hurdle dmr takes two coefficent matrices coefspos, coefszero, and a two specific directions and returns an n-by-3 matrix Z = [zpos zzero m]. dirpos = 0 omits positive counts projections and dirzero = 0 omits zero counts projections.\n\n\n\n"
+    "text": "srproj for hurdle dmr takes two coefficent matrices coefspos, coefszero, and a two specific directions and returns an n-by-3 matrix Z = [zpos zzero m]. dirpos = 0 omits positive counts projections and dirzero = 0 omits zero counts projections. Setting any of these to nothing will return projections in all directions.\n\n\n\n"
 },
 
 {
@@ -349,7 +349,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "HurdleDMR.srproj",
     "category": "method",
-    "text": "srproj for hurdle dmr takes two coefficent matrices coefspos, coefszero, and a two specific directions and returns an n-by-3 matrix Z = [zpos zzero m]. dirpos = 0 omits positive counts projections and dirzero = 0 omits zero counts projections.\n\n\n\n"
+    "text": "srproj for hurdle dmr takes two coefficent matrices coefspos, coefszero, and a two specific directions and returns an n-by-3 matrix Z = [zpos zzero m]. dirpos = 0 omits positive counts projections and dirzero = 0 omits zero counts projections. Setting any of these to nothing will return projections in all directions.\n\n\n\n"
 },
 
 {
@@ -446,62 +446,6 @@ var documenterSearchIndex = {"docs": [
     "title": "Counts Inverse Regression (CIR)",
     "category": "section",
     "text": "Counts inverse regression allows us to predict a covariate with the counts and other covariates. Here we use hdmr for the backward regression and another model for the forward regression. This can be accomplished with a single command, by fitting a CIR{HDMR,FM} where the forward model is FM <: RegressionModel.cir = fit(CIR{HDMR,LinearModel},mf,covarsdf,counts,:vy; nocounts=true)where the nocounts=true means we also fit a benchmark model without counts.we can get the forward and backward model coefficients withcoefbwd(cir)\ncoeffwd(cir)The fitted model can be used to predict vy with new datayhat = predict(cir, covarsdf[1:10,:], counts[1:10,:])We can also predict only with the other covariates, which in this case is just a linear regressionyhat_nocounts = predict(cir, covarsdf[1:10,:], counts[1:10,:]; nocounts=true)Syntax:Modules = [HurdleDMR]\nOrder   = [:macro, :type, :function]\nPages   = [\"src/invreg.jl\"]\nPrivate = false"
-},
-
-{
-    "location": "#HurdleDMR.CVData",
-    "page": "Home",
-    "title": "HurdleDMR.CVData",
-    "category": "type",
-    "text": "Container for cross validation y and yhats\n\n\n\n"
-},
-
-{
-    "location": "#HurdleDMR.LeaveOutSample",
-    "page": "Home",
-    "title": "HurdleDMR.LeaveOutSample",
-    "category": "type",
-    "text": "Splits the sample into one train and one test subsamples.\n\n\n\n"
-},
-
-{
-    "location": "#HurdleDMR.SerialKfold",
-    "page": "Home",
-    "title": "HurdleDMR.SerialKfold",
-    "category": "type",
-    "text": "Non-random K-fold generator that simply splits into consequtive blocks of data. Useful for time-series data.\n\n\n\n"
-},
-
-{
-    "location": "#HurdleDMR.cv-Union{Tuple{BM}, Tuple{C}, Tuple{FM}, Tuple{T}, Tuple{Type{C},AbstractArray{T,2},AbstractArray{V,2},Int64,Vararg{Any,N} where N}, Tuple{V}} where C<:HurdleDMR.CIR{BM,FM} where FM<:StatsBase.RegressionModel where BM<:HurdleDMR.DCR where V where T<:AbstractFloat",
-    "page": "Home",
-    "title": "HurdleDMR.cv",
-    "category": "method",
-    "text": "cv(::CIR,covars,counts,projdir[,fmargs...]; <keyword arguments>)\n\nCross-validates a Counts Inverse Regression (CIR) of   covars[:,projdir] ~ counts + covars[:,~projdir]. See also fit(::CIR).\n\nExample with Lasso regularization:\n\n  cvdata = cv(CIR{HDMR,LinearModel},covars,counts,1; k=5, gentype=MLBase.Kfold, seed=123)\n  CVStats(cvdata)\n\nArguments\n\ncovars n-by-p matrix of covariates\ncounts n-by-d matrix of counts (usually sparse)\nprojdir index of covars column used as dependent variable in forward model\nfmargs... optional arguments passed along to the forward regression model\n\nKeywords\n\ngentype=Kfold cross validation fold generator CrossValGenerator\nk=10 number of folds\nseed=13 random seed for generating folds\ngen=nothing if specified, uses this instantiated cross validation fold generator and disregards gentype, k, and seed\ndcrkwargs... additional keyword arguments passed along to backward regression model\n\n\n\n"
-},
-
-{
-    "location": "#HurdleDMR.cvstats-Tuple{HurdleDMR.CVData}",
-    "page": "Home",
-    "title": "HurdleDMR.cvstats",
-    "category": "method",
-    "text": "When no dictionary type is specified, uses a simple Dict\n\n\n\n"
-},
-
-{
-    "location": "#HurdleDMR.cvstats-Union{Tuple{D}, Tuple{Type{D},HurdleDMR.CVData}} where D<:Associative",
-    "page": "Home",
-    "title": "HurdleDMR.cvstats",
-    "category": "method",
-    "text": "cvstats(D, cvdata; stats=[:rmse, :r2])\n\nCreate a dictionary with fit statistics (mse, rmse, r2) from CVData.\n\nExample\n\n  s = cvstats(OrderedDict, cvdata; stats=[:mse])\n  s[:oos_mse]\n\nKeywords\n\nstats::Vector{Symbol} one or more of :mse, :rmse, or :r2\n\n\n\n"
-},
-
-{
-    "location": "#Cross-validation-utilities-1",
-    "page": "Home",
-    "title": "Cross-validation utilities",
-    "category": "section",
-    "text": "Syntax:Modules = [HurdleDMR]\nOrder   = [:macro, :type, :function]\nPages   = [\"src/cross_validation.jl\"]\nPrivate = false"
 },
 
 {
