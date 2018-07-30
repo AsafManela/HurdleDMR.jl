@@ -30,6 +30,7 @@ end
 function Base.show(io::IO, m::Model)
   println(io, "$(length(m.parts))-part model:")
   println.(io, m.parts)
+  nothing
 end
 
 function mergerhsterms(a::StatsModels.Terms, b::StatsModels.Terms)

@@ -2,6 +2,7 @@
 # to get exactly Rdistrom's run use λminratio=0.01 because our gamlr's have different defaults
 testargs = Dict(:γ=>1.0, :λminratio=>0.01, :verbose=>false,:showwarnings=>true)
 f = @model(c ~ v1 + v2 + vy)
+@test show(IOBuffer(),f) == nothing
 
 @testset "dmr" begin
 
@@ -189,7 +190,6 @@ end
 zcounts = deepcopy(counts)
 zcounts[:,2] = zeros(n)
 zcounts[:,3] = ones(n)
-find(var(zcounts,1) .== 0)
 
 # make sure we are not adding all zero obseravtions
 m = sum(zcounts,2)
@@ -203,7 +203,16 @@ zcoefs = coef(dmrzcoefs)
 
 dmrzcoefs2 = dmr(covars, zcounts; local_cluster=false, testargs...)
 zcoefs2 = coef(dmrzcoefs2)
-@test zcoefs2 ≈ zcoefs2
+@test zcoefs2 ≈ zcoefs
+
+# serial runs can also test for warnings
+dmrzcoefs3 = @test_warn "failed on count dimension 2" dmr(covars, zcounts; parallel=false, testargs...)
+zcoefs2 = coef(dmrzcoefs2)
+@test zcoefs2 ≈ zcoefs
+
+dmrzpaths3 = @test_warn "failed for countsj" dmrpaths(covars, zcounts; parallel=false, testargs...)
+zcoefs3 = coef(dmrzpaths3)
+@test zcoefs3 ≈ zcoefs
 
 # test an observation with all zeros
 zcounts = deepcopy(counts)
