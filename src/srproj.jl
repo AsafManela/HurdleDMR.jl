@@ -8,6 +8,7 @@ j, z_j = C'φ_j/m is the SR projection in the direction of j.
 The MNIR paper explains how V=[v_1 ... v_K],
 your original covariates/attributes, are independent of text counts C given SR
 projections Z=[z_1 ... z_K].
+dir == nothing returns projections in all directions.
 """
 srproj(m::DMR, counts, dir::Union{Void,Int}=nothing; focusj=indices(counts,2), select=:AICc) =
   srproj(coef(m; select=select), counts, dir; intercept=hasintercept(m), focusj=focusj)
@@ -20,6 +21,7 @@ j, z_j = C'φ_j/m is the SR projection in the direction of j.
 The MNIR paper explains how V=[v_1 ... v_K],
 your original covariates/attributes, are independent of text counts C given SR
 projections Z=[z_1 ... z_K].
+dir == nothing returns projections in all directions.
 """
 function srproj(coefs::AbstractMatrix{T}, counts, dir::Union{Void,Int}=nothing; intercept=true, focusj=indices(counts,2)) where T
    ixoffset = intercept ? 1 : 0 # omitting the intercept
@@ -100,6 +102,7 @@ coefspos, coefszero, and a two specific directions
 and returns an n-by-3 matrix Z = [zpos zzero m].
 dirpos = 0 omits positive counts projections and
 dirzero = 0 omits zero counts projections.
+Setting any of these to nothing will return projections in all directions.
 """
 srproj(m::HDMR, counts, dirpos::D=nothing, dirzero::D=nothing; select=:AICc, kwargs...) where {D<:Union{Void,Int}}=
   srproj(coef(m; select=select)..., counts, dirpos, dirzero; intercept=hasintercept(m), kwargs...)
@@ -110,6 +113,7 @@ coefspos, coefszero, and a two specific directions
 and returns an n-by-3 matrix Z = [zpos zzero m].
 dirpos = 0 omits positive counts projections and
 dirzero = 0 omits zero counts projections.
+Setting any of these to nothing will return projections in all directions.
 """
 function srproj(coefspos::C, coefszero::C, counts, dirpos::D, dirzero::D; kwargs...) where {T, C<:AbstractMatrix{T}, D<:Union{Void,Int}}
   if (dirpos == nothing || dirpos>0) && (dirzero == nothing || dirzero>0)

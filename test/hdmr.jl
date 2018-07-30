@@ -107,12 +107,11 @@ Z1 = srproj(coefsHppos, coefsHpzero, counts, projdir, projdir; intercept=true)
 Z1b = srproj(hdmrcoefs, counts, projdir, projdir; intercept=true)
 @test Z1 == Z1b
 
-Z3 = srproj(coefsHppos, coefsHpzero, counts, projdir, projdir; intercept=true)
-z3pos = srproj(coefsHppos, counts, projdir)
-z3zero = srproj(coefsHpzero, posindic(counts), projdir)
-@test Z3 == [z3pos[:,1] z3zero[:,1] z3pos[:,2]]
-Z3b = srproj(hdmrcoefs, counts, projdir, projdir; intercept=true)
-@test Z3 == Z3b
+Z0pos = srproj(coefsHppos, coefsHpzero, counts, 0, projdir; intercept=true)
+Z0zero = srproj(coefsHppos, coefsHpzero, counts, projdir, 0; intercept=true)
+@test Z0pos == z1zero
+@test Z0zero == z1pos
+@test_throws ErrorException srproj(coefsHppos, coefsHpzero, counts, 0, 0; intercept=true)
 
 regdata = DataFrame(y=covars[:,1], zw1=z1zero[:,1], zv1=z1pos[:,1], m=z1pos[:,2])
 lmw1 = lm(@formula(y ~ zw1+m), regdata)
@@ -124,29 +123,29 @@ r2v1 = adjr2(lmv1)
 lmw1v1 = lm(@formula(y ~ zw1+zv1+m), regdata)
 r2w1v1 = adjr2(lmw1v1)
 
-X1, X1_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; includem=true)
+X1, X1_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; includem=true)
 @test X1_nocounts == [ones(n) covars[:,1:2]]
 @test X1 == [X1_nocounts Z1]
-X1b, X1_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,projdir; includem=true)
+X1b, X1_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; includem=true)
 @test X1 == X1b
 @test X1_nocountsb == X1_nocountsb
-@test includezposb == includezposb
+@test inz == inzb
 
-X2, X2_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; includem=false)
+X2, X2_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; includem=false)
 @test X2_nocounts == X1_nocounts
 @test X2 == X1[:,1:end-1]
-X2b, X2_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,projdir; includem=false)
+X2b, X2_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; includem=false)
 @test X2 == X2b
 @test X2_nocountsb == X2_nocountsb
-@test includezposb == includezposb
+@test inzb == inzb
 
-X3, X3_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; includem=true)
+X3, X3_nocounts, inz3 = srprojX(coefsHppos,coefsHpzero,zeros(counts),covars,projdir; includem=true)
 @test X3_nocounts == [ones(n) covars[:,setdiff(1:p,[projdir])]]
-@test X3 == [X3_nocounts Z3]
-X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,projdir; includem=true)
-@test X3 == X3b
-@test X3_nocountsb == X3_nocountsb
-@test includezposb == includezposb
+@test inz3 == [2]
+
+X3, X3_nocounts, inz3b = srprojX(coefsHppos,coefsHpzero,zeros(counts),covars,projdir; includem=true, inz=inz3)
+@test X3_nocounts == [ones(n) covars[:,setdiff(1:p,[projdir])]]
+@test inz3 == inz3b
 
 # HIR
 hir = fit(CIR{HDMR,LinearModel},covars,counts,projdir; nocounts=true, testargs...)
@@ -293,29 +292,21 @@ r2v1 = adjr2(lmv1)
 lmw1v1 = lm(@formula(y ~ zw1+zv1+m), regdata)
 r2w1v1 = adjr2(lmw1v1)
 
-X1, X1_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inpos=inpos, includem=true)
+X1, X1_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inpos=inpos, includem=true)
 @test X1_nocounts == [ones(n) covars[:,1:2]]
 @test X1 == [X1_nocounts Z1]
-X1b, X1_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,projdir; inpos=inpos, includem=true)
+X1b, X1_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; inpos=inpos, includem=true)
 @test X1 == X1b
 @test X1_nocountsb == X1_nocountsb
-@test includezposb == includezposb
+@test inz == inzb
 
-X2, X2_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inpos=inpos, includem=false)
+X2, X2_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inpos=inpos, includem=false)
 @test X2_nocounts == X1_nocounts
 @test X2 == X1[:,1:end-1]
-X2b, X2_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,projdir; inpos=inpos, includem=false)
+X2b, X2_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; inpos=inpos, includem=false)
 @test X2 == X2b
 @test X2_nocountsb == X2_nocountsb
-@test includezposb == includezposb
-
-# X3, X3_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,3; inpos=inpos, includem=true)
-# @test X3_nocounts == [ones(n) covars[:,[1,2,4,5]]]
-# @test X3 == [X3_nocounts Z3]
-# X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,3; inpos=inpos, includem=true)
-# @test X3 == X3b
-# @test X3_nocountsb == X3_nocountsb
-# @test includezposb == includezposb
+@test inz == inzb
 
 # HIR
 hir = fit(CIR{HDMR,LinearModel},covars,counts,projdir; inpos=inpos, nocounts=true, testargs...)
@@ -450,31 +441,22 @@ regdata = DataFrame(y=covars[:,1], zv1=z1pos[:,1], m=z1pos[:,2], v1=covars[:,las
 lmv1 = lm(@formula(y ~ zv1+m), regdata)
 r2v1 = adjr2(lmv1)
 
-X1, X1_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inzero=inzero, inpos=inpos, includem=true)
+X1, X1_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inzero=inzero, inpos=inpos, includem=true)
 ix = filter!(x->x!=projdir,collect(1:p))
 @test X1_nocounts ≈ [ones(n) covars[:,ix]] rtol=1e-8
 @test X1 ≈ [X1_nocounts Z1] rtol=1e-8
-X1b, X1_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,projdir; inzero=inzero, inpos=inpos, includem=true)
+X1b, X1_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; inzero=inzero, inpos=inpos, includem=true)
 @test X1 ≈ X1b rtol=1e-8
 @test X1_nocountsb ≈ X1_nocountsb rtol=1e-8
-@test includezposb == includezposb
+@test inz == inzb
 
-X2, X2_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inzero=inzero, inpos=inpos, includem=false)
+X2, X2_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inzero=inzero, inpos=inpos, includem=false)
 @test X2_nocounts ≈ X1_nocounts rtol=1e-8
 @test X2 ≈ X1[:,1:end-1] rtol=1e-8
-X2b, X2_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,projdir; inzero=inzero, inpos=inpos, includem=false)
+X2b, X2_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; inzero=inzero, inpos=inpos, includem=false)
 @test X2 ≈ X2b rtol=1e-8
 @test X2_nocountsb ≈ X2_nocountsb rtol=1e-8
-@test includezposb == includezposb
-
-# X3, X3_nocounts, includezpos = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inzero=inzero, inpos=inpos, includem=true)
-# ix = filter!(x->x!=projdir,collect(1:p))
-# @test X3_nocounts ≈ [ones(n) covars[:,ix]] rtol=1e-8
-# @test X3 ≈ [X3_nocounts Z3] rtol=1e-8
-# X3b, X3_nocountsb, includezposb = srprojX(hdmrcoefs,counts,covars,1; inzero=inzero, inpos=inpos, includem=true)
-# @test X3 ≈ X3b rtol=1e-8
-# @test X3_nocountsb ≈ X3_nocountsb rtol=1e-8
-# @test includezposb == includezposb
+@test inz == inzb
 
 # HIR
 hir = fit(CIR{HDMR,LinearModel},covars,counts,projdir; inzero=inzero, inpos=inpos, nocounts=true, testargs...)
