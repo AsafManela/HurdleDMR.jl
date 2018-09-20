@@ -232,8 +232,17 @@ function Base.convert(::Type{SharedArray}, A::SparseMatrixCSC{T,N}) where {T,N}
   S
 end
 
+"convert counts matrix elements to Float64 if necessary"
+fpcounts(counts::M) where {V, N, M<:SparseMatrixCSC{V,N}} = convert(SparseMatrixCSC{Float64,N}, counts)
+fpcounts(counts::M) where {V, M<:AbstractMatrix{V}} = convert(Matrix{Float64}, counts)
+fpcounts(counts::M) where {V<:GLM.FP, N, M<:SparseMatrixCSC{V,N}} = counts
+fpcounts(counts::M) where {V<:GLM.FP, M<:AbstractMatrix{V}} = counts
+
 "Computes DMR shifters (μ=log(m)) and removes all zero observations"
-function shifters{T<:AbstractFloat,V}(covars::AbstractMatrix{T}, counts::AbstractMatrix{V}, showwarnings::Bool)
+function shifters(covars::AbstractMatrix{T}, counts::AbstractMatrix, showwarnings::Bool) where {T<:AbstractFloat}
+    # standardize counts matrix to conform to GLM.FP
+    counts = fpcounts(counts)
+
     m = vec(sum(counts,2))
 
     if any(iszero,m)

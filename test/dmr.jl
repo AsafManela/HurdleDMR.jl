@@ -11,6 +11,12 @@ coefs = coef(dmrcoefs)
 @test size(coefs) == (p+1, d)
 @test_throws ErrorException coef(dmrcoefs; select=:all)
 
+# test Int matrix for counts
+countsint = convert(Matrix{Int64},counts)
+dmrcoefsint = dmr(covars, countsint; testargs...)
+coefsint = coef(dmrcoefsint)
+@test coefsint == coefs
+
 dmrcoefsb = fit(DMRCoefs, covars, counts; testargs...)
 @test coef(dmrcoefs) == coefs
 dmrb = fit(DMR, covars, counts; testargs...)

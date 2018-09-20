@@ -19,6 +19,12 @@ coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test size(coefsHpzero) == (p+1, d)
 @test_throws ErrorException coef(hdmrcoefs; select=:all)
 
+# test Int matrix for counts
+hdmrcoefsint = hdmr(covars, countsint; parallel=true, testargs...)
+coefsHpposint, coefsHpzeroint = coef(hdmrcoefsint)
+@test coefsHpposint == coefsHppos
+@test coefsHpzeroint == coefsHpzero
+
 hdmrcoefsb = fit(HDMRCoefs, covars, counts; parallel=true, testargs...)
 @test coef(hdmrcoefsb)[1] == coefsHppos
 @test coef(hdmrcoefsb)[2] == coefsHpzero
@@ -191,6 +197,12 @@ coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test size(coefsHppos) == (ppos+1, d)
 @test size(coefsHpzero) == (p+1, d)
 
+# test Int matrix for counts
+hdmrcoefsint = hdmr(covars, countsint; inpos=inpos, parallel=true, testargs...)
+coefsHpposint, coefsHpzeroint = coef(hdmrcoefsint)
+@test coefsHpposint == coefsHppos
+@test coefsHpzeroint == coefsHpzero
+
 hdmrcoefsb = fit(HDMRCoefs, covars, counts; inpos=inpos, parallel=true, testargs...)
 @test coef(hdmrcoefsb)[1] == coefsHppos
 @test coef(hdmrcoefsb)[2] == coefsHpzero
@@ -319,6 +331,12 @@ coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test size(coefsHppos) == (ppos+1, d)
 @test size(coefsHpzero) == (pzero+1, d)
 
+# test Int matrix for counts
+hdmrcoefsint = hdmr(covars, countsint; inzero=inzero, parallel=true, testargs...)
+coefsHpposint, coefsHpzeroint = coef(hdmrcoefsint)
+@test coefsHpposint == coefsHppos
+@test coefsHpzeroint == coefsHpzero
+
 hdmrcoefsb = fit(HDMRCoefs, covars, counts; inzero=inzero, parallel=true, testargs...)
 @test coef(hdmrcoefsb)[1] == coefsHppos
 @test coef(hdmrcoefsb)[2] == coefsHpzero
@@ -444,6 +462,12 @@ hdmrcoefs = hdmr(covars, counts; inpos=inpos, inzero=inzero, parallel=true, test
 coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test size(coefsHppos) == (ppos+1, d)
 @test size(coefsHpzero) == (pzero+1, d)
+
+# test Int matrix for counts
+hdmrcoefsint = hdmr(covars, countsint; inpos=inpos, inzero=inzero, parallel=true, testargs...)
+coefsHpposint, coefsHpzeroint = coef(hdmrcoefsint)
+@test coefsHpposint == coefsHppos
+@test coefsHpzeroint == coefsHpzero
 
 hdmrcoefsb = fit(HDMRCoefs, covars, counts; inpos=inpos, inzero=inzero, parallel=true, testargs...)
 @test coef(hdmrcoefsb)[1] == coefsHppos

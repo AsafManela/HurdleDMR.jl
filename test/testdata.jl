@@ -10,6 +10,7 @@ covars = rand(n,p)
 q = [ηfn(covars[i,:]) for i=1:n]
 scale!.(q,ones(n)./sum.(q))
 counts = convert(SparseMatrixCSC{Float64,Int},hcat(broadcast((qi,mi)->rand(Multinomial(mi, qi)),q,m)...)')
+countsint = convert(Matrix{Int64},counts) # used for testing the int eltype case
 
 newcovars = covars[1:10,:]
 
