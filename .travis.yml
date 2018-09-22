@@ -5,6 +5,8 @@ os:
   - osx
 julia:
   - 0.6
+  - 0.7
+  - 1.0
   - nightly
 notifications:
   email: false
@@ -27,10 +29,10 @@ matrix:
 
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --check-bounds=yes -e 'Pkg.clone("https://github.com/AsafManela/Lasso.jl"); Pkg.clone(pwd()); Pkg.build("HurdleDMR"); Pkg.test("HurdleDMR", coverage=true)'
+  - julia --check-bounds=yes -e 'using Pkg; Pkg.add("https://github.com/AsafManela/Lasso.jl#am/0.7upgrade"); Pkg.clone(pwd()); Pkg.build("HurdleDMR"); Pkg.test("HurdleDMR", coverage=true)'
 
 after_success:
   - julia -e 'Pkg.add("Documenter")'
-  - julia -e 'cd(Pkg.dir("HurdleDMR")); include(joinpath("docs", "make.jl"))'
-  - julia -e 'cd(Pkg.dir("HurdleDMR")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  - julia -e 'using Pkg; cd(Pkg.dir("HurdleDMR")); include(joinpath("docs", "make.jl"))'
+  - julia -e 'using Pkg; cd(Pkg.dir("HurdleDMR")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
   # - julia -e 'cd(Pkg.dir("HurdleDMR")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
