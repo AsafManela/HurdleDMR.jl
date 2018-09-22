@@ -12,7 +12,7 @@ n = 100
 p = 3
 d = 4
 
-srand(13)
+Random.seed!(13)
 m = 1+rand(Poisson(5),n)
 covars = rand(n,p)
 ηfn(vi) = exp.([0 + i*sum(vi) for i=1:d])

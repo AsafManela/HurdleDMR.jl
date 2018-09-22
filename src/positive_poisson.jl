@@ -5,14 +5,14 @@
 ###################################################################
 # Distributions.jl extensions
 ###################################################################
-doc"""
+"""
     PositivePoisson(λ)
 
 A *PositivePoisson distribution* (aka zero-truncated Poisson, ZTP) descibes the number of
 independent events occurring within a unit time interval, given the average rate of occurrence `λ`
 and, importantly, given that the number is not zero.
 
-$P(X = k) = \frac{\lambda^k}{k!(1-e^{-\lambda})} e^{-\lambda}, \quad \text{ for } k = 1,2,\ldots.$
+``P(X = k) = \\frac{λ^k}{k!(1-e^{-λ})} e^{-λ}, \\quad \\text{ for } k = 1,2,\\ldots.``
 
 ```julia
 PositivePoisson()        # PositivePoisson distribution with rate parameter 1
@@ -27,7 +27,7 @@ External links:
 * [PositivePoisson distribution on Wikipedia](https://en.wikipedia.org/wiki/Zero-truncated_Poisson_distribution)
 
 """
-immutable PositivePoisson <: DiscreteUnivariateDistribution
+struct PositivePoisson <: DiscreteUnivariateDistribution
     λ::Float64
 
     PositivePoisson(λ::Real) = new(λ)
@@ -83,7 +83,7 @@ logpdf_approx(d::Poisson, x::Integer) = x*log(d.λ) - d.λ - logfactorialapprox(
 ###################################################################
 # GLM.jl extensions
 ###################################################################
-type LogProductLogLink <: Link end
+struct LogProductLogLink <: Link end
 
 # denoting by λ=e^η the intensity of the untruncated poisson
 LAMBERTW_USE_NAN=true

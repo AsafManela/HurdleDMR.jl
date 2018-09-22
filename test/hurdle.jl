@@ -397,8 +397,8 @@ coefsJpos, coefsJzero = coef(hurdle;select=:all)
 # this test case used to give numerical headaches to devresid(PositivePoisson(),...)
 include(joinpath(testdir,"data","degenerate_hurdle_5.jl"))
 hurdle = fit(Hurdle,GammaLassoPath,X,y; Xpos=Xpos, offset=offset)
-@test !(isnull(hurdle.mpos))
-@test !(isnull(hurdle.mzero))
+@test !(ismissing(hurdle.mpos))
+@test !(ismissing(hurdle.mzero))
 @test typeof(hurdle.mpos) <: GammaLassoPath
 @test typeof(hurdle.mzero) <: GammaLassoPath
 

@@ -9,7 +9,7 @@ abstract type HDMR <: DCR end
 Relatively heavy object used to return HDMR results when we care about the regulatrization paths.
 """
 struct HDMRPaths <: HDMR
-  nlpaths::Vector{Nullable{Hurdle}} # independent Hurdle{GammaLassoPath} for each phrase
+  nlpaths::Vector{Union{Missing,Hurdle}} # independent Hurdle{GammaLassoPath} for each phrase
   intercept::Bool               # whether to include an intercept in each Poisson regression
                                 # (only kept with remote cluster, not with local cluster)
   n::Int                      # number of observations. May be lower than provided after removing all zero obs.
@@ -17,7 +17,7 @@ struct HDMRPaths <: HDMR
   inpos                         # indices of covars columns included in positives model
   inzero                        # indices of covars columns included in zeros model
 
-  HDMRPaths(nlpaths::Vector{Nullable{Hurdle}}, intercept::Bool, n::Int, d::Int, inpos, inzero) =
+  HDMRPaths(nlpaths::Vector{Union{Missing,Hurdle}}, intercept::Bool, n::Int, d::Int, inpos, inzero) =
     new(nlpaths, intercept, n, d, inpos, inzero)
 end
 
@@ -165,8 +165,8 @@ function StatsBase.coef(m::HDMRPaths; select=:AICc)
   d = length(m.nlpaths)
   d < 1 && return nothing, nothing
 
-  # drop null paths
-  nonnullpaths = dropnull(m.nlpaths)
+  # drop missing paths
+  nonmsngpaths = skipmissing(m.nlpaths)
 
   # get number of variables from paths object
   ppos = ncoefspos(m)
@@ -174,9 +174,9 @@ function StatsBase.coef(m::HDMRPaths; select=:AICc)
 
   # establish maximum path lengths
   nλzero = nλpos = 0
-  if size(nonnullpaths,1) > 0
-    nλzero = maximum(broadcast(nlpath->size(nlpath.value.mzero)[2],nonnullpaths))
-    nλpos = maximum(broadcast(nlpath->size(nlpath.value.mpos)[2],nonnullpaths))
+  if size(nonmsngpaths,1) > 0
+    nλzero = maximum(broadcast(nlpath->size(nlpath.mzero)[2],nonmsngpaths))
+    nλpos = maximum(broadcast(nlpath->size(nlpath.mpos)[2],nonmsngpaths))
   end
 
   nλ = max(nλzero,nλpos)
@@ -193,9 +193,8 @@ function StatsBase.coef(m::HDMRPaths; select=:AICc)
 
   # iterate over paths
   for j=1:d
-    nlpath = m.nlpaths[j]
-    if !Base.isnull(nlpath)
-      path = nlpath.value
+    path = m.nlpaths[j]
+    if !ismissing(path)
       cjpos, cjzero = coef(path;select=select)
       if select==:all
         for i=1:ppos
@@ -284,7 +283,7 @@ function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
   ppos = length(inpos)
   pzero = length(inzero)
 
-  verbose && info("fitting $n observations on $d categories \n$ppos covariates for positive and $pzero for zero counts")
+  verbose && @info("fitting $n observations on $d categories \n$ppos covariates for positive and $pzero for zero counts")
 
   # add one coef for intercept
   ncoefpos = ppos + (intercept ? 1 : 0)
@@ -298,10 +297,10 @@ function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
     try
       # we make it dense remotely to reduce communication costs
       # we use the same offsets for pos and zeros
-      Nullable{Hurdle}(fit(Hurdle,GammaLassoPath,covarszero,full(countsj); Xpos=covarspos, offsetpos=μ, offsetzero=μ, verbose=false, showwarnings=showwarnings, kwargs...))
+      fit(Hurdle,GammaLassoPath,covarszero,full(countsj); Xpos=covarspos, offsetpos=μ, offsetzero=μ, verbose=false, showwarnings=showwarnings, kwargs...)
     catch e
-      showwarnings && warn("fit(Hurdle...) failed for countsj with frequencies $(sort(countmap(countsj))) and will return null path ($e)")
-      Nullable{Hurdle}()
+      showwarnings && warn("fit(Hurdle...) failed for countsj with frequencies $(sort(countmap(countsj))) and will return missing path ($e)")
+      missing
     end
   end
 
@@ -309,14 +308,15 @@ function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
   countscols = (counts[:,j] for j=1:d)
 
   if parallel
-    verbose && info("distributed hurdle run on remote cluster with $(nworkers()) nodes")
+    verbose && @info("distributed hurdle run on remote cluster with $(nworkers()) nodes")
     mapfn = pmap
   else
-    verbose && info("serial hurdle run on a single node")
+    verbose && @info("serial hurdle run on a single node")
     mapfn = map
   end
 
-  nlpaths = convert(Vector{Nullable{Hurdle}},mapfn(tryfith,countscols))
+  # TODO: the conversion here may be redudant
+  nlpaths = convert(Vector{Union{Missing,Hurdle}},mapfn(tryfith,countscols))
 
   HDMRPaths(nlpaths, intercept, n, d, inpos, inzero)
 end
@@ -375,12 +375,12 @@ function tryfith!(coefspos::AbstractMatrix{T}, coefszero::AbstractMatrix{T}, j::
 end
 
 "Shorthand for fit(HDMR,covars,counts). See also [`fit(::HDMR)`](@ref)"
-function hdmr{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatrix{V};
+function hdmr(covars::AbstractMatrix{T},counts::AbstractMatrix{V};
           inpos=1:size(covars,2), inzero=1:size(covars,2),
           intercept=true,
           parallel=true, local_cluster=true,
           verbose=true, showwarnings=false,
-          kwargs...)
+          kwargs...) where {T<:AbstractFloat,V}
   if local_cluster || !parallel
     hdmr_local_cluster(covars,counts,inpos,inzero,intercept,parallel,verbose,showwarnings; kwargs...)
   else
@@ -392,8 +392,9 @@ end
 This version is built for local clusters and shares memory used by both inputs
 and outputs if run in parallel mode.
 """
-function hdmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
-          inpos,inzero,intercept,parallel,verbose,showwarnings; kwargs...)
+function hdmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
+          inpos,inzero,intercept,parallel,verbose,showwarnings;
+          kwargs...) where {T<:AbstractFloat,V}
   # get dimensions
   n, d = size(counts)
   n1,p = size(covars)
@@ -402,7 +403,7 @@ function hdmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts
   ppos = length(inpos)
   pzero = length(inzero)
 
-  verbose && info("fitting $n observations on $d categories \n$ppos covariates for positive and $pzero for zero counts")
+  verbose && @info("fitting $n observations on $d categories \n$ppos covariates for positive and $pzero for zero counts")
 
   # add one coef for intercept
   ncoefpos = ppos + (intercept ? 1 : 0)
@@ -412,18 +413,18 @@ function hdmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts
 
   # fit separate GammaLassoPath's to each dimension of counts j=1:d and pick its min AICc segment
   if parallel
-    verbose && info("distributed hurdle run on local cluster with $(nworkers()) nodes")
+    verbose && @info("distributed hurdle run on local cluster with $(nworkers()) nodes")
     counts = convert(SharedArray,counts)
     coefszero = SharedMatrix{T}(ncoefzero,d)
     coefspos = SharedMatrix{T}(ncoefpos,d)
     covars = convert(SharedArray,covars)
     # μ = convert(SharedArray,μ) incompatible with GLM
 
-    @sync @parallel for j=1:d
+    @sync @distributed for j=1:d
       tryfith!(coefspos, coefszero, j, covars, counts, inpos, inzero; offset=μ, verbose=false, showwarnings=showwarnings, intercept=intercept, kwargs...)
     end
   else
-    verbose && info("serial hurdle run on a single node")
+    verbose && @info("serial hurdle run on a single node")
     coefszero = Matrix{T}(ncoefzero,d)
     coefspos = Matrix{T}(ncoefpos,d)
     for j=1:d
@@ -438,8 +439,9 @@ end
 This version does not share memory across workers, so may be more efficient for
  small problems, or on remote clusters.
 """
-function hdmr_remote_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
-          inpos,inzero,intercept,parallel,verbose,showwarnings; kwargs...)
+function hdmr_remote_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
+          inpos,inzero,intercept,parallel,verbose,showwarnings;
+          kwargs...) where {T<:AbstractFloat,V}
   paths = hdmrpaths(covars, counts; inpos=inpos, inzero=inzero, parallel=parallel, verbose=verbose, showwarnings=showwarnings, kwargs...)
   HDMRCoefs(paths)
 end

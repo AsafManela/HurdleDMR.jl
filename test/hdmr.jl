@@ -638,7 +638,7 @@ end
 @testset "degenerate case of no hurdle variation (all counts > 0)" begin
 
 zcounts = full(deepcopy(counts))
-srand(13)
+Random.seed!(13)
 for I = eachindex(zcounts)
     if iszero(zcounts[I])
         zcounts[I] = rand(1:10)

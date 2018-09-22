@@ -10,7 +10,7 @@ your original covariates/attributes, are independent of text counts C given SR
 projections Z=[z_1 ... z_K].
 dir == nothing returns projections in all directions.
 """
-srproj(m::DMR, counts, dir::Union{Void,Int}=nothing; focusj=indices(counts,2), select=:AICc) =
+srproj(m::DMR, counts, dir::Union{Nothing,Int}=nothing; focusj=indices(counts,2), select=:AICc) =
   srproj(coef(m; select=select), counts, dir; intercept=hasintercept(m), focusj=focusj)
 
 """
@@ -23,7 +23,7 @@ your original covariates/attributes, are independent of text counts C given SR
 projections Z=[z_1 ... z_K].
 dir == nothing returns projections in all directions.
 """
-function srproj(coefs::AbstractMatrix{T}, counts, dir::Union{Void,Int}=nothing; intercept=true, focusj=indices(counts,2)) where T
+function srproj(coefs::AbstractMatrix{T}, counts, dir::Union{Nothing,Int}=nothing; intercept=true, focusj=indices(counts,2)) where T
    ixoffset = intercept ? 1 : 0 # omitting the intercept
    if dir==nothing
      Φ=coefs[ixoffset+1:end,focusj]' # all directions
@@ -90,7 +90,7 @@ function srprojX(coefs::AbstractMatrix{T},counts,covars,projdir; includem=true, 
     X = X[:,1:end-1]
   end
 
-  const inz=[1]
+  inz = [1]
 
   X, X_nocounts, inz
 end
@@ -104,7 +104,7 @@ dirpos = 0 omits positive counts projections and
 dirzero = 0 omits zero counts projections.
 Setting any of these to nothing will return projections in all directions.
 """
-srproj(m::HDMR, counts, dirpos::D=nothing, dirzero::D=nothing; select=:AICc, kwargs...) where {D<:Union{Void,Int}}=
+srproj(m::HDMR, counts, dirpos::D=nothing, dirzero::D=nothing; select=:AICc, kwargs...) where {D<:Union{Nothing,Int}}=
   srproj(coef(m; select=select)..., counts, dirpos, dirzero; intercept=hasintercept(m), kwargs...)
 
 """
@@ -115,7 +115,7 @@ dirpos = 0 omits positive counts projections and
 dirzero = 0 omits zero counts projections.
 Setting any of these to nothing will return projections in all directions.
 """
-function srproj(coefspos::C, coefszero::C, counts, dirpos::D, dirzero::D; kwargs...) where {T, C<:AbstractMatrix{T}, D<:Union{Void,Int}}
+function srproj(coefspos::C, coefszero::C, counts, dirpos::D, dirzero::D; kwargs...) where {T, C<:AbstractMatrix{T}, D<:Union{Nothing,Int}}
   if (dirpos == nothing || dirpos>0) && (dirzero == nothing || dirzero>0)
     zpos = srproj(coefspos, counts, dirpos; kwargs...)
     zzero = srproj(coefszero, posindic(counts), dirzero; kwargs...)
@@ -175,9 +175,9 @@ function srprojX(coefspos::M, coefszero::M, counts, covars, projdir::Int;
 
   if !includezpos || (testrank && rank(X) < size(X,2))
     if includezpos
-      info("rank(X) = $(rank(X)) < $(size(X,2)) = size(X,2). dropping zpos.")
+      @info("rank(X) = $(rank(X)) < $(size(X,2)) = size(X,2). dropping zpos.")
     else
-      info("includezpos == false. dropping zpos.")
+      @info("includezpos == false. dropping zpos.")
     end
     Z = srproj(coefszero, posindic(counts), dirzero; srprojargs...)
     X = [X_nocounts Z]

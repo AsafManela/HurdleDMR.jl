@@ -29,7 +29,8 @@ matrix:
 
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --check-bounds=yes -e 'using Pkg; Pkg.add("https://github.com/AsafManela/Lasso.jl#am/0.7upgrade"); Pkg.clone(pwd()); Pkg.build("HurdleDMR"); Pkg.test("HurdleDMR", coverage=true)'
+  # - julia --check-bounds=yes -e 'using Pkg; Pkg.add("https://github.com/AsafManela/Lasso.jl#am/0.7upgrade"); Pkg.clone(pwd()); Pkg.build("HurdleDMR"); Pkg.test("HurdleDMR", coverage=true)'
+  - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/AsafManela/Lasso.jl", rev="am/0.7upgrade")); Pkg.build(); Pkg.test(; coverage=true)'
 
 after_success:
   - julia -e 'Pkg.add("Documenter")'

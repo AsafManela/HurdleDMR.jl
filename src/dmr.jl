@@ -12,14 +12,14 @@ abstract type DMR <: DCR end
 Relatively heavy object used to return DMR results when we care about the regulatrization paths.
 """
 struct DMRPaths <: DMR
-  nlpaths::Vector{Nullable{GammaLassoPath}} # independent Poisson GammaLassoPath for each phrase
+  nlpaths::Vector{Union{Missing,GammaLassoPath}} # independent Poisson GammaLassoPath for each phrase
   intercept::Bool               # whether to include an intercept in each Poisson regression
                                 # (only kept with remote cluster, not with local cluster)
   n::Int                      # number of observations. May be lower than provided after removing all zero obs.
   d::Int                      # number of categories (terms/words/phrases)
   p::Int                      # number of covariates
 
-  DMRPaths(nlpaths::Vector{Nullable{GammaLassoPath}}, intercept::Bool,
+  DMRPaths(nlpaths::Vector{Union{Missing,GammaLassoPath}}, intercept::Bool,
     n::Int, d::Int, p::Int) =
     new(nlpaths, intercept, n, d, p)
 end
@@ -157,16 +157,16 @@ function StatsBase.coef(m::DMRPaths; select=:AICc)
   d = length(m.nlpaths)
   d < 1 && return nothing
 
-  # drop null paths
-  nonnullpaths = dropnull(m.nlpaths)
+  # drop missing paths
+  nonmsngpaths = skipmissing(m.nlpaths)
 
   # get number of coefs from paths object
   p = ncoefs(m)
 
   # establish maximum path lengths
   nλ = 0
-  if size(nonnullpaths,1) > 0
-    nλ = maximum(broadcast(nlpath->size(nlpath.value)[2],nonnullpaths))
+  if size(nonmsngpaths,1) > 0
+    nλ = maximum(broadcast(nlpath->size(nlpath)[2],nonmsngpaths))
   end
 
   # allocate space
@@ -178,9 +178,8 @@ function StatsBase.coef(m::DMRPaths; select=:AICc)
 
   # iterate over paths
   for j=1:d
-    nlpath = m.nlpaths[j]
-    if !Base.isnull(nlpath)
-      path = nlpath.value
+    path = m.nlpaths[j]
+    if !ismissing(path)
       cj = coef(path;select=select)
       if select==:all
         for i=1:p
@@ -264,13 +263,13 @@ end
 """
 This version is built for local clusters and shares memory used by both inputs and outputs if run in parallel mode.
 """
-function dmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
-          parallel,verbose,showwarnings,intercept; kwargs...)
+function dmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
+          parallel,verbose,showwarnings,intercept; kwargs...) where {T<:AbstractFloat,V}
   # get dimensions
   n, d = size(counts)
   n1,p = size(covars)
   @assert n==n1 "counts and covars should have the same number of observations"
-  verbose && info("fitting $n observations on $d categories, $p covariates ")
+  verbose && @info("fitting $n observations on $d categories, $p covariates ")
 
   # add one coef for intercept
   ncoef = p + (intercept ? 1 : 0)
@@ -279,17 +278,17 @@ function dmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts:
 
   # fit separate GammaLassoPath's to each dimension of counts j=1:d and pick its min AICc segment
   if parallel
-    verbose && info("distributed poisson run on local cluster with $(nworkers()) nodes")
+    verbose && @info("distributed poisson run on local cluster with $(nworkers()) nodes")
     counts = convert(SharedArray,counts)
     coefs = SharedMatrix{T}(ncoef,d)
     covars = convert(SharedArray,covars)
     # μ = convert(SharedArray,μ) incompatible with GLM
 
-    @sync @parallel for j=1:d
+    @sync @distributed for j=1:d
       tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false, showwarnings=showwarnings, intercept=intercept, kwargs...)
     end
   else
-    verbose && info("serial poisson run on a single node")
+    verbose && @info("serial poisson run on a single node")
     coefs = Matrix{T}(ncoef,d)
     for j=1:d
       tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false, showwarnings=showwarnings, intercept=intercept, kwargs...)
@@ -300,8 +299,8 @@ function dmr_local_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts:
 end
 
 "This version does not share memory across workers, so may be more efficient for small problems, or on remote clusters."
-function dmr_remote_cluster{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
-          parallel,verbose,showwarnings,intercept; kwargs...)
+function dmr_remote_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
+          parallel,verbose,showwarnings,intercept; kwargs...) where {T<:AbstractFloat,V}
   paths = dmrpaths(covars, counts; parallel=parallel, verbose=verbose, showwarnings=showwarnings, intercept=intercept, kwargs...)
   DMRCoefs(paths)
 end
@@ -316,17 +315,17 @@ function dmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
   n, d = size(counts)
   n1,p = size(covars)
   @assert n==n1 "counts and covars should have the same number of observations"
-  verbose && info("fitting $n observations on $d categories, $p covariates ")
+  verbose && @info("fitting $n observations on $d categories, $p covariates ")
 
   covars, counts, μ, n = shifters(covars, counts, showwarnings)
 
   function tryfitgl(countsj::AbstractVector)
     try
       # we make it dense remotely to reduce communication costs
-      Nullable{GammaLassoPath}(fit(GammaLassoPath,covars,full(countsj),Poisson(),LogLink(); offset=μ, verbose=false, kwargs...))
+      fit(GammaLassoPath,covars,full(countsj),Poisson(),LogLink(); offset=μ, verbose=false, kwargs...)
     catch e
-      showwarnings && warn("fitgl failed for countsj with frequencies $(sort(countmap(countsj))) and will return null path ($e)")
-      Nullable{GammaLassoPath}()
+      showwarnings && warn("fitgl failed for countsj with frequencies $(sort(countmap(countsj))) and will return missing path ($e)")
+      missing
     end
   end
 
@@ -334,14 +333,15 @@ function dmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
   countscols = (counts[:,j] for j=1:d)
 
   if parallel
-    verbose && info("distributed poisson run on remote cluster with $(nworkers()) nodes")
+    verbose && @info("distributed poisson run on remote cluster with $(nworkers()) nodes")
     mapfn = pmap
   else
-    verbose && info("serial poisson run on a single node")
+    verbose && @info("serial poisson run on a single node")
     mapfn = map
   end
 
-  nlpaths = convert(Vector{Nullable{GammaLassoPath}},mapfn(tryfitgl,countscols))
+  # TODO: the conversion here may be redudant
+  nlpaths = convert(Vector{Union{Missing,GammaLassoPath}},mapfn(tryfitgl,countscols))
 
   DMRPaths(nlpaths, intercept, n, d, p)
 end
@@ -370,22 +370,17 @@ function tryfitgl!(coefs::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},c
 end
 
 "Shorthand for fit(DMR,covars,counts). See also [`fit(::DMR)`](@ref)"
-function dmr{T<:AbstractFloat,V}(covars::AbstractMatrix{T},counts::AbstractMatrix{V};
+function dmr(covars::AbstractMatrix{T},counts::AbstractMatrix{V};
           intercept=true,
           parallel=true, local_cluster=true,
           verbose=true, showwarnings=false,
-          kwargs...)
+          kwargs...) where {T<:AbstractFloat,V}
   if local_cluster || !parallel
     dmr_local_cluster(covars,counts,parallel,verbose,showwarnings,intercept; kwargs...)
   else
     dmr_remote_cluster(covars,counts,parallel,verbose,showwarnings,intercept; kwargs...)
   end
 end
-
-"Drops null elements from a Nullable vector"
-dropnull{T<:Nullable}(v::Vector{T}) = v[.!isnull.(v)]
-
-# aicc{R<:RegularizationPath}(paths::Vector{R}; k=2) = broadcast(path->Lasso.aicc(path;k=k),paths)
 
 # We take care of the intercept ourselves, without relying on StatsModels, because
 # it is unregulated, so we drop it from formula
@@ -436,8 +431,8 @@ function _predict(m, newcovars::AbstractMatrix{T};
   η = zeros(T,newn,m.d)
   for j=1:m.d
     path = m.nlpaths[j]
-    if !isnull(path)
-      η[:,j] = predict(path.value,newcovars;offset=newoffset, select=select, kwargs...)
+    if !ismissing(path)
+      η[:,j] = predict(path, newcovars;offset=newoffset, select=select, kwargs...)
     end
   end
 

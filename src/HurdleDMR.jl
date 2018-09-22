@@ -1,6 +1,8 @@
 module HurdleDMR
 
-using Lasso, StatsBase, StatsModels, DataFrames, LambertW, GLM.FPVector, GLM.FP
+using Lasso, StatsBase, StatsModels, DataFrames, LambertW,
+    SparseArrays, Distributed, SharedArrays, LinearAlgebra
+using GLM: FPVector, FP
 
 export dmr, dmrpaths, hdmr, hdmrpaths, fit, coef, srproj, srprojX, @~, mcdmr, posindic,
   DCR, DMR, HDMR, DMRCoefs, DMRPaths, HDMRCoefs, HDMRPaths, @model, Model,

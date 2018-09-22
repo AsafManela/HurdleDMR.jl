@@ -170,7 +170,7 @@ covariates matrix Xpos used to model positive counts.
 - `lpos::Link=canonicallink(dpos)` link function for positives model
 
 # Keywords
-- `Xpos::Union{AbstractMatrix{T},Void} = nothing` covariates matrix for positives
+- `Xpos::Union{AbstractMatrix{T},Nothing} = nothing` covariates matrix for positives
   model or nothing to use X for both parts
 - `dofit::Bool = true` fit the model or just construct its shell
 - `wts::V = ones(y)` observation weights
@@ -187,9 +187,9 @@ function StatsBase.fit(::Type{Hurdle},::Type{M},
   dpos::UnivariateDistribution = PositivePoisson(),
   lzero::Link = canonicallink(dzero),
   lpos::Link = canonicallink(dpos);
-  Xpos::Union{AbstractMatrix{T},Void} = nothing,
+  Xpos::Union{AbstractMatrix{T},Nothing} = nothing,
   dofit::Bool = true,
-  wts::V = ones(y),
+  wts::V = fill(one(eltype(y)),size(y)),
   offsetzero::AbstractVector = similar(y, 0),
   offsetpos::AbstractVector = similar(y, 0),
   offset::AbstractVector = similar(y, 0),
@@ -341,7 +341,7 @@ Predict using a fitted Hurdle given new X (and potentially Xpos).
 - `X` n-by-p matrix of covariates of same dimensions used to fit m.
 
 # Keywords
-- `Xpos::Union{AbstractMatrix{T},Void} = nothing` covariates matrix for positives
+- `Xpos::Union{AbstractMatrix{T},Nothing} = nothing` covariates matrix for positives
   model or nothing to use X for both parts
 - `kwargs...` additional keyword arguments passed along to predict() for each
   of the two model parts.
