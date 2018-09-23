@@ -19,7 +19,7 @@ b = view(sA,:,2:3)
 # test counts matrix coverter to float64 entries
 fpcounts = HurdleDMR.fpcounts
 C = convert(SparseMatrixCSC{Int},counts)
-D = full(C)
+D = Matrix(C)
 Cf = fpcounts(C)
 Df = fpcounts(D)
 @test C == Cf
@@ -37,7 +37,7 @@ Df = fpcounts(D)
 shifters = HurdleDMR.shifters
 
 tcovars, tcounts, tμ, tn = shifters(covars, counts, false)
-eμ = vec(log.(sum(tcounts,2)))
+eμ = vec(log.(sum(tcounts, dims=2)))
 @test tμ == eμ
 @test tcounts == counts
 
@@ -56,7 +56,7 @@ tcovars, tcounts, tμ, tn = shifters(covars, convert(Matrix{Int},counts), false)
 @test tcounts !== Cf
 @test tμ == eμ
 
-Cf[1,:] = 0
+Cf[1,:] .= 0
 tcovars, tcounts, tμ, tn = shifters(covars, Cf, false)
 @test tcounts != Cf
 @test tcounts == Cf[2:end,:]

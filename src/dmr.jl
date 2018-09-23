@@ -214,7 +214,7 @@ ncovars(m::DMR) = m.p
 ncoefs(m::DMR) = ncovars(m) + (hasintercept(m) ? 1 : 0)
 
 # some helpers for converting to SharedArray
-Base.convert(::Type{SharedArray}, A::SubArray) = (S = SharedArray{eltype(A)}(size(A)); copy!(S, A))
+Base.convert(::Type{SharedArray}, A::SubArray) = (S = SharedArray{eltype(A)}(size(A)); copyto!(S, A))
 function Base.convert(::Type{SharedArray}, A::SparseMatrixCSC{T,N}) where {T,N}
   S = SharedArray{T}(size(A))
   fill!(S,zero(T))
@@ -242,11 +242,11 @@ function shifters(covars::AbstractMatrix{T}, counts::AbstractMatrix, showwarning
     # standardize counts matrix to conform to GLM.FP
     counts = fpcounts(counts)
 
-    m = vec(sum(counts,2))
+    m = vec(sum(counts, dims=2))
 
     if any(iszero,m)
         # omit observations with no counts
-        ixposm = find(m)
+        ixposm = findall(m)
         showwarnings && warn("omitting $(length(m)-length(ixposm)) observations with no counts")
         m = m[ixposm]
         counts = counts[ixposm,:]

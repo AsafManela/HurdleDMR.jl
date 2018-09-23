@@ -43,10 +43,10 @@ yhatR1partial=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurd
 hurdlefit = fit(Hurdle,GeneralizedLinearModel,Xwconst,y)
 showres = IOBuffer()
 show(showres, hurdlefit)
-showstr = String(showres)
-@test contains(showstr,"Hurdle regression")
-@test contains(showstr,"Count model coefficients")
-@test contains(showstr,"Zero hurdle coefficients")
+showstr = String(take!(copy(showres)))
+@test occursin(showstr,"Hurdle regression")
+@test occursin(showstr,"Count model coefficients")
+@test occursin(showstr,"Zero hurdle coefficients")
 
 coefsJ=vcat(coef(hurdlefit)...)
 @test coefsJ ≈ coefsR1 rtol=1e-6
@@ -83,10 +83,10 @@ coefsJpos, coefsJzero = coef(hurdleglrfit;select=:all)
 
 showres = IOBuffer()
 show(showres, hurdleglrfit)
-showstr = String(showres)
-@test contains(showstr,"Hurdle regression")
-@test contains(showstr,"Count model regularization path")
-@test contains(showstr,"Zero hurdle regularization path")
+showstr = String(take!(copy(showres)))
+@test occursin(showstr,"Hurdle regression")
+@test occursin(showstr,"Count model regularization path")
+@test occursin(showstr,"Zero hurdle regularization path")
 
 # this one throws an error because we did not specify the same λ vector for both submodels so they have different lengths
 @test_throws AssertionError predict(hurdleglrfit, X; select=:all)
@@ -342,7 +342,7 @@ coefsJpos, coefsJzero = coef(hurdle;select=:all)
 @test coefsJpos == zeros(coefsJpos)
 @test size(coefsJzero,1) == 2
 
-ydeg = zeros(y)
+ydeg = zero(y)
 ydeg[1] = 2
 ydeg[2] = 3
 hurdleglm = @test_warn "failed to fit truncated counts model to positive" fit(Hurdle,GeneralizedLinearModel,[ones(size(X,1)) X],ydeg; showwarnings=true)

@@ -32,11 +32,11 @@ end
 "Returns positives indicators for y"
 function getIy(y::AbstractVector{T}) where {T}
     # find positive y entries
-    ixpos = find(y)
+    ixpos = findall(y)
 
     # build positive indicators vector
-    Iy = zeros(y)
-    Iy[ixpos] = one(T)
+    Iy = zero(y)
+    Iy[ixpos] .= one(T)
 
     ixpos, Iy
 end
@@ -237,7 +237,7 @@ function StatsBase.fit(::Type{Hurdle},::Type{M},
                       lpos::Link = canonicallink(dpos);
                       fpos::Formula = f,
                       dofit::Bool = true,
-                      wts = ones(Float64,size(df,1)),
+                      wts = fill(1.0,size(df,1)),
                       offsetzero = Float64[],
                       offsetpos = Float64[],
                       offset = Float64[],
@@ -348,9 +348,9 @@ Predict using a fitted Hurdle given new X (and potentially Xpos).
 """
 function StatsBase.predict(hurdle::Hurdle, X::AbstractMatrix{T};
   Xpos::AbstractMatrix{T} = X,
-  offsetzero::AbstractVector = Array{T}(0),
-  offsetpos::AbstractVector = Array{T}(0),
-  offset::AbstractVector=Array{T}(0),
+  offsetzero::AbstractVector = Array{T}(undef, 0),
+  offsetpos::AbstractVector = Array{T}(undef, 0),
+  offset::AbstractVector=Array{T}(undef, 0),
   kwargs...) where {T<:AbstractFloat}
 
   # set offsets
