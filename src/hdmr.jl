@@ -174,7 +174,7 @@ function StatsBase.coef(m::HDMRPaths; select=:AICc)
 
   # establish maximum path lengths
   nλzero = nλpos = 0
-  if size(nonmsngpaths,1) > 0
+  if !isempty(nonmsngpaths)
     nλzero = maximum(broadcast(nlpath->size(nlpath.mzero)[2],nonmsngpaths))
     nλpos = maximum(broadcast(nlpath->size(nlpath.mpos)[2],nonmsngpaths))
   end
@@ -297,9 +297,9 @@ function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
     try
       # we make it dense remotely to reduce communication costs
       # we use the same offsets for pos and zeros
-      fit(Hurdle,GammaLassoPath,covarszero,full(countsj); Xpos=covarspos, offsetpos=μ, offsetzero=μ, verbose=false, showwarnings=showwarnings, kwargs...)
+      fit(Hurdle,GammaLassoPath,covarszero,Vector(countsj); Xpos=covarspos, offsetpos=μ, offsetzero=μ, verbose=false, showwarnings=showwarnings, kwargs...)
     catch e
-      showwarnings && warn("fit(Hurdle...) failed for countsj with frequencies $(sort(countmap(countsj))) and will return missing path ($e)")
+      showwarnings && @warn("fit(Hurdle...) failed for countsj with frequencies $(sort(countmap(countsj))) and will return missing path ($e)")
       missing
     end
   end
@@ -347,7 +347,7 @@ function hurdle_regression!(coefspos::AbstractMatrix{T}, coefszero::AbstractMatr
             inpos, inzero;
             offset::AbstractVector=similar(y, 0),
             kwargs...) where {T<:AbstractFloat,V}
-  cj = vec(full(counts[:,j]))
+  cj = Vector(counts[:,j])
   covarspos, covarszero = incovars(covars,inpos,inzero)
   # we use the same offsets for pos and zeros
   path = fit(Hurdle,GammaLassoPath,covarszero,cj; Xpos=covarspos, offsetpos=offset, offsetzero=offset, kwargs...)
@@ -363,7 +363,7 @@ function tryfith!(coefspos::AbstractMatrix{T}, coefszero::AbstractMatrix{T}, j::
   try
     hurdle_regression!(coefspos, coefszero, j, covars, counts, inpos, inzero; kwargs...)
   catch e
-    showwarnings && warn("hurdle_regression! failed on count dimension $j with frequencies $(sort(countmap(counts[:,j]))) and will return zero coefs ($e)")
+    showwarnings && @warn("hurdle_regression! failed on count dimension $j with frequencies $(sort(countmap(counts[:,j]))) and will return zero coefs ($e)")
     # redudant ASSUMING COEFS ARRAY INTIAILLY FILLED WITH ZEROS, but can happen in serial mode
     for i=1:size(coefszero,1)
       coefszero[i,j] = zero(T)

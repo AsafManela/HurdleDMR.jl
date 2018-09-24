@@ -48,7 +48,7 @@ logliks = loglik.(ys, μs)
 @test isinf(devresid(PositivePoisson(λ0), 3.0, 0.1))
 @test iszero(devresid(PositivePoisson(λ0), 0.3, 0.1))
 
-ys = fill(1, size(μs))
+ys = fill(1.0, size(μs))
 devresids1 = devresid.(PositivePoisson(λ0), ys, μs)
 @test all(isfinite,devresids1)
 logliks1 = loglik.(ys, μs)
@@ -68,7 +68,7 @@ logliksbig = loglik.(ysbig, μsbig)
 @test all(isfinite,logliksbig)
 @test logliks ≈ Float64.(logliksbig)
 
-ysbig = fill(1, size(μsbig))
+ysbig = fill(big"1.0", size(μsbig))
 devresidsbig1 = devresid.(PositivePoisson(λ0), ysbig, μsbig)
 @test all(isfinite,devresidsbig1)
 @test devresids1 ≈ Float64.(devresidsbig1)
@@ -81,13 +81,13 @@ logliksbig1 = loglik.(ysbig, μsbig)
 μscheck=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
 @test μs ≈ μscheck
 #verify works for large μ
-ys = round.(BigInt,μs) .+ 1.0
+ys = round.(BigInt,μs) .+ big"1.0"
 devresidsbig = devresid.(PositivePoisson(λ0), ys, μs)
 @test all(isfinite,devresidsbig)
 logliksbig = loglik.(ys, μs)
 @test all(isfinite,logliksbig)
 
-ys = fill(1, size(μs))
+ys = fill(big"1.0", size(μs))
 devresidsbig = devresid.(PositivePoisson(λ0), ys, μs)
 @test all(isfinite,devresidsbig)
 logliks1 = loglik.(ys, μs)

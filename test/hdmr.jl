@@ -8,7 +8,7 @@ testargs = Dict(:verbose=>false,:showwarnings=>true)
 
 f = @model(h ~ v1 + v2 + vy, c ~ v1 + v2 + vy)
 @test show(IOBuffer(),f) == nothing
-projdir = findfirst(names(covarsdf),:vy)
+projdir = something(findfirst(isequal(:vy), names(covarsdf)), 0)
 dirpos = 3
 dirzero = 3
 
@@ -187,7 +187,7 @@ f = @model(h ~ v1 + v2 + vy, c ~ v2 + vy)
 inzero = 1:p
 inpos = 2:p
 ppos = p-1
-projdir = findfirst(names(covarsdf),:vy)
+projdir = something(findfirst(isequal(:vy), names(covarsdf)), 0)
 dirpos = 2
 dirzero = 3
 
@@ -321,7 +321,7 @@ inzero = [1,2]
 inpos = 1:p
 ppos = length(inpos)
 pzero = length(inzero)
-projdir = findfirst(names(covarsdf),:vy)
+projdir = something(findfirst(isequal(:vy), names(covarsdf)), 0)
 dirpos = 3
 dirzero = 0
 
@@ -449,7 +449,7 @@ f = @model(h ~ v1 + v2, c ~ v2 + vy)
 @test show(IOBuffer(),f) == nothing
 inzero = 1:2
 inpos = 2:3
-projdir = findfirst(names(covarsdf),:vy)
+projdir = something(findfirst(isequal(:vy), names(covarsdf)), 0)
 
 pzero = length(inzero)
 ppos = length(inpos)
@@ -613,7 +613,7 @@ coefsHppos2, coefsHpzero2 = coef(hdmrcoefs)
 @test η[:,4] ≈ ones(size(newcovars,1))*0.6 atol=0.1
 
 # hurdle dmr serial paths
-hdmrcoefs3 = @test_warn "failed for countsj" fit(HDMRPaths,covars, zcounts; parallel=false, testargs...)
+hdmrcoefs3 = @test_logs (:warn, r"failed for countsj") fit(HDMRPaths,covars, zcounts; parallel=false, testargs...)
 coefsHppos3, coefsHpzero3 = coef(hdmrcoefs3)
 @test coefsHppos ≈ coefsHppos3
 @test coefsHpzero ≈ coefsHpzero3
@@ -624,7 +624,7 @@ coefsHppos3, coefsHpzero3 = coef(hdmrcoefs3)
 @test η[:,4] ≈ ones(size(newcovars,1))*0.6 atol=0.1
 
 # hurdle dmr serial coefs
-hdmrcoefs4 = @test_warn "failed on count dimension 2" fit(HDMR,covars, zcounts; parallel=false, testargs...)
+hdmrcoefs4 = @test_logs (:warn, r"failed on count dimension 2") fit(HDMR,covars, zcounts; parallel=false, testargs...)
 coefsHppos4, coefsHpzero4 = coef(hdmrcoefs4)
 @test size(coefsHppos4) == (p+1, d)
 @test size(coefsHpzero4) == (p+1, d)

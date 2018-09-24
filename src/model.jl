@@ -126,8 +126,8 @@ function createmodelmatrix(trms, df, counts, contrasts)
   # StatsModels.drop_intercept(T) && (mf.terms.intercept = false)
   mf.terms.intercept = false
   mm = ModelMatrix(mf)
-  if !all(mf.msng)
-    counts = counts[mf.msng,:]
+  if !all(mf.nonmissing)
+    counts = counts[mf.nonmissing,:]
   end
   mf, mm, counts
 end

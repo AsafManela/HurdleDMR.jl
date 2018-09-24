@@ -1,7 +1,7 @@
 # common args for all dmr tests
 # to get exactly Rdistrom's run use λminratio=0.01 because our gamlr's have different defaults
 testargs = Dict(:γ=>1.0, :λminratio=>0.01, :verbose=>false,:showwarnings=>true)
-f = @model(c ~ v1 + v2 + vy)
+global f = @model(c ~ v1 + v2 + vy)
 @test show(IOBuffer(),f) == nothing
 
 @testset "dmr" begin
@@ -12,7 +12,6 @@ coefs = coef(dmrcoefs)
 @test_throws ErrorException coef(dmrcoefs; select=:all)
 
 # test Int matrix for counts
-countsint = convert(Matrix{Int64},counts)
 dmrcoefsint = dmr(covars, countsint; testargs...)
 coefsint = coef(dmrcoefsint)
 @test coefsint == coefs
@@ -198,7 +197,7 @@ zcounts[:,2] = zeros(n)
 zcounts[:,3] = ones(n)
 
 # make sure we are not adding all zero obseravtions
-m = sum(zcounts,2)
+m = sum(zcounts,dims=2)
 @test sum(m .== 0) == 0
 
 # this one should warn on dimension 2 but @test_warn doen't capture the workers' warnings
@@ -212,11 +211,11 @@ zcoefs2 = coef(dmrzcoefs2)
 @test zcoefs2 ≈ zcoefs
 
 # serial runs can also test for warnings
-dmrzcoefs3 = @test_warn "failed on count dimension 2" dmr(covars, zcounts; parallel=false, testargs...)
+dmrzcoefs3 = @test_logs (:warn, r"failed on count dimension 2") dmr(covars, zcounts; parallel=false, testargs...)
 zcoefs2 = coef(dmrzcoefs2)
 @test zcoefs2 ≈ zcoefs
 
-dmrzpaths3 = @test_warn "failed for countsj" dmrpaths(covars, zcounts; parallel=false, testargs...)
+dmrzpaths3 = @test_logs (:warn, r"failed for countsj") dmrpaths(covars, zcounts; parallel=false, testargs...)
 zcoefs3 = coef(dmrzpaths3)
 @test zcoefs3 ≈ zcoefs
 
@@ -225,7 +224,7 @@ zcounts = deepcopy(counts)
 zcounts[1,:] = 0.0
 m = sum(zcounts,2)
 @test sum(m .== 0) == 1
-dmrzcoefs = @test_warn "omitting 1" dmr(covars, zcounts; testargs...)
+dmrzcoefs = @test_logs (:warn, r"omitting 1") dmr(covars, zcounts; testargs...)
 dmrzcoefs2 = dmr(covars[2:end,:], counts[2:end,:]; testargs...)
 zcoefs3 = coef(dmrzcoefs)
 @test size(zcoefs3) == (p+1, d)

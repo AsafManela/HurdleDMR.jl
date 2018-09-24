@@ -165,7 +165,7 @@ function StatsBase.coef(m::DMRPaths; select=:AICc)
 
   # establish maximum path lengths
   nλ = 0
-  if size(nonmsngpaths,1) > 0
+  if !isempty(nonmsngpaths)
     nλ = maximum(broadcast(nlpath->size(nlpath)[2],nonmsngpaths))
   end
 
@@ -238,7 +238,7 @@ fpcounts(counts::M) where {V<:GLM.FP, N, M<:SparseMatrixCSC{V,N}} = counts
 fpcounts(counts::M) where {V<:GLM.FP, M<:AbstractMatrix{V}} = counts
 
 "Computes DMR shifters (μ=log(m)) and removes all zero observations"
-function shifters(covars::AbstractMatrix{T}, counts::AbstractMatrix, showwarnings::Bool) where {T<:AbstractFloat}
+function shifters(covars::AbstractMatrix{T}, counts::AbstractMatrix{C}, showwarnings::Bool) where {T<:AbstractFloat,C}
     # standardize counts matrix to conform to GLM.FP
     counts = fpcounts(counts)
 
@@ -246,8 +246,8 @@ function shifters(covars::AbstractMatrix{T}, counts::AbstractMatrix, showwarning
 
     if any(iszero,m)
         # omit observations with no counts
-        ixposm = findall(m)
-        showwarnings && warn("omitting $(length(m)-length(ixposm)) observations with no counts")
+        ixposm = findall(x->x!=zero(C), m)
+        showwarnings && @warn("omitting $(length(m)-length(ixposm)) observations with no counts")
         m = m[ixposm]
         counts = counts[ixposm,:]
         covars = covars[ixposm,:]
@@ -322,9 +322,9 @@ function dmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
   function tryfitgl(countsj::AbstractVector)
     try
       # we make it dense remotely to reduce communication costs
-      fit(GammaLassoPath,covars,full(countsj),Poisson(),LogLink(); offset=μ, verbose=false, kwargs...)
+      fit(GammaLassoPath,covars,Vector(countsj),Poisson(),LogLink(); offset=μ, verbose=false, kwargs...)
     catch e
-      showwarnings && warn("fitgl failed for countsj with frequencies $(sort(countmap(countsj))) and will return missing path ($e)")
+      showwarnings && @warn("fitgl failed for countsj with frequencies $(sort(countmap(countsj))) and will return missing path ($e)")
       missing
     end
   end
@@ -348,7 +348,7 @@ end
 
 "Fits a regularized poisson regression counts[:,j] ~ covars saving the coefficients in coefs[:,j]"
 function poisson_regression!(coefs::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V}; kwargs...) where {T<:AbstractFloat,V}
-  cj = vec(full(counts[:,j]))
+  cj = Vector(counts[:,j])
   path = fit(GammaLassoPath,covars,cj,Poisson(),LogLink(); kwargs...)
   coefs[:,j] = coef(path;select=:AICc)
   nothing
@@ -361,7 +361,7 @@ function tryfitgl!(coefs::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},c
   try
     poisson_regression!(coefs, j, covars, counts; kwargs...)
   catch e
-    showwarnings && warn("fitgl! failed on count dimension $j with frequencies $(sort(countmap(counts[:,j]))) and will return zero coefs ($e)")
+    showwarnings && @warn("fitgl! failed on count dimension $j with frequencies $(sort(countmap(counts[:,j]))) and will return zero coefs ($e)")
     # redudant ASSUMING COEFS ARRAY INTIAILLY FILLED WITH ZEROS, but can be uninitialized in serial case
     for i=1:size(coefs,1)
       coefs[i,j] = zero(T)
@@ -436,7 +436,7 @@ function _predict(m, newcovars::AbstractMatrix{T};
     end
   end
 
-  scale!(one(T)./vec(sum(η,2)),η)
+  LinearAlgebra.scale!(one(T)./vec(sum(η,2)),η)
 
   η
 end

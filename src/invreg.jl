@@ -186,12 +186,12 @@ function StatsBase.predict(mm::MM, df::AbstractDataFrame, counts::AbstractMatrix
     # create new model frame/matrix
     mf = ModelFrame(newTerms, df; contrasts = mm.mf.contrasts)
     newX = ModelMatrix(mf).m
-    if !all(mf.msng)
-      counts = counts[mf.msng,:]
+    if !all(mf.nonmissing)
+      counts = counts[mf.nonmissing,:]
     end
     yp = predict(mm, newX, counts; kwargs...)
     out = missings(eltype(yp), size(df, 1))
-    out[mf.msng] = yp
+    out[mf.nonmissing] = yp
     return(out)
 end
 # # when the backward model is an HDMR we need to make sure we didn't drop a colinear zpos

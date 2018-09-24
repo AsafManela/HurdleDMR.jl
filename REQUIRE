@@ -4,3 +4,4 @@ StatsBase
 StatsModels
 DataFrames
 LambertW
+GLM

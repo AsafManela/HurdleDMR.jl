@@ -25,6 +25,8 @@ const ixpartial = 50:60
 ###########################################################
 @testset "hurdle with Xpos == Xzero" begin
 
+using LinearAlgebra
+
 ## logit-poisson
 # R"fm_hp1 <- hurdle(art ~ fem + mar + kid5 + phd + ment, data = bioChemists)"
 # print(R"summary(fm_hp1)")
@@ -44,9 +46,9 @@ hurdlefit = fit(Hurdle,GeneralizedLinearModel,Xwconst,y)
 showres = IOBuffer()
 show(showres, hurdlefit)
 showstr = String(take!(copy(showres)))
-@test occursin(showstr,"Hurdle regression")
-@test occursin(showstr,"Count model coefficients")
-@test occursin(showstr,"Zero hurdle coefficients")
+@test occursin("Hurdle regression",showstr)
+@test occursin("Count model coefficients",showstr)
+@test occursin("Zero hurdle coefficients",showstr)
 
 coefsJ=vcat(coef(hurdlefit)...)
 @test coefsJ ≈ coefsR1 rtol=1e-6
@@ -84,9 +86,9 @@ coefsJpos, coefsJzero = coef(hurdleglrfit;select=:all)
 showres = IOBuffer()
 show(showres, hurdleglrfit)
 showstr = String(take!(copy(showres)))
-@test occursin(showstr,"Hurdle regression")
-@test occursin(showstr,"Count model regularization path")
-@test occursin(showstr,"Zero hurdle regularization path")
+@test occursin("Hurdle regression",showstr)
+@test occursin("Count model regularization path",showstr)
+@test occursin("Zero hurdle regularization path",showstr)
 
 # this one throws an error because we did not specify the same λ vector for both submodels so they have different lengths
 @test_throws AssertionError predict(hurdleglrfit, X; select=:all)
@@ -334,24 +336,24 @@ end
 
 # degenerate positive counts data case 1
 include(joinpath(testdir,"data","degenerate_hurdle_1.jl"))
-hurdle = @test_warn "failed to fit truncated counts model to positive" fit(Hurdle,GammaLassoPath,X,y; showwarnings=true)
+hurdle = @test_logs (:warn, r"failed to fit truncated counts model to positive") fit(Hurdle,GammaLassoPath,X,y; showwarnings=true)
 coefsJ=vcat(coef(hurdle;select=:AICc)...)
 @test vec(coefsJ) ≈ [0.0, 0.0, -6.04112, 0.675767] rtol=1e-4
 coefsJpos, coefsJzero = coef(hurdle;select=:all)
 @test size(coefsJpos,1) == 2
-@test coefsJpos == zeros(coefsJpos)
+@test coefsJpos == zero(coefsJpos)
 @test size(coefsJzero,1) == 2
 
 ydeg = zero(y)
 ydeg[1] = 2
 ydeg[2] = 3
-hurdleglm = @test_warn "failed to fit truncated counts model to positive" fit(Hurdle,GeneralizedLinearModel,[ones(size(X,1)) X],ydeg; showwarnings=true)
+hurdleglm = @test_logs (:warn, r"failed to fit truncated counts model to positive") fit(Hurdle,GeneralizedLinearModel,[ones(size(X,1)) X],ydeg; showwarnings=true)
 
 
 # degenerate positive counts data case 1 without >1
-y0or1=deepcopy(y)
-y0or1[y.>1]=1
-hurdle = @test_warn "ypos has no elements larger than 1" fit(Hurdle,GammaLassoPath,X,y0or1; showwarnings=true)
+y0or1 = deepcopy(y)
+y0or1[y.>1] .= 1
+hurdle = @test_logs (:warn, r"ypos has no elements larger than 1") fit(Hurdle,GammaLassoPath,X,y0or1; showwarnings=true)
 coefs0or1=vcat(coef(hurdle;select=:AICc)...)
 @test coefs0or1 == coefsJ
 coefs0or1pos, coefs0or1zero = coef(hurdle;select=:all)
@@ -360,38 +362,38 @@ coefs0or1pos, coefs0or1zero = coef(hurdle;select=:all)
 
 # degenerate positive counts data case 1 without zeros
 y0or1 = deepcopy(y)
-y0or1[y.==0]=1
-hurdle = @test_warn "I(y) is all ones" fit(Hurdle,GammaLassoPath,X,y0or1; verbose=true, showwarnings=true)
+y0or1[y.==0] .= 1
+hurdle = @test_logs (:warn, r"I\(y\) is all ones") fit(Hurdle,GammaLassoPath,X,y0or1; verbose=true, showwarnings=true)
 coefs0or1=vcat(coef(hurdle;select=:AICc)...)
 @test vec(coefs0or1) ≈ [-7.34062, 0.0, 0.0, 0.0] rtol=1e-4
 coefs0or1pos, coefs0or1zero = coef(hurdle;select=:all)
 @test all(iszero,coefs0or1zero)
 
-hurdleglm = @test_warn "I(y) is all ones" fit(Hurdle,GeneralizedLinearModel,[ones(size(X,1)) X],y0or1; verbose=true, showwarnings=true)
+hurdleglm = @test_logs (:warn, r"I\(y\) is all ones") fit(Hurdle,GeneralizedLinearModel,[ones(size(X,1)) X],y0or1; verbose=true, showwarnings=true)
 
 # degenerate positive counts data case 1 with only zeros
-y0or1 = zeros(y)
+y0or1 = zero(y)
 @test_throws ErrorException fit(Hurdle,GammaLassoPath,X,y0or1)
-@test_throws ErrorException @test_warn "I(y) is all zerbos" fit(Hurdle,GammaLassoPath,X,y0or1; verbose=true, showwarnings=true)
+@test_logs (:warn, r"I\(y\) is all zeros") @test_throws ErrorException fit(Hurdle,GammaLassoPath,X,y0or1; verbose=true, showwarnings=true)
 
 # degenerate positive counts data case 2
 include(joinpath(testdir,"data","degenerate_hurdle_2.jl"))
-hurdle = @test_warn "not enough variation in ypos" fit(Hurdle,GammaLassoPath,X,y; showwarnings=true)
+hurdle = @test_logs (:warn, r"not enough variation in ypos") fit(Hurdle,GammaLassoPath,X,y; showwarnings=true)
 coefsJ=vcat(coef(hurdle;select=:AICc)...)
 @test vec(coefsJ) ≈ [0.0,0.0,-5.30128195796556,0.1854148891565171]'' rtol=1e-4
 coefsJpos, coefsJzero = coef(hurdle;select=:all)
 @test size(coefsJpos,1) == 2
-@test coefsJpos == zeros(coefsJpos)
+@test coefsJpos == zero(coefsJpos)
 @test size(coefsJzero,1) == 2
 
 # degenerate positive counts data case 3
 include(joinpath(testdir,"data","degenerate_hurdle_3.jl"))
-hurdle = @test_warn "ypos has no elements larger than 1" fit(Hurdle,GammaLassoPath,X,y; showwarnings=true)
+hurdle = @test_logs (:warn, r"ypos has no elements larger than 1") fit(Hurdle,GammaLassoPath,X,y; showwarnings=true)
 coefsJ=vcat(coef(hurdle;select=:AICc)...)
 @test vec(coefsJ) ≈ [0.0,0.0,-4.541820686620407,0.0]'' rtol=1e-4
 coefsJpos, coefsJzero = coef(hurdle;select=:all)
 @test size(coefsJpos,1) == 2
-@test coefsJpos == zeros(coefsJpos)
+@test coefsJpos == zero(coefsJpos)
 @test size(coefsJzero,1) == 2
 
 # this test case used to give numerical headaches to devresid(PositivePoisson(),...)

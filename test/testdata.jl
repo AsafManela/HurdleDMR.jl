@@ -4,20 +4,20 @@ p = 3
 d = 4
 
 Random.seed!(13)
-m = 1 .+ rand(Poisson(5),n)
+ctotal = 1 .+ rand(Poisson(5),n)
 covars = rand(n,p)
 ηfn(vi) = exp.([0 + i*sum(vi) for i=1:d])
 q = [ηfn(covars[i,:]) for i=1:n]
 for i=1:n
   q[i] ./= sum(q[i])
 end
-counts = convert(SparseMatrixCSC{Float64,Int},hcat(broadcast((qi,mi)->rand(Multinomial(mi, qi)),q,m)...)')
+counts = convert(SparseMatrixCSC{Float64,Int},hcat(broadcast((qi,mi)->rand(Multinomial(mi, qi)),q,ctotal)...)')
 countsint = convert(Matrix{Int64},counts) # used for testing the int eltype case
 
 newcovars = covars[1:10,:]
 
 covarsdf = DataFrame(covars,[:v1, :v2, :vy])
-projdir = something(findfirst(isequal(:vy),names(covarsdf)),0)
+global projdir = something(findfirst(isequal(:vy),names(covarsdf)),0)
 
 # # uncomment to generate R benchmark
 # using RCall
