@@ -8,7 +8,7 @@ testargs = Dict(:verbose=>false,:showwarnings=>true)
 
 f = @model(h ~ v1 + v2 + vy, c ~ v1 + v2 + vy)
 @test show(IOBuffer(),f) == nothing
-projdir = something(findfirst(isequal(:vy), names(covarsdf)), 0)
+
 dirpos = 3
 dirzero = 3
 
@@ -53,7 +53,7 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 @test p == ncovarszero(hdmrpaths3)
 @test size(hdmrpaths3.nlpaths,1) == d
 η = predict(hdmrpaths3,newcovars)
-@test sum(η,2) ≈ ones(size(η,1))
+@test sum(η, dims=2) ≈ ones(size(η, 1))
 coefsallpos, coefsallzero = coef(hdmrpaths3; select=:all)
 @test size(coefsallpos,1) > 1
 @test size(coefsallpos,2) == p+1
@@ -136,11 +136,11 @@ X2b, X2_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; includem=fals
 @test X2_nocountsb == X2_nocountsb
 @test inzb == inzb
 
-X3, X3_nocounts, inz3 = srprojX(coefsHppos,coefsHpzero,zeros(counts),covars,projdir; includem=true)
+X3, X3_nocounts, inz3 = srprojX(coefsHppos,coefsHpzero,zero(counts),covars,projdir; includem=true)
 @test X3_nocounts == [ones(n) covars[:,setdiff(1:p,[projdir])]]
 @test inz3 == [2]
 
-X3, X3_nocounts, inz3b = srprojX(coefsHppos,coefsHpzero,zeros(counts),covars,projdir; includem=true, inz=inz3)
+X3, X3_nocounts, inz3b = srprojX(coefsHppos,coefsHpzero,zero(counts),covars,projdir; includem=true, inz=inz3)
 @test X3_nocounts == [ones(n) covars[:,setdiff(1:p,[projdir])]]
 @test inz3 == inz3b
 
@@ -187,7 +187,7 @@ f = @model(h ~ v1 + v2 + vy, c ~ v2 + vy)
 inzero = 1:p
 inpos = 2:p
 ppos = p-1
-projdir = something(findfirst(isequal(:vy), names(covarsdf)), 0)
+
 dirpos = 2
 dirzero = 3
 
@@ -230,7 +230,7 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 @test p == ncovarszero(hdmrpaths3)
 @test size(hdmrpaths3.nlpaths,1) == d
 η = predict(hdmrpaths3,newcovars)
-@test sum(η,2) ≈ ones(size(η,1))
+@test sum(η, dims=2) ≈ ones(size(η, 1))
 
 # # hurdle dmr serial
 hdmrcoefs3 = hdmr(covars, counts; inpos=inpos, parallel=false, testargs...)
@@ -321,7 +321,7 @@ inzero = [1,2]
 inpos = 1:p
 ppos = length(inpos)
 pzero = length(inzero)
-projdir = something(findfirst(isequal(:vy), names(covarsdf)), 0)
+
 dirpos = 3
 dirzero = 0
 
@@ -364,7 +364,7 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 @test pzero == ncovarszero(hdmrpaths3)
 @test size(hdmrpaths3.nlpaths,1) == d
 η = predict(hdmrpaths3,newcovars)
-@test sum(η,2) ≈ ones(size(η,1))
+@test sum(η, dims=2) ≈ ones(size(η, 1))
 
 # # hurdle dmr serial
 hdmrcoefs3 = hdmr(covars, counts; inzero=inzero, parallel=false, testargs...)
@@ -449,7 +449,7 @@ f = @model(h ~ v1 + v2, c ~ v2 + vy)
 @test show(IOBuffer(),f) == nothing
 inzero = 1:2
 inpos = 2:3
-projdir = something(findfirst(isequal(:vy), names(covarsdf)), 0)
+
 
 pzero = length(inzero)
 ppos = length(inpos)
@@ -496,7 +496,7 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 @test pzero == ncovarszero(hdmrpaths3)
 @test size(hdmrpaths3.nlpaths,1) == d
 η = predict(hdmrpaths3,newcovars)
-@test sum(η,2) ≈ ones(size(η,1))
+@test sum(η, dims=2) ≈ ones(size(η, 1))
 
 # hurdle dmr serial
 hdmrcoefs3 = hdmr(covars, counts; inpos=inpos, inzero=inzero, parallel=false, testargs...)
@@ -588,7 +588,7 @@ zcounts[:,2] = zeros(n)
 zcounts[:,3] = ones(n)
 
 # make sure we are not adding all zero obseravtions
-m = sum(zcounts,2)
+m = sum(zcounts, dims=2)
 @test sum(m .== 0) == 0
 
 # hurdle dmr parallel local cluster
@@ -607,18 +607,18 @@ coefsHppos2, coefsHpzero2 = coef(hdmrcoefs)
 @test coefsHppos ≈ coefsHppos2
 @test coefsHpzero ≈ coefsHpzero2
 η = predict(hdmrcoefs2,newcovars)
-@test sum(η,2) ≈ ones(size(newcovars,1))
+@test sum(η, dims=2) ≈ ones(size(newcovars, 1))
 @test η[:,2] == zeros(size(newcovars,1))
 @test η[:,3] ≈ ones(size(newcovars,1))*0.36 atol=0.05
 @test η[:,4] ≈ ones(size(newcovars,1))*0.6 atol=0.1
 
 # hurdle dmr serial paths
-hdmrcoefs3 = @test_logs (:warn, r"failed for countsj") fit(HDMRPaths,covars, zcounts; parallel=false, testargs...)
+hdmrcoefs3 = @test_logs (:warn, r"fit\(Hurdle...\) failed for countsj") (:warn, r"ypos has no elements larger than 1") fit(HDMRPaths,covars, zcounts; parallel=false, testargs...)
 coefsHppos3, coefsHpzero3 = coef(hdmrcoefs3)
 @test coefsHppos ≈ coefsHppos3
 @test coefsHpzero ≈ coefsHpzero3
 η = predict(hdmrcoefs3,newcovars)
-@test sum(η,2) ≈ ones(size(newcovars,1))
+@test sum(η, dims=2) ≈ ones(size(newcovars, 1))
 @test η[:,2] == zeros(size(newcovars,1))
 @test η[:,3] ≈ ones(size(newcovars,1))*0.36 atol=0.05
 @test η[:,4] ≈ ones(size(newcovars,1))*0.6 atol=0.1
@@ -637,7 +637,7 @@ end
 
 @testset "degenerate case of no hurdle variation (all counts > 0)" begin
 
-zcounts = full(deepcopy(counts))
+zcounts = Matrix(deepcopy(counts))
 Random.seed!(13)
 for I = eachindex(zcounts)
     if iszero(zcounts[I])
@@ -646,7 +646,7 @@ for I = eachindex(zcounts)
 end
 
 # make sure we are not adding all zero obseravtions
-m = sum(zcounts,2)
+m = sum(zcounts, dims=2)
 @test sum(m .== 0) == 0
 
 # hurdle dmr parallel local cluster

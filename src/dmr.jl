@@ -166,7 +166,7 @@ function StatsBase.coef(m::DMRPaths; select=:AICc)
   # establish maximum path lengths
   nλ = 0
   if !isempty(nonmsngpaths)
-    nλ = maximum(broadcast(nlpath->size(nlpath)[2],nonmsngpaths))
+    nλ = maximum(size(nlpath)[2] for nlpath in nonmsngpaths)
   end
 
   # allocate space
@@ -289,7 +289,7 @@ function dmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
     end
   else
     verbose && @info("serial poisson run on a single node")
-    coefs = Matrix{T}(ncoef,d)
+    coefs = Matrix{T}(undef,ncoef,d)
     for j=1:d
       tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false, showwarnings=showwarnings, intercept=intercept, kwargs...)
     end
@@ -436,7 +436,7 @@ function _predict(m, newcovars::AbstractMatrix{T};
     end
   end
 
-  LinearAlgebra.scale!(one(T)./vec(sum(η,2)),η)
+  lmul!(Diagonal(one(T)./vec(sum(η, dims=2))),η)
 
   η
 end

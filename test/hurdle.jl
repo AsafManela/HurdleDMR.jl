@@ -25,8 +25,6 @@ const ixpartial = 50:60
 ###########################################################
 @testset "hurdle with Xpos == Xzero" begin
 
-using LinearAlgebra
-
 ## logit-poisson
 # R"fm_hp1 <- hurdle(art ~ fem + mar + kid5 + phd + ment, data = bioChemists)"
 # print(R"summary(fm_hp1)")

@@ -175,8 +175,8 @@ function StatsBase.coef(m::HDMRPaths; select=:AICc)
   # establish maximum path lengths
   nλzero = nλpos = 0
   if !isempty(nonmsngpaths)
-    nλzero = maximum(broadcast(nlpath->size(nlpath.mzero)[2],nonmsngpaths))
-    nλpos = maximum(broadcast(nlpath->size(nlpath.mpos)[2],nonmsngpaths))
+    nλzero = maximum(size(nlpath.mzero)[2] for nlpath in nonmsngpaths)
+    nλpos = maximum(size(nlpath.mpos)[2] for nlpath in nonmsngpaths)
   end
 
   nλ = max(nλzero,nλpos)
@@ -425,8 +425,8 @@ function hdmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
     end
   else
     verbose && @info("serial hurdle run on a single node")
-    coefszero = Matrix{T}(ncoefzero,d)
-    coefspos = Matrix{T}(ncoefpos,d)
+    coefszero = Matrix{T}(undef,ncoefzero,d)
+    coefspos = Matrix{T}(undef,ncoefpos,d)
     for j=1:d
       tryfith!(coefspos, coefszero, j, covars, counts, inpos, inzero; offset=μ, verbose=false, showwarnings=showwarnings, intercept=intercept, kwargs...)
     end
@@ -451,13 +451,13 @@ end
 
 Returns an array of the same dimensions of indicators for positive entries in A.
 """
-function posindic(A::AbstractArray)
+function posindic(A::AbstractArray{T}) where T
   # find positive y entries
-  ixpos = find(A)
+  ixpos = (LinearIndices(A))[findall(x->x!=0, A)]
 
   # build positive indicators matrix
   Ia = deepcopy(A)
-  Ia[ixpos] = 1
+  Ia[ixpos] .= one(T)
   Ia
 end
 
@@ -465,5 +465,5 @@ end
 function posindic(A::SparseMatrixCSC)
   m,n = size(A)
   I,J,V = findnz(A)
-  sparse(I,J,ones(V),m,n)
+  sparse(I, J, fill(1,length(V)), m, n)
 end

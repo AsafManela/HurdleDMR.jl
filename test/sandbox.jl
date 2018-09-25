@@ -106,7 +106,7 @@ covered_lines, total_lines = get_summary(coverage)
 function focus(X; j=:)
   X[:,j]
 end
-function focus2(X; j=indices(X,2))
+function focus2(X; j=axes(X,2))
   X[:,j]
 end
 
@@ -116,15 +116,15 @@ focus2(A)
 focus(A; j=3)
 focus2(A; j=3)
 
-j = indices(A,2)
+j = axes(A,2)
 j == 3:3
 A
-in(4000,indices(A,2))
+in(4000,axes(A,2))
 in(4000,3)
-A[indices(A,1),indices(A,2)]
+A[axes(A,1),axes(A,2)]
 j = 4
-focusj = to_indices(A,(:,4))
-A[indices(A,1),indices(A,2)]
+focusj = to_axes(A,(:,4))
+A[axes(A,1),axes(A,2)]
 A[:,4]
 A[focusj[1],focusj[2]]
 

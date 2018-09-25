@@ -142,7 +142,7 @@ end
 
 "Find column number of sprojdir"
 function ixprojdir(trms::StatsModels.Terms, sprojdir::Symbol)
-  ix = findfirst(trms.terms,sprojdir)
+  ix = something(findfirst(isequal(sprojdir), trms.terms), 0)
   @assert ix > 0 "$sprojdir not found in provided dataframe"
   ix
 end

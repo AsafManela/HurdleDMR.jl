@@ -17,8 +17,7 @@ countsint = convert(Matrix{Int64},counts) # used for testing the int eltype case
 newcovars = covars[1:10,:]
 
 covarsdf = DataFrame(covars,[:v1, :v2, :vy])
-global projdir = something(findfirst(isequal(:vy),names(covarsdf)),0)
-
+projdir = something(findfirst(isequal(:vy),names(covarsdf)),0)
 # # uncomment to generate R benchmark
 # using RCall
 # R"library(textir)"
@@ -31,7 +30,7 @@ global projdir = something(findfirst(isequal(:vy),names(covarsdf)),0)
 # z1Rdistrom = rcopy(R"as.matrix(srproj(fits,$counts,3))")
 # predictRdistrom = rcopy(R"as.matrix(predict(fits,$newcovars,type=\"response\"))")
 #
-# CSV.write(joinpath(testdir,"data","dmr_coefsRdistrom.csv.gz"),DataFrame(full(coefsRdistrom)))
+# CSV.write(joinpath(testdir,"data","dmr_coefsRdistrom.csv.gz"),DataFrame(Matrix(coefsRdistrom)))
 # CSV.write(joinpath(testdir,"data","dmr_zRdistrom.csv.gz"),DataFrame(zRdistrom))
 # CSV.write(joinpath(testdir,"data","dmr_z1Rdistrom.csv.gz"),DataFrame(z1Rdistrom))
 # CSV.write(joinpath(testdir,"data","dmr_predictRdistrom.csv.gz"),DataFrame(predictRdistrom))

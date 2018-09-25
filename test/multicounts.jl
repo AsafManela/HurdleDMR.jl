@@ -1,5 +1,5 @@
 # common args for all multicounts tests
-testargs = Dict(:γ=>γ, :λminratio=>0.01, :verbose=>false,:showwarnings=>true)
+testargs = Dict(:γ=>1.0, :λminratio=>0.01, :verbose=>false,:showwarnings=>true)
 
 counts1 = counts[:,:]
 counts2 = counts1[:,:]

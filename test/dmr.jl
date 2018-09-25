@@ -1,10 +1,11 @@
 # common args for all dmr tests
 # to get exactly Rdistrom's run use λminratio=0.01 because our gamlr's have different defaults
 testargs = Dict(:γ=>1.0, :λminratio=>0.01, :verbose=>false,:showwarnings=>true)
-global f = @model(c ~ v1 + v2 + vy)
-@test show(IOBuffer(),f) == nothing
 
 @testset "dmr" begin
+
+f = @model(c ~ v1 + v2 + vy)
+@test show(IOBuffer(),f) == nothing
 
 dmrcoefs = dmr(covars, counts; testargs...)
 coefs = coef(dmrcoefs)
@@ -67,12 +68,12 @@ regdata = DataFrame(y=covars[:,1], z=z[:,1], m=z[:,2])
 lm1 = lm(@formula(y ~ z+m), regdata)
 r21 = adjr2(lm1)
 
-@test coefs ≈ full(coefsRdistrom) rtol=rtol
+@test coefs ≈ Matrix(coefsRdistrom) rtol=rtol
 # println("rdist(coefs,coefsRdistrom)=$(rdist(coefs,coefsRdistrom))")
 
 η = predict(dmrPaths,newcovars)
 @test η ≈ predictRdistrom rtol=rtol
-@test sum(η,2) ≈ ones(size(newcovars,1))
+@test sum(η, dims=2) ≈ ones(size(newcovars, 1))
 
 @test_throws ErrorException predict(dmrcoefs,newcovars)
 
@@ -92,9 +93,9 @@ z1b = srproj(dmrcoefs, counts, projdir)
 z1c = srproj(coefs, counts, projdir)
 @test z1 ≈ z[:,[projdir,end]]
 
-z1dense = srproj(coefs, full(counts), projdir)
-z1denseb = srproj(dmrcoefs, full(counts), projdir)
-z1densec = srproj(dmrPaths, full(counts), projdir)
+z1dense = srproj(coefs, Matrix(counts), projdir)
+z1denseb = srproj(dmrcoefs, Matrix(counts), projdir)
+z1densec = srproj(dmrPaths, Matrix(counts), projdir)
 @test z1dense == z1denseb
 @test z1dense ≈ z1densec
 @test z1dense ≈ z1
@@ -123,7 +124,7 @@ X2b, X2_nocountsb, inz = srprojX(dmrcoefs,counts,covars,projdir; includem=false)
 # project in a single direction, focusing only on cj
 focusj = 3
 z1j = srproj(coefs, counts, projdir; focusj=focusj)
-z1jdense = srproj(coefs, full(counts), projdir; focusj=focusj)
+z1jdense = srproj(coefs, Matrix(counts), projdir; focusj=focusj)
 @test z1jdense == z1j
 
 X1j, X1j_nocounts, inz = srprojX(coefs,counts,covars,projdir; includem=true, focusj=focusj)
@@ -136,12 +137,12 @@ X2j, X2j_nocounts, inz = srprojX(coefs,counts,covars,projdir; includem=false, fo
 @test X2j == X1j[:,1:end-1]
 @test inz == [1]
 
-X1jfull, X1jfull_nocounts, inz = srprojX(coefs,full(counts),covars,projdir; includem=true, focusj=focusj)
+X1jfull, X1jfull_nocounts, inz = srprojX(coefs,Matrix(counts),covars,projdir; includem=true, focusj=focusj)
 @test X1jfull ≈ X1j
 @test X1jfull_nocounts ≈ X1jfull_nocounts
 @test inz == [1]
 
-X2jfull, X2jfull_nocounts, inz = srprojX(coefs,full(counts),covars,projdir; includem=false, focusj=focusj)
+X2jfull, X2jfull_nocounts, inz = srprojX(coefs,Matrix(counts),covars,projdir; includem=false, focusj=focusj)
 @test X2jfull ≈ X2j
 @test X2jfull_nocounts ≈ X2jfull_nocounts
 @test inz == [1]
@@ -191,6 +192,8 @@ end
 
 @testset "dmr degenerate cases" begin
 
+f = @model(c ~ v1 + v2 + vy)
+
 # always one (zero var) counts columns
 zcounts = deepcopy(counts)
 zcounts[:,2] = zeros(n)
@@ -221,8 +224,8 @@ zcoefs3 = coef(dmrzpaths3)
 
 # test an observation with all zeros
 zcounts = deepcopy(counts)
-zcounts[1,:] = 0.0
-m = sum(zcounts,2)
+zcounts[1,:] .= 0.0
+m = sum(zcounts, dims=2)
 @test sum(m .== 0) == 1
 dmrzcoefs = @test_logs (:warn, r"omitting 1") dmr(covars, zcounts; testargs...)
 dmrzcoefs2 = dmr(covars[2:end,:], counts[2:end,:]; testargs...)

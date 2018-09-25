@@ -10,7 +10,7 @@ your original covariates/attributes, are independent of text counts C given SR
 projections Z=[z_1 ... z_K].
 dir == nothing returns projections in all directions.
 """
-srproj(m::DMR, counts, dir::Union{Nothing,Int}=nothing; focusj=indices(counts,2), select=:AICc) =
+srproj(m::DMR, counts, dir::Union{Nothing,Int}=nothing; focusj=axes(counts,2), select=:AICc) =
   srproj(coef(m; select=select), counts, dir; intercept=hasintercept(m), focusj=focusj)
 
 """
@@ -23,14 +23,14 @@ your original covariates/attributes, are independent of text counts C given SR
 projections Z=[z_1 ... z_K].
 dir == nothing returns projections in all directions.
 """
-function srproj(coefs::AbstractMatrix{T}, counts, dir::Union{Nothing,Int}=nothing; intercept=true, focusj=indices(counts,2)) where T
+function srproj(coefs::AbstractMatrix{T}, counts, dir::Union{Nothing,Int}=nothing; intercept=true, focusj=axes(counts,2)) where T
    ixoffset = intercept ? 1 : 0 # omitting the intercept
    if dir==nothing
      Φ=coefs[ixoffset+1:end,focusj]' # all directions
    else
      Φ=coefs[ixoffset+dir:ixoffset+dir,focusj]' # keep only desired directions
    end
-   m = sum(counts,2) # total counts per observation
+   m = sum(counts, dims=2) # total counts per observation
    z = counts[:,focusj]*Φ ./ (m+(m.==0)) # scale to get frequencies
    [z m] # m is part of the sufficient reduction
 end
@@ -39,7 +39,7 @@ end
 Like srproj but efficiently interates over a sparse counts matrix, and
 only projects in a single direction (dir).
 """
-function srproj(coefs::AbstractMatrix{T}, counts::SparseMatrixCSC, dir::Int; intercept=true, focusj=indices(counts,2)) where T
+function srproj(coefs::AbstractMatrix{T}, counts::SparseMatrixCSC, dir::Int; intercept=true, focusj=axes(counts,2)) where T
    ixoffset = intercept ? 1 : 0 # omitting the intercept
    n,d = size(counts)
    zm = zeros(n,2)
@@ -138,8 +138,8 @@ function ixcovars(dir::Int, inpos, inzero)
   # @assert dir ∈ inpos "projection direction $dir must be included in coefpos estimation!"
 
   # findfirst returns 0 if not found
-  dirpos = findfirst(inpos,dir)
-  dirzero = findfirst(inzero,dir)
+  dirpos = something(findfirst(isequal(dir), inpos), 0)
+  dirzero = something(findfirst(isequal(dir), inzero), 0)
 
   ineither = union(inzero,inpos)
   ixnotdir = setdiff(ineither,[dir])

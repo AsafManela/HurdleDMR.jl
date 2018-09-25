@@ -40,10 +40,10 @@ function mergerhsterms(a::StatsModels.Terms, b::StatsModels.Terms)
   is_non_redundant = falses(length(eterms),length(terms))
   for t = 1:length(terms)
     for s in [a,b]
-      it = findfirst(s.terms,terms[t])
+      it = something(findfirst(isequal(terms[t]), s.terms), 0)
       if it > 0
         for et = 1:length(eterms)
-          iet = findfirst(s.terms,eterms[et])
+          iet = something(findfirst(isequal(eterms[et]), s.terms), 0)
           if iet > 0
             factors[et,t] = s.factors[iet,it]
             is_non_redundant[et,t] = s.is_non_redundant[iet,it]
@@ -52,14 +52,14 @@ function mergerhsterms(a::StatsModels.Terms, b::StatsModels.Terms)
       end
     end
   end
-  order = vec(sum(factors,1))
+  order = vec(sum(factors, dims=1))
   response = false
   intercept = false
 
   newt = StatsModels.Terms(terms, eterms, factors, is_non_redundant, order, response, intercept)
 
-  ina = findin(terms,a.terms)
-  inb = findin(terms,b.terms)
+  ina = findall((in)(a.terms), terms)
+  inb = findall((in)(b.terms), terms)
 
   newt, ina, inb
 end

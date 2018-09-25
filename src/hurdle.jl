@@ -63,7 +63,7 @@ function fitzero(::Type{M},
     catch e
       showwarnings && @warn("failed to fit zero counts model, possibly not enough variation in I(y). countmap(Iy)=$(countmap(Iy))")
       if typeof(e) <: ErrorException && (occursin("step-halving", e.msg) || occursin("failure to converge", e.msg) || occursin("failed to converge", e.msg)) ||
-          typeof(e) == Base.LinAlg.PosDefException || typeof(e) == DomainError
+          typeof(e) == PosDefException || typeof(e) == DomainError
         fittedzero = false
       else
         showwarnings && @warn("X'=$(X')")
@@ -115,7 +115,7 @@ function fitpos(::Type{M},
     catch e
       showwarnings && @warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos. countmap(ypos)=$(sort(countmap(ypos)))")
       if typeof(e) <: ErrorException && (occursin("step-halving", e.msg) || occursin("failure to converge", e.msg) || occursin("failed to converge", e.msg)) ||
-          typeof(e) == Base.LinAlg.PosDefException || typeof(e) == DomainError
+          typeof(e) == PosDefException || typeof(e) == DomainError
         fittedpos = false
       else
         showwarnings && @warn("Xpos'=$(Xpos')")
