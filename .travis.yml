@@ -4,7 +4,6 @@ os:
   - linux
   - osx
 julia:
-  - 0.6
   - 0.7
   - 1.0
   - nightly
@@ -19,18 +18,9 @@ matrix:
  allow_failures:
  - julia: nightly
 
-## uncomment and modify the following lines to manually install system packages
-#addons:
-#  apt: # apt-get for linux
-#    packages:
-#    - gfortran
-#before_script: # homebrew for mac
-#  - if [ $TRAVIS_OS_NAME = osx ]; then brew install gcc; fi
-
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  # - julia --check-bounds=yes -e 'using Pkg; Pkg.add("https://github.com/AsafManela/Lasso.jl#am/0.7upgrade"); Pkg.clone(pwd()); Pkg.build("HurdleDMR"); Pkg.test("HurdleDMR", coverage=true)'
-  - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/AsafManela/Lasso.jl", rev="am/0.7upgrade")); Pkg.build(); Pkg.test(; coverage=true)'
+  - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/AsafManela/Lasso.jl", rev="am/0.7upgrade")); Pkg.clone(pwd()); Pkg.build("HurdleDMR"); Pkg.test("HurdleDMR"; coverage=true)'
 
 after_success:
   - julia -e 'Pkg.add("Documenter")'
