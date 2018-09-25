@@ -358,9 +358,12 @@ coefs0or1pos, coefs0or1zero = coef(hurdle;select=:all)
 @test coefs0or1pos == coefsJpos
 @test coefs0or1zero == coefsJzero
 
+@info("Testing hurdle degenerate cases. The following warnings about step-halving are expected ...")
+
 # degenerate positive counts data case 1 without zeros
 y0or1 = deepcopy(y)
 y0or1[y.==0] .= 1
+
 hurdle = @test_logs (:warn, r"I\(y\) is all ones") fit(Hurdle,GammaLassoPath,X,y0or1; verbose=true, showwarnings=true)
 coefs0or1=vcat(coef(hurdle;select=:AICc)...)
 @test vec(coefs0or1) ≈ [-7.34062, 0.0, 0.0, 0.0] rtol=1e-4

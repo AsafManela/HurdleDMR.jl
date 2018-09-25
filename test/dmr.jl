@@ -5,7 +5,7 @@ testargs = Dict(:γ=>1.0, :λminratio=>0.01, :verbose=>false,:showwarnings=>true
 @testset "dmr" begin
 
 f = @model(c ~ v1 + v2 + vy)
-@test show(IOBuffer(),f) == nothing
+@test_show f "1-part model: [Formula: c ~ v1 + v2 + vy]"
 
 dmrcoefs = dmr(covars, counts; testargs...)
 coefs = coef(dmrcoefs)
@@ -191,6 +191,8 @@ end
 #########################################################################3
 
 @testset "dmr degenerate cases" begin
+
+@info("Testing dmr degenerate cases. The 2 following warnings by workers are expected ...")
 
 f = @model(c ~ v1 + v2 + vy)
 

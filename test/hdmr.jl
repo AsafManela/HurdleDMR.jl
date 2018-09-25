@@ -7,7 +7,7 @@ testargs = Dict(:verbose=>false,:showwarnings=>true)
 @testset "hurdle-dmr with covarspos == covarszero" begin
 
 f = @model(h ~ v1 + v2 + vy, c ~ v1 + v2 + vy)
-@test show(IOBuffer(),f) == nothing
+@test_show f "2-part model: [Formula: h ~ v1 + v2 + vy, Formula: c ~ v1 + v2 + vy]"
 
 dirpos = 3
 dirzero = 3
@@ -183,7 +183,7 @@ end
 @testset "hurdle-dmr with covarspos ≠ covarszero, both models includes projdir" begin
 
 f = @model(h ~ v1 + v2 + vy, c ~ v2 + vy)
-@test show(IOBuffer(),f) == nothing
+@test_show f "2-part model: [Formula: h ~ v1 + v2 + vy, Formula: c ~ v2 + vy]"
 inzero = 1:p
 inpos = 2:p
 ppos = p-1
@@ -316,7 +316,7 @@ end
 @testset "hurdle-dmr with covarspos ≠ covarszero, only pos model includes projdir" begin
 
 f = @model(h ~ v1 + v2, c ~ v1 + v2 + vy)
-@test show(IOBuffer(),f) == nothing
+@test_show f "2-part model: [Formula: h ~ v1 + v2, Formula: c ~ v1 + v2 + vy]"
 inzero = [1,2]
 inpos = 1:p
 ppos = length(inpos)
@@ -446,7 +446,7 @@ end
 @testset "hurdle-dmr with covarspos ≠ covarszero, v1 excluded from pos model" begin
 
 f = @model(h ~ v1 + v2, c ~ v2 + vy)
-@test show(IOBuffer(),f) == nothing
+@test_show f "2-part model: [Formula: h ~ v1 + v2, Formula: c ~ v2 + vy]"
 inzero = 1:2
 inpos = 2:3
 
@@ -581,6 +581,8 @@ hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:vy,Gamma(); n
 end
 
 @testset "degenerate cases" begin
+
+@info("Testing hdmr degenerate cases. The 3 following warnings by workers are expected ...")
 
 # column j is never zero, so hj=1 for all observations
 zcounts = deepcopy(counts)

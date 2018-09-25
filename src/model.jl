@@ -28,8 +28,16 @@ function model_helper(args...)
 end
 
 function Base.show(io::IO, m::Model)
-  println(io, "$(length(m.parts))-part model:")
-  println.(io, m.parts)
+  print(io, "$(length(m.parts))-part model: [")
+  notfirst = false
+  for p in m.parts
+    if notfirst
+      print(io, ", ")
+    end
+    print(io, p)
+    notfirst = true
+  end
+  print(io, "]")
   nothing
 end
 
