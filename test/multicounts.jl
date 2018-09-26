@@ -8,11 +8,13 @@ counts3 = counts2[:,:]
 counts3[3:end,:] += counts1[1:end-2,:]
 multicounts = [counts1, counts2, counts3]
 
-@testset "mcdmr" begin
-
 dmrcoefs = dmr(covars, multicounts[1]; testargs...)
 
 Z, multicoefs = mcdmr(covars, multicounts, projdir; testargs...)
+
+# NOTE: something about @testset in windows makes the mcdmr call fail
+# if it is inside the @testset block
+@testset "mcdmr" begin
 
 coefs = coef(dmrcoefs)
 @test size(coefs) == (p+1, d)
