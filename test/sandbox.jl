@@ -34,10 +34,6 @@ m = hdmr(covars, counts; inpos=1:4, inzero=1:5, showwarnings=true)
 mf = @model(h ~ cat + x + y + z, c ~ cat + x + y)
 m2 = fit(HDMR, mf, covarsdf, counts)
 
-coef(m)
-
-coef(m2.model)
-
 # where the h ~ equation is the model for zeros (hurdle crossing) and c ~ is the model for positive counts
 
 # in either case we can get the coefficients matrix for each variable + intercept as usual with
@@ -55,7 +51,7 @@ z = srproj(m,counts,1,1)
 # Counts inverse regression (cir) allows us to predict a covariate with the counts and other covariates
 # Here we use hdmr for the backward regression and another model for the forward regression
 # This can be accomplished with a single command, by fitting a CIR{HDMR,FM} where the forward model is FM <: RegressionModel
-cir = fit(CIR{HDMR,LinearModel},mf,covarsdf,counts,:vy; nocounts=true)
+cir = fit(CIR{HDMR,LinearModel},mf,covarsdf,counts,:y; nocounts=true)
 # where the argument nocounts=true means we also fit a benchmark model without counts
 
 # we can get the forward and backward model coefficients with
@@ -73,7 +69,7 @@ yhat_nocounts = predict(cir, covarsdf[1:10,:], counts[1:10,:]; nocounts=true)
 m = dmr(covars, counts)
 
 # or with a dataframe and formula
-mf = @model(c ~ vy + v1 + v2)
+mf = @model(c ~ x + z + y)
 m = fit(DMR, mf, covarsdf, counts)
 
 # in either case we can get the coefficients matrix for each variable + intercept as usual with
@@ -91,7 +87,7 @@ z = srproj(m,counts,1)
 
 # A multinomial inverse regression (mnir) uses dmr for the backward regression and another model for the forward regression
 # This can be accomplished with a single command, by fitting a CIR{DMR,FM} where FM is the forward RegressionModel
-mnir = fit(CIR{DMR,LinearModel},mf,covarsdf,counts,:vy)
+mnir = fit(CIR{DMR,LinearModel},mf,covarsdf,counts,:y)
 
 # we can get the forward and backward model coefficients with
 coefbwd(mnir)
@@ -101,7 +97,7 @@ coeffwd(mnir)
 yhat = predict(mnir, covarsdf[1:10,:], counts[1:10,:])
 
 # Suppose instead we want to predict a discrete variable, then perhaps use a Poisson GLM as follows
-mnir = fit(CIR{DMR,GeneralizedLinearModel},mf,covarsdf,counts,:vy,Gamma())
+mnir = fit(CIR{DMR,GeneralizedLinearModel},mf,covarsdf,counts,:y,Gamma())
 
 
 
