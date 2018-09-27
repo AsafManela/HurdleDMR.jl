@@ -1,16 +1,19 @@
 # common args for all dmr tests
 # to get exactly Rdistrom's run use λminratio=0.01 because our gamlr's have different defaults
-testargs = Dict(:γ=>1.0, :λminratio=>0.01, :verbose=>false,:showwarnings=>true)
+testargs = Dict(:γ=>γdistrom, :λminratio=>0.01, :verbose=>false,:showwarnings=>true)
 
 @testset "dmr" begin
 
-f = @model(c ~ v1 + v2 + vy)
-@test_show f "1-part model: [Formula: c ~ v1 + v2 + vy]"
+f = @model(c ~ x + z + cat + y)
+@test_show f "1-part model: [Formula: c ~ x + z + cat + y]"
 
 dmrcoefs = dmr(covars, counts; testargs...)
 coefs = coef(dmrcoefs)
 @test size(coefs) == (p+1, d)
 @test_throws ErrorException coef(dmrcoefs; select=:all)
+@test coefs ≈ coefsRdistrom rtol=rtol
+coefs ./ coefsRdistrom
+# println("rdist(coefs,coefsRdistrom)=$(rdist(coefs,coefsRdistrom))")
 
 # test Int matrix for counts
 dmrcoefsint = dmr(covars, countsint; testargs...)
@@ -68,11 +71,9 @@ regdata = DataFrame(y=covars[:,1], z=z[:,1], m=z[:,2])
 lm1 = lm(@formula(y ~ z+m), regdata)
 r21 = adjr2(lm1)
 
-@test coefs ≈ Matrix(coefsRdistrom) rtol=rtol
-# println("rdist(coefs,coefsRdistrom)=$(rdist(coefs,coefsRdistrom))")
-
 η = predict(dmrPaths,newcovars)
-@test η ≈ predictRdistrom rtol=rtol
+@test η ≈ predictRdistrom rtol=5rtol
+# rdist(η,predictRdistrom)
 @test sum(η, dims=2) ≈ ones(size(newcovars, 1))
 
 @test_throws ErrorException predict(dmrcoefs,newcovars)
@@ -102,7 +103,7 @@ z1densec = srproj(dmrPaths, Matrix(counts), projdir)
 
 @test z1 ≈ z1Rdistrom rtol=rtol
 X1, X1_nocounts, inz = srprojX(coefs,counts,covars,projdir; includem=true)
-@test X1_nocounts == [ones(n,1) covars[:,1:2]]
+@test X1_nocounts == [ones(n,1) covars[:,1:4]]
 @test X1 == [X1_nocounts z1]
 @test inz == [1]
 
@@ -128,7 +129,7 @@ z1jdense = srproj(coefs, Matrix(counts), projdir; focusj=focusj)
 @test z1jdense == z1j
 
 X1j, X1j_nocounts, inz = srprojX(coefs,counts,covars,projdir; includem=true, focusj=focusj)
-@test X1j_nocounts == [ones(n,1) covars[:,1:2]]
+@test X1j_nocounts == [ones(n,1) covars[:,1:4]]
 @test X1j == [X1_nocounts z1j]
 @test inz == [1]
 
@@ -148,8 +149,6 @@ X2jfull, X2jfull_nocounts, inz = srprojX(coefs,Matrix(counts),covars,projdir; in
 @test inz == [1]
 
 # MNIR
-# using Juno
-# Juno.@enter fit(CIR{DMR,LinearModel},covars,counts,1)
 mnir = fit(CIR{DMR,LinearModel},covars,counts,projdir; nocounts=true, testargs...)
 @test coefbwd(mnir) ≈ coef(dmrcoefs)
 mnirglm = fit(CIR{DMR,GeneralizedLinearModel},covars,counts,projdir,Gamma(); nocounts=false, testargs...)
@@ -160,29 +159,50 @@ mnirglm = fit(CIR{DMR,GeneralizedLinearModel},covars,counts,projdir,Gamma(); noc
 @test !(predict(mnir,covars[1:10,:],counts[1:10,:]) ≈ predict(mnir,covars[1:10,:],counts[1:10,:];nocounts=true))
 @test_throws ErrorException predict(mnirglm,covars[1:10,:],counts[1:10,:];nocounts=true)
 
-mnirdf = fit(CIR{DMR,LinearModel},f,covarsdf,counts,:vy; nocounts=true, testargs...)
+mnirdf = fit(CIR{DMR,LinearModel},f,covarsdf,counts,:y; nocounts=true, testargs...)
 @test coefbwd(mnirdf) ≈ coef(dmrcoefs)
 @test coeffwd(mnirdf) ≈ coeffwd(mnir)
 @test coeffwd(mnirdf) != coeffwd(mnir; nocounts=true)
 @test coef(mnirdf) ≈ coef(mnir)
-mnirglmdf = fit(CIR{DMR,GeneralizedLinearModel},f,covarsdf,counts,:vy,Gamma(); nocounts=false, testargs...)
+mnirglmdf = fit(CIR{DMR,GeneralizedLinearModel},f,covarsdf,counts,:y,Gamma(); nocounts=false, testargs...)
 @test coefbwd(mnirglmdf) ≈ coef(dmrcoefs)
 @test_throws ErrorException coeffwd(mnirglmdf; nocounts=true)
+# #### debug start
+# mm = mnirdf
+# mdf = covarsdf[1:10,:]
+# newTerms = StatsModels.dropresponse!(mm.mf.terms)
+# # create new model frame/matrix
+# newTerms.intercept = true
+# mf = ModelFrame(newTerms, mdf; contrasts = mm.mf.contrasts)
+# mf.terms.intercept = false
+# newX = ModelMatrix(mf).m
+# if !all(mf.nonmissing)
+# counts = counts[mf.nonmissing,:]
+# end
+# yp = predict(mm, newX, counts; kwargs...)
+# out = missings(eltype(yp), size(df, 1))
+# out[mf.nonmissing] = yp
+#
+# predict(mnirdf,covarsdf[1:10,:],counts[1:10,:])
+# size(covarsdf)
+# mnirdf.model.projdir
+# #### debug end
+@test !(predict(mnirdf,covarsdf[1:10,:],counts[1:10,:]) ≈ predict(mnirglmdf,covarsdf[1:10,:],counts[1:10,:]))
 @test !(predict(mnirdf,covarsdf[1:10,:],counts[1:10,:]) ≈ predict(mnirglmdf,covarsdf[1:10,:],counts[1:10,:]))
 @test !(predict(mnirdf,covarsdf[1:10,:],counts[1:10,:]) ≈ predict(mnirdf,covarsdf[1:10,:],counts[1:10,:];nocounts=true))
 @test_throws ErrorException predict(mnirglmdf,covarsdf[1:10,:],counts[1:10,:];nocounts=true)
 
-zlm = lm(hcat(ones(n,1),z1,covars[:,1:2]),covars[:,projdir])
+zlm = lm(hcat(ones(n,1),z1,covars[:,1:4]),covars[:,projdir])
 @test r2(zlm) ≈ r2(mnir)
 @test adjr2(zlm) ≈ adjr2(mnir)
-@test predict(zlm,hcat(ones(10,1),z1[1:10,:],covars[1:10,1:2])) ≈ predict(mnir,covars[1:10,:],counts[1:10,:])
-@test predict(zlm,hcat(ones(10,1),z1[1:10,:],covars[1:10,1:2])) ≈ predict(mnirdf,covars[1:10,:],counts[1:10,:])
+@test predict(zlm,hcat(ones(10,1),z1[1:10,:],covars[1:10,1:4])) ≈ predict(mnir,covars[1:10,:],counts[1:10,:])
+@test predict(zlm,hcat(ones(10,1),z1[1:10,:],covars[1:10,1:4])) ≈ predict(mnirdf,covars[1:10,:],counts[1:10,:])
 
-zlmnocounts = lm(hcat(ones(n,1),covars[:,1:2]),covars[:,projdir])
+zlmnocounts = lm(hcat(ones(n,1),covars[:,1:4]),covars[:,projdir])
 @test r2(zlmnocounts) ≈ r2(mnir; nocounts=true)
 @test adjr2(zlmnocounts) ≈ adjr2(mnir; nocounts=true)
-@test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,1:2])) ≈ predict(mnir,covars[1:10,:],counts[1:10,:]; nocounts=true)
-@test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,1:2])) ≈ predict(mnirdf,covars[1:10,:],counts[1:10,:]; nocounts=true)
+@test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,1:4])) ≈ predict(mnir,covars[1:10,:],counts[1:10,:]; nocounts=true)
+@test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,1:4])) ≈ predict(mnirdf,covars[1:10,:],counts[1:10,:]; nocounts=true)
 
 end
 
@@ -194,7 +214,7 @@ end
 
 @info("Testing dmr degenerate cases. The 2 following warnings by workers are expected ...")
 
-f = @model(c ~ v1 + v2 + vy)
+f = @model(c ~ x + z + cat + y)
 
 # always one (zero var) counts columns
 zcounts = deepcopy(counts)
@@ -243,7 +263,7 @@ dmrzcoefsdf = fit(DMR, f, zcovarsdf, counts; testargs...)
 zcoefsdf = coef(dmrzcoefsdf)
 @test zcoefsdf == zcoefs3
 
-zmnirdf = fit(CIR{DMR,LinearModel},f,zcovarsdf,counts,:vy; nocounts=true, testargs...)
+zmnirdf = fit(CIR{DMR,LinearModel},f,zcovarsdf,counts,:y; nocounts=true, testargs...)
 zyhat = predict(zmnirdf, zcovarsdf, counts)
 @test ismissing(zyhat[1])
 @test !any(ismissing,zyhat[2:end])

@@ -99,7 +99,7 @@ function StatsBase.fit(::Type{C}, m::Model, df::AbstractDataFrame, counts::Abstr
   mf, mm, counts = createmodelmatrix(trms, df, counts, contrasts)
 
   # resolve projdir
-  projdir = ixprojdir(trms, sprojdir)
+  projdir = ixprojdir(trms, sprojdir, mm)
 
   # fit and wrap in DataFrameRegressionModel
   StatsModels.DataFrameRegressionModel(fit(C, mm.m, counts, projdir, fmargs...; kwargs...), mf, mm)
@@ -133,18 +133,23 @@ function StatsBase.fit(::Type{C}, m::Model, df::AbstractDataFrame, counts::Abstr
   # create model matrix
   mf, mm, counts = createmodelmatrix(trms, df, counts, contrasts)
 
+  # inzero and inpos may be different in mm with factor variables
+  inzero, inpos = mapins(inzero, inpos, mm)
+
   # resolve projdir
-  projdir = ixprojdir(trms, sprojdir)
+  projdir = ixprojdir(trms, sprojdir, mm)
 
   # fit and wrap in DataFrameRegressionModel
   StatsModels.DataFrameRegressionModel(fit(C, mm.m, counts, projdir, fmargs...; inzero=inzero, inpos=inpos, kwargs...), mf, mm)
 end
 
 "Find column number of sprojdir"
-function ixprojdir(trms::StatsModels.Terms, sprojdir::Symbol)
+function ixprojdir(trms::StatsModels.Terms, sprojdir::Symbol, mm)
   ix = something(findfirst(isequal(sprojdir), trms.terms), 0)
   @assert ix > 0 "$sprojdir not found in provided dataframe"
-  ix
+  mappedix = something(findfirst(isequal(ix), mm.assign), 0)
+  @assert mappedix > 0 "$sprojdir not found in ModelMatrix (perhaps redundant?)"
+  mappedix
 end
 
 StatsModels.@delegate StatsModels.DataFrameRegressionModel.model [coeffwd, coefbwd, srproj, srprojX]
@@ -184,7 +189,10 @@ function StatsBase.predict(mm::MM, df::AbstractDataFrame, counts::AbstractMatrix
     # term is not found in the DataFrame and we don't want to remove elements with missing y)
     newTerms = StatsModels.dropresponse!(mm.mf.terms)
     # create new model frame/matrix
+    newTerms.intercept = true
     mf = ModelFrame(newTerms, df; contrasts = mm.mf.contrasts)
+    mf.terms.intercept = false
+
     newX = ModelMatrix(mf).m
     if !all(mf.nonmissing)
       counts = counts[mf.nonmissing,:]

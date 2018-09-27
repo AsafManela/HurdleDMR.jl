@@ -6,11 +6,11 @@ testargs = Dict(:verbose=>false,:showwarnings=>true)
 ###########################################################
 @testset "hurdle-dmr with covarspos == covarszero" begin
 
-f = @model(h ~ v1 + v2 + vy, c ~ v1 + v2 + vy)
-@test_show f "2-part model: [Formula: h ~ v1 + v2 + vy, Formula: c ~ v1 + v2 + vy]"
+f = @model(h ~ x + z + cat + y, c ~ x + z + cat + y)
+@test_show f "2-part model: [Formula: h ~ x + z + cat + y, Formula: c ~ x + z + cat + y]"
 
-dirpos = 3
-dirzero = 3
+dirpos = 5
+dirzero = 5
 
 # hurdle dmr parallel local cluster
 hdmrcoefs = hdmr(covars, counts; parallel=true, testargs...)
@@ -121,7 +121,7 @@ Z0zero = srproj(coefsHppos, coefsHpzero, counts, projdir, 0; intercept=true)
 @test_throws ErrorException srproj(coefsHppos, coefsHpzero, counts, 0, 0; intercept=true)
 
 X1, X1_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; includem=true)
-@test X1_nocounts == [ones(n) covars[:,1:2]]
+@test X1_nocounts == [ones(n) covars[:,1:4]]
 @test X1 == [X1_nocounts Z1]
 X1b, X1_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; includem=true)
 @test X1 == X1b
@@ -155,25 +155,25 @@ hirglm = fit(CIR{HDMR,GeneralizedLinearModel},covars,counts,projdir,Gamma(); noc
 @test !(coeffwd(hirglm)[1] ≈ coeffwd(hir)[1])
 @test !(coeffwd(hirglm)[2] ≈ coeffwd(hir)[2])
 
-hirdf = fit(CIR{HDMR,LinearModel},f,covarsdf,counts,:vy; nocounts=true, testargs...)
+hirdf = fit(CIR{HDMR,LinearModel},f,covarsdf,counts,:y; nocounts=true, testargs...)
 @test coefbwd(hirdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirdf)[2] ≈ coef(hdmrcoefs)[2]
 @test coeffwd(hirdf) ≈ coeffwd(hir)
-hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:vy,Gamma(); nocounts=true, testargs...)
+hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:y,Gamma(); nocounts=true, testargs...)
 @test coefbwd(hirglmdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirglmdf)[2] ≈ coef(hdmrcoefs)[2]
 @test !(coeffwd(hirglmdf)[2] ≈ coeffwd(hirdf)[2])
 @test !(coeffwd(hirglmdf)[1] ≈ coeffwd(hirdf)[1])
 
-zlm = lm(hcat(ones(n,1),Z1,covars[:,1:2]),covars[:,projdir])
+zlm = lm(hcat(ones(n,1),Z1,covars[:,1:4]),covars[:,projdir])
 @test r2(zlm) ≈ r2(hir)
 @test adjr2(zlm) ≈ adjr2(hir)
-@test predict(zlm,hcat(ones(10,1),Z1[1:10,:],covars[1:10,1:2])) ≈ predict(hir,covars[1:10,:],counts[1:10,:])
+@test predict(zlm,hcat(ones(10,1),Z1[1:10,:],covars[1:10,1:4])) ≈ predict(hir,covars[1:10,:],counts[1:10,:])
 
-zlmnocounts = lm(hcat(ones(n,1),covars[:,1:2]),covars[:,projdir])
+zlmnocounts = lm(hcat(ones(n,1),covars[:,1:4]),covars[:,projdir])
 @test r2(zlmnocounts) ≈ r2(hir; nocounts=true)
 @test adjr2(zlmnocounts) ≈ adjr2(hir; nocounts=true)
-@test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,1:2])) ≈ predict(hir,covars[1:10,:],counts[1:10,:]; nocounts=true)
+@test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,1:4])) ≈ predict(hir,covars[1:10,:],counts[1:10,:]; nocounts=true)
 
 end
 
@@ -182,14 +182,15 @@ end
 ####################################################################
 @testset "hurdle-dmr with covarspos ≠ covarszero, both models includes projdir" begin
 
-f = @model(h ~ v1 + v2 + vy, c ~ v2 + vy)
-@test_show f "2-part model: [Formula: h ~ v1 + v2 + vy, Formula: c ~ v2 + vy]"
+f = @model(h ~ x + z + cat + y, c ~ z + cat + y)
+@test_show f "2-part model: [Formula: h ~ x + z + cat + y, Formula: c ~ z + cat + y]"
+
 inzero = 1:p
 inpos = 2:p
-ppos = p-1
+ppos = length(inpos)
 
-dirpos = 2
-dirzero = 3
+dirpos = 4
+dirzero = 5
 
 # hurdle dmr parallel local cluster
 hdmrcoefs = hdmr(covars, counts; inpos=inpos, parallel=true, testargs...)
@@ -272,7 +273,7 @@ Z1b = srproj(hdmrcoefs, counts, dirpos, dirzero; intercept=true)
 @test Z1 == Z1b
 
 X1, X1_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inpos=inpos, includem=true)
-@test X1_nocounts == [ones(n) covars[:,1:2]]
+@test X1_nocounts == [ones(n) covars[:,1:4]]
 @test X1 == [X1_nocounts Z1]
 X1b, X1_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; inpos=inpos, includem=true)
 @test X1 == X1b
@@ -298,11 +299,11 @@ hirglm = fit(CIR{HDMR,GeneralizedLinearModel},covars,counts,projdir,Gamma(); inp
 @test !(coeffwd(hirglm)[1] ≈ coeffwd(hir)[1])
 @test !(coeffwd(hirglm)[2] ≈ coeffwd(hir)[2])
 
-hirdf = fit(CIR{HDMR,LinearModel},f,covarsdf,counts,:vy; nocounts=true, testargs...)
+hirdf = fit(CIR{HDMR,LinearModel},f,covarsdf,counts,:y; nocounts=true, testargs...)
 @test coefbwd(hirdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirdf)[2] ≈ coef(hdmrcoefs)[2]
 @test coeffwd(hirdf) ≈ coeffwd(hir)
-hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:vy,Gamma(); nocounts=true, testargs...)
+hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:y,Gamma(); nocounts=true, testargs...)
 @test coefbwd(hirglmdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirglmdf)[2] ≈ coef(hdmrcoefs)[2]
 @test !(coeffwd(hirglmdf)[2] ≈ coeffwd(hirdf)[2])
@@ -315,14 +316,14 @@ end
 ####################################################################
 @testset "hurdle-dmr with covarspos ≠ covarszero, only pos model includes projdir" begin
 
-f = @model(h ~ v1 + v2, c ~ v1 + v2 + vy)
-@test_show f "2-part model: [Formula: h ~ v1 + v2, Formula: c ~ v1 + v2 + vy]"
-inzero = [1,2]
+f = @model(h ~ x + z + cat, c ~ x + z + cat + y)
+@test_show f "2-part model: [Formula: h ~ x + z + cat, Formula: c ~ x + z + cat + y]"
+inzero = 1:4
 inpos = 1:p
 ppos = length(inpos)
 pzero = length(inzero)
 
-dirpos = 3
+dirpos = 5
 dirzero = 0
 
 # hurdle dmr parallel local cluster
@@ -402,7 +403,7 @@ Z1b = srproj(hdmrcoefs, counts, dirpos, dirzero; intercept=true)
 @test Z1 == Z1b
 
 X1, X1_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inzero=inzero, includem=true)
-@test X1_nocounts == [ones(n) covars[:,1:2]]
+@test X1_nocounts == [ones(n) covars[:,1:4]]
 @test X1 == [X1_nocounts Z1]
 X1b, X1_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; inzero=inzero, includem=true)
 @test X1 == X1b
@@ -428,11 +429,11 @@ hirglm = fit(CIR{HDMR,GeneralizedLinearModel},covars,counts,projdir,Gamma(); inz
 @test !(coeffwd(hirglm)[1] ≈ coeffwd(hir)[1])
 @test !(coeffwd(hirglm)[2] ≈ coeffwd(hir)[2])
 
-hirdf = fit(CIR{HDMR,LinearModel},f,covarsdf,counts,:vy; nocounts=true, testargs...)
+hirdf = fit(CIR{HDMR,LinearModel},f,covarsdf,counts,:y; nocounts=true, testargs...)
 @test coefbwd(hirdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirdf)[2] ≈ coef(hdmrcoefs)[2]
 @test coeffwd(hirdf) ≈ coeffwd(hir)
-hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:vy,Gamma(); nocounts=true, testargs...)
+hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:y,Gamma(); nocounts=true, testargs...)
 @test coefbwd(hirglmdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirglmdf)[2] ≈ coef(hdmrcoefs)[2]
 @test !(coeffwd(hirglmdf)[2] ≈ coeffwd(hirdf)[2])
@@ -445,16 +446,16 @@ end
 ########################################################################
 @testset "hurdle-dmr with covarspos ≠ covarszero, v1 excluded from pos model" begin
 
-f = @model(h ~ v1 + v2, c ~ v2 + vy)
-@test_show f "2-part model: [Formula: h ~ v1 + v2, Formula: c ~ v2 + vy]"
-inzero = 1:2
-inpos = 2:3
+f = @model(h ~ x + z + cat, c ~ z + cat + y)
+@test_show f "2-part model: [Formula: h ~ x + z + cat, Formula: c ~ z + cat + y]"
 
+inzero = 1:4
+inpos = 2:5
 
 pzero = length(inzero)
 ppos = length(inpos)
 
-dirpos = 2
+dirpos = 4
 dirzero = 0
 
 # hurdle dmr parallel local cluster
@@ -568,11 +569,11 @@ hirglm = fit(CIR{HDMR,GeneralizedLinearModel},covars,counts,projdir,Gamma(); inz
 @test !(coeffwd(hirglm)[1] ≈ coeffwd(hir)[1])
 @test !(coeffwd(hirglm)[2] ≈ coeffwd(hir)[2])
 
-hirdf = fit(CIR{HDMR,LinearModel},f,covarsdf,counts,:vy; nocounts=true, testargs...)
+hirdf = fit(CIR{HDMR,LinearModel},f,covarsdf,counts,:y; nocounts=true, testargs...)
 @test coefbwd(hirdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirdf)[2] ≈ coef(hdmrcoefs)[2]
 @test coeffwd(hirdf) ≈ coeffwd(hir)
-hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:vy,Gamma(); nocounts=true, testargs...)
+hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:y,Gamma(); nocounts=true, testargs...)
 @test coefbwd(hirglmdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirglmdf)[2] ≈ coef(hdmrcoefs)[2]
 @test !(coeffwd(hirglmdf)[2] ≈ coeffwd(hirdf)[2])
@@ -611,9 +612,9 @@ coefsHppos2, coefsHpzero2 = coef(hdmrcoefs)
 η = predict(hdmrcoefs2,newcovars)
 @test sum(η, dims=2) ≈ ones(size(newcovars, 1))
 @test η[:,2] == zeros(size(newcovars,1))
-@test η[:,3] ≈ ones(size(newcovars,1))*0.36 atol=0.05
-@test η[:,4] ≈ ones(size(newcovars,1))*0.6 atol=0.1
-
+@test η[:,3] ≈ ones(size(newcovars,1))*0.36 rtol=0.05
+# rdist(η[:,3], ones(size(newcovars,1))*0.36)
+@test η[:,4] ≈ ones(size(newcovars,1))*0.6 rtol=0.06
 # hurdle dmr serial paths
 hdmrcoefs3 = @test_logs (:warn, r"fit\(Hurdle...\) failed for countsj") (:warn, r"ypos has no elements larger than 1") fit(HDMRPaths,covars, zcounts; parallel=false, testargs...)
 coefsHppos3, coefsHpzero3 = coef(hdmrcoefs3)
@@ -622,8 +623,8 @@ coefsHppos3, coefsHpzero3 = coef(hdmrcoefs3)
 η = predict(hdmrcoefs3,newcovars)
 @test sum(η, dims=2) ≈ ones(size(newcovars, 1))
 @test η[:,2] == zeros(size(newcovars,1))
-@test η[:,3] ≈ ones(size(newcovars,1))*0.36 atol=0.05
-@test η[:,4] ≈ ones(size(newcovars,1))*0.6 atol=0.1
+@test η[:,3] ≈ ones(size(newcovars,1))*0.36 rtol=0.05
+@test η[:,4] ≈ ones(size(newcovars,1))*0.6 rtol=0.06
 
 # hurdle dmr serial coefs
 hdmrcoefs4 = @test_logs (:warn, r"failed on count dimension 2") fit(HDMR,covars, zcounts; parallel=false, testargs...)

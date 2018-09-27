@@ -72,6 +72,22 @@ function mergerhsterms(a::StatsModels.Terms, b::StatsModels.Terms)
   newt, ina, inb
 end
 
+"maps inzero and inpos to ModelMatrix columns (important with factor variables)"
+function mapins(inzero, inpos, mm)
+  mappedinzero = Int[]
+  mappedinpos = Int[]
+  for to=1:length(mm.assign)
+    from = mm.assign[to]
+    if from in inzero
+      push!(mappedinzero, to)
+    end
+    if from in inpos
+      push!(mappedinpos, to)
+    end
+  end
+  mappedinzero, mappedinpos
+end
+
 # """
 #   getpart(m, lhs[, clearlhs=true])
 #
