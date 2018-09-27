@@ -7,26 +7,37 @@ import HurdleDMR; @everywhere using HurdleDMR
 
 # Setup your data into an n-by-p covars matrix, and a (sparse) n-by-d counts matrix
 # Here we generate some random data
-using CSV, GLM, DataFrames, Distributions
+using CSV, GLM, DataFrames, Distributions, CategoricalArrays
 n = 100
 p = 3
 d = 4
 
 srand(13)
 m = 1+rand(Poisson(5),n)
-covars = rand(n,p)
-ηfn(vi) = exp.([0 + i*sum(vi) for i=1:d])
-q = [ηfn(covars[i,:]) for i=1:n]
-scale!.(q,ones(n)./sum.(q))
-counts = convert(SparseMatrixCSC{Float64,Int},hcat(broadcast((qi,mi)->rand(Multinomial(mi, qi)),q,m)...)')
-covarsdf = DataFrame(covars,[:vy, :v1, :v2])
+vs = rand(n,p)
+covarsdf = DataFrame(vs,[:y, :x, :z])
+covarsdf[:cat] = CategoricalArray(rand(["1","2","3"], n))
+ηfn(vi,g) = exp.([0 + i*sum(vi) - parse(Float64, g) for i=1:d])
+q = [ηfn(vs[i,:], covarsdf[i,:cat]) for i=1:n]
+for i=1:n
+  q[i] ./= sum(q[i])
+end
+counts = convert(SparseMatrixCSC{Float64,Int}, hcat(broadcast((qi,mi)->rand(Multinomial(mi, qi)),q,m)...)')
+
+# construct equivalent covars matrix so we can show how that api works too
+covars = ModelMatrix(ModelFrame(@formula(y ~ cat + x + y + z), covarsdf)).m[:,2:end]
 
 ## To fit a hurdle distribtued multiple regression (hdmr):
-m = hdmr(covars, counts; inpos=1:2, inzero=1:3)
+m = hdmr(covars, counts; inpos=1:4, inzero=1:5, showwarnings=true)
 
 # or with a dataframe and formula
-mf = @model(h ~ vy + v1 + v2, c ~ vy + v1)
-m = fit(HDMR, mf, covarsdf, counts)
+mf = @model(h ~ cat + x + y + z, c ~ cat + x + y)
+m2 = fit(HDMR, mf, covarsdf, counts)
+
+coef(m)
+
+coef(m2.model)
+
 # where the h ~ equation is the model for zeros (hurdle crossing) and c ~ is the model for positive counts
 
 # in either case we can get the coefficients matrix for each variable + intercept as usual with
