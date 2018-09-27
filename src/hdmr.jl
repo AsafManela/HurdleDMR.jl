@@ -119,6 +119,9 @@ function StatsBase.fit(::Type{T}, m::Model, df::AbstractDataFrame, counts::Abstr
   # create model matrix
   mf, mm, counts = createmodelmatrix(trms, df, counts, contrasts)
 
+  # inzero and inpos may be different in mm with factor variables
+  inzero, inpos = mapins(inzero, inpos, mm)
+
   # fit and wrap in DataFrameRegressionModel
   StatsModels.DataFrameRegressionModel(fit(T, mm.m, counts, args...; inzero=inzero, inpos=inpos, kwargs...), mf, mm)
 end

@@ -28,8 +28,16 @@ function model_helper(args...)
 end
 
 function Base.show(io::IO, m::Model)
-  println(io, "$(length(m.parts))-part model:")
-  println.(io, m.parts)
+  print(io, "$(length(m.parts))-part model: [")
+  notfirst = false
+  for p in m.parts
+    if notfirst
+      print(io, ", ")
+    end
+    print(io, p)
+    notfirst = true
+  end
+  print(io, "]")
   nothing
 end
 
@@ -62,6 +70,22 @@ function mergerhsterms(a::StatsModels.Terms, b::StatsModels.Terms)
   inb = findin(terms,b.terms)
 
   newt, ina, inb
+end
+
+"maps inzero and inpos to ModelMatrix columns (important with factor variables)"
+function mapins(inzero, inpos, mm)
+  mappedinzero = Int[]
+  mappedinpos = Int[]
+  for to=1:length(mm.assign)
+    from = mm.assign[to]
+    if from in inzero
+      push!(mappedinzero, to)
+    end
+    if from in inpos
+      push!(mappedinpos, to)
+    end
+  end
+  mappedinzero, mappedinpos
 end
 
 # """
