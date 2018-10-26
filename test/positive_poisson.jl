@@ -39,7 +39,7 @@ loglik(y, μ) = GLM.loglik_obs(PositivePoisson(λ0), y, μ, one(y), 0)
 μscheck=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
 @test μs ≈ μscheck
 #verify works for large μ
-ys = round.(Int,μs) + 1.0
+ys = round.(Int,μs) .+ 1.0
 devresids = devresid.(PositivePoisson(λ0), ys, μs)
 @test all(isfinite,devresids)
 logliks = loglik.(ys, μs)
@@ -48,7 +48,7 @@ logliks = loglik.(ys, μs)
 @test isinf(devresid(PositivePoisson(λ0), 3.0, 0.1))
 @test iszero(devresid(PositivePoisson(λ0), 0.3, 0.1))
 
-ys = ones(μs)
+ys = fill(1.0, size(μs))
 devresids1 = devresid.(PositivePoisson(λ0), ys, μs)
 @test all(isfinite,devresids1)
 logliks1 = loglik.(ys, μs)
@@ -59,7 +59,7 @@ logliks1 = loglik.(ys, μs)
 μscheck=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
 @test μsbig ≈ μscheck
 #verify works for large μ
-ysbig = round.(BigInt,μsbig) + 1.0
+ysbig = round.(BigInt,μsbig) .+ 1.0
 devresidsbig = devresid.(PositivePoisson(λ0), ysbig, μsbig)
 @test all(isfinite,devresidsbig)
 @test devresids ≈ Float64.(devresidsbig)
@@ -68,7 +68,7 @@ logliksbig = loglik.(ysbig, μsbig)
 @test all(isfinite,logliksbig)
 @test logliks ≈ Float64.(logliksbig)
 
-ysbig = ones(μsbig)
+ysbig = fill(big"1.0", size(μsbig))
 devresidsbig1 = devresid.(PositivePoisson(λ0), ysbig, μsbig)
 @test all(isfinite,devresidsbig1)
 @test devresids1 ≈ Float64.(devresidsbig1)
@@ -81,13 +81,13 @@ logliksbig1 = loglik.(ysbig, μsbig)
 μscheck=broadcast(η->linkinv(LogProductLogLink(),η),ηs)
 @test μs ≈ μscheck
 #verify works for large μ
-ys = round.(BigInt,μs) + 1.0
+ys = round.(BigInt,μs) .+ big"1.0"
 devresidsbig = devresid.(PositivePoisson(λ0), ys, μs)
 @test all(isfinite,devresidsbig)
 logliksbig = loglik.(ys, μs)
 @test all(isfinite,logliksbig)
 
-ys = ones(μs)
+ys = fill(big"1.0", size(μs))
 devresidsbig = devresid.(PositivePoisson(λ0), ys, μs)
 @test all(isfinite,devresidsbig)
 logliks1 = loglik.(ys, μs)
@@ -122,7 +122,7 @@ import CSV
 pdata=CSV.read(joinpath(testdir,"data","positive_poisson_pdata.csv"))
 coefsR=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","positive_poisson_coefsR.csv"))))
 
-X=convert(Array{Float64,2},pdata[:,[:x2]])
+X=convert(Array{Float64,2},pdata[[:x2]])
 Xwconst=[ones(size(X,1)) X]
 y=convert(Array{Float64,1},pdata[:y1])
 

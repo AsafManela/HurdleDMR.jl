@@ -145,9 +145,9 @@ end
 
 "Find column number of sprojdir"
 function ixprojdir(trms::StatsModels.Terms, sprojdir::Symbol, mm)
-  ix = findfirst(trms.terms,sprojdir)
+  ix = something(findfirst(isequal(sprojdir), trms.terms), 0)
   @assert ix > 0 "$sprojdir not found in provided dataframe"
-  mappedix = findfirst(mm.assign, ix)
+  mappedix = something(findfirst(isequal(ix), mm.assign), 0)
   @assert mappedix > 0 "$sprojdir not found in ModelMatrix (perhaps redundant?)"
   mappedix
 end
@@ -194,12 +194,12 @@ function StatsBase.predict(mm::MM, df::AbstractDataFrame, counts::AbstractMatrix
     mf.terms.intercept = false
 
     newX = ModelMatrix(mf).m
-    if !all(mf.msng)
-      counts = counts[mf.msng,:]
+    if !all(mf.nonmissing)
+      counts = counts[mf.nonmissing,:]
     end
     yp = predict(mm, newX, counts; kwargs...)
     out = missings(eltype(yp), size(df, 1))
-    out[mf.msng] = yp
+    out[mf.nonmissing] = yp
     return(out)
 end
 # # when the backward model is an HDMR we need to make sure we didn't drop a colinear zpos

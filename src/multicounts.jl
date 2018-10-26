@@ -12,14 +12,15 @@ Unlike dmr(), mcdmr() takes a vector of counts matrices and sequencially
   3. uses [covars Z] for subsequent regressions
 Returns the accumulated Z matrix and a vector of coefficient matrices
 """
-function mcdmr{T<:AbstractFloat}(covars::AbstractMatrix{T},multicounts::Vector,projdir::Int; verbose=true, kwargs...)
-	L = length(multicounts)
+function mcdmr(covars::AbstractMatrix{T},multicounts::Vector,projdir::Int;
+    verbose=true, kwargs...) where {T<:AbstractFloat}
+  L = length(multicounts)
   n,p = size(covars)
-	verbose && info("fitting mcdmr to $L counts matrices")
-  multicoefs = Vector{DMRCoefs}(L)
-  Z = Array{T}(n,0)
+  verbose && @info("fitting mcdmr to $L counts matrices")
+  multicoefs = Vector{DMRCoefs}(undef,L)
+  Z = Array{T}(undef,n,0)
 	for l=1:L
-		verbose && info("fitting dmr to counts matrix #$l on $p covars + $(size(Z,2)) previous SR projections ...")
+		verbose && @info("fitting dmr to counts matrix #$l on $p covars + $(size(Z,2)) previous SR projections ...")
 		# get l'th counts matrix
 		counts = multicounts[l]
 		# fit dmr

@@ -32,11 +32,11 @@ end
 "Returns positives indicators for y"
 function getIy(y::AbstractVector{T}) where {T}
     # find positive y entries
-    ixpos = find(y)
+    ixpos = findall(x->x!=zero(T), y)
 
     # build positive indicators vector
-    Iy = zeros(y)
-    Iy[ixpos] = one(T)
+    Iy = zero(y)
+    Iy[ixpos] .= one(T)
 
     ixpos, Iy
 end
@@ -61,22 +61,22 @@ function fitzero(::Type{M},
       mzero = fit(M, X, Iy, dzero, lzero; dofit=dofit, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
       fittedzero = dofit
     catch e
-      showwarnings && warn("failed to fit zero counts model, possibly not enough variation in I(y). countmap(Iy)=$(countmap(Iy))")
-      if typeof(e) <: ErrorException && (contains(e.msg,"step-halving") || contains(e.msg,"failure to converge") || contains(e.msg,"failed to converge")) ||
-          typeof(e) == Base.LinAlg.PosDefException || typeof(e) == DomainError
+      showwarnings && @warn("failed to fit zero counts model, possibly not enough variation in I(y). countmap(Iy)=$(countmap(Iy))")
+      if typeof(e) <: ErrorException && (occursin("step-halving", e.msg) || occursin("failure to converge", e.msg) || occursin("failed to converge", e.msg)) ||
+          typeof(e) == PosDefException || typeof(e) == DomainError
         fittedzero = false
       else
-        showwarnings && warn("X'=$(X')")
-        showwarnings && warn("Iy=$Iy)")
+        showwarnings && @warn("X'=$(X')")
+        showwarnings && @warn("Iy=$Iy)")
         rethrow(e)
       end
     end
   else
     if verbose
       if all(iszero,Iy)
-        showwarnings && warn("I(y) is all zeros. There is nothing to explain.")
+        showwarnings && @warn("I(y) is all zeros. There is nothing to explain.")
       else
-        showwarnings && warn("I(y) is all ones. Data may be fully described by a poisson model.")
+        showwarnings && @warn("I(y) is all ones. Data may be fully described by a poisson model.")
       end
     end
   end
@@ -113,13 +113,13 @@ function fitpos(::Type{M},
       mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=dofit, wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
       fittedpos = dofit
     catch e
-      showwarnings && warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos. countmap(ypos)=$(sort(countmap(ypos)))")
-      if typeof(e) <: ErrorException && (contains(e.msg,"step-halving") || contains(e.msg,"failure to converge") || contains(e.msg,"failed to converge")) ||
-          typeof(e) == Base.LinAlg.PosDefException || typeof(e) == DomainError
+      showwarnings && @warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos. countmap(ypos)=$(sort(countmap(ypos)))")
+      if typeof(e) <: ErrorException && (occursin("step-halving", e.msg) || occursin("failure to converge", e.msg) || occursin("failed to converge", e.msg)) ||
+          typeof(e) == PosDefException || typeof(e) == DomainError
         fittedpos = false
       else
-        showwarnings && warn("Xpos'=$(Xpos')")
-        showwarnings && warn("ypos=$ypos)")
+        showwarnings && @warn("Xpos'=$(Xpos')")
+        showwarnings && @warn("ypos=$ypos)")
         rethrow(e)
       end
     end
@@ -127,7 +127,7 @@ function fitpos(::Type{M},
     if length(ypos) == 0
       error("y is all zeros! There is nothing to explain.")
     else
-      showwarnings && warn("ypos has no elements larger than 1! Data may be fully described by a probability model.")
+      showwarnings && @warn("ypos has no elements larger than 1! Data may be fully described by a probability model.")
     end
   end
 
@@ -170,7 +170,7 @@ covariates matrix Xpos used to model positive counts.
 - `lpos::Link=canonicallink(dpos)` link function for positives model
 
 # Keywords
-- `Xpos::Union{AbstractMatrix{T},Void} = nothing` covariates matrix for positives
+- `Xpos::Union{AbstractMatrix{T},Nothing} = nothing` covariates matrix for positives
   model or nothing to use X for both parts
 - `dofit::Bool = true` fit the model or just construct its shell
 - `wts::V = ones(y)` observation weights
@@ -187,9 +187,9 @@ function StatsBase.fit(::Type{Hurdle},::Type{M},
   dpos::UnivariateDistribution = PositivePoisson(),
   lzero::Link = canonicallink(dzero),
   lpos::Link = canonicallink(dpos);
-  Xpos::Union{AbstractMatrix{T},Void} = nothing,
+  Xpos::Union{AbstractMatrix{T},Nothing} = nothing,
   dofit::Bool = true,
-  wts::V = ones(y),
+  wts::V = fill(one(eltype(y)),size(y)),
   offsetzero::AbstractVector = similar(y, 0),
   offsetpos::AbstractVector = similar(y, 0),
   offset::AbstractVector = similar(y, 0),
@@ -237,7 +237,7 @@ function StatsBase.fit(::Type{Hurdle},::Type{M},
                       lpos::Link = canonicallink(dpos);
                       fpos::Formula = f,
                       dofit::Bool = true,
-                      wts = ones(Float64,size(df,1)),
+                      wts = fill(1.0,size(df,1)),
                       offsetzero = Float64[],
                       offsetpos = Float64[],
                       offset = Float64[],
@@ -341,16 +341,16 @@ Predict using a fitted Hurdle given new X (and potentially Xpos).
 - `X` n-by-p matrix of covariates of same dimensions used to fit m.
 
 # Keywords
-- `Xpos::Union{AbstractMatrix{T},Void} = nothing` covariates matrix for positives
+- `Xpos::Union{AbstractMatrix{T},Nothing} = nothing` covariates matrix for positives
   model or nothing to use X for both parts
 - `kwargs...` additional keyword arguments passed along to predict() for each
   of the two model parts.
 """
 function StatsBase.predict(hurdle::Hurdle, X::AbstractMatrix{T};
   Xpos::AbstractMatrix{T} = X,
-  offsetzero::AbstractVector = Array{T}(0),
-  offsetpos::AbstractVector = Array{T}(0),
-  offset::AbstractVector=Array{T}(0),
+  offsetzero::AbstractVector = Array{T}(undef, 0),
+  offsetpos::AbstractVector = Array{T}(undef, 0),
+  offset::AbstractVector=Array{T}(undef, 0),
   kwargs...) where {T<:AbstractFloat}
 
   # set offsets

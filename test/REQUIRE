@@ -2,3 +2,6 @@
 GLM
 CSV
 DataStructures
+Distributions
+DataFrames
+Lasso

@@ -16,8 +16,7 @@ It includes a Julia implementation of the Distributed Multinomial Regression (DM
 
 Install the HurdleDMR package
 ```julia
-Pkg.clone("https://github.com/AsafManela/Lasso.jl")
-Pkg.clone("https://github.com/AsafManela/HurdleDMR.jl")
+pkg> add HurdleDMR
 ```
 
 Add parallel workers and make package available to workers

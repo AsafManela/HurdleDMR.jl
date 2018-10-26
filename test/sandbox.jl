@@ -2,18 +2,20 @@
 #Pkg.clone("https://github.com/AsafManela/HurdleDMR.jl")
 
 # Add parallel workers and make package available to workers
-addprocs(Sys.CPU_CORES-2)
-import HurdleDMR; @everywhere using HurdleDMR
+using Distributed
+import HurdleDMR
+addprocs(Sys.CPU_THREADS-2)
+@everywhere using HurdleDMR
 
 # Setup your data into an n-by-p covars matrix, and a (sparse) n-by-d counts matrix
 # Here we generate some random data
-using CSV, GLM, DataFrames, Distributions, CategoricalArrays
+using CSV, GLM, DataFrames, Distributions, Random, SparseArrays, CategoricalArrays#, StatsModels
 n = 100
 p = 3
 d = 4
 
-srand(13)
-m = 1+rand(Poisson(5),n)
+Random.seed!(13)
+m = 1 .+ rand(Poisson(5),n)
 vs = rand(n,p)
 covarsdf = DataFrame(vs,[:y, :x, :z])
 covarsdf[:cat] = CategoricalArray(rand(["1","2","3"], n))
@@ -33,7 +35,29 @@ m = hdmr(covars, counts; inpos=1:4, inzero=1:5, showwarnings=true)
 # or with a dataframe and formula
 mf = @model(h ~ cat + x + y + z, c ~ cat + x + y)
 m2 = fit(HDMR, mf, covarsdf, counts)
+coef(m2.model)
 
+using GLM
+lm1 = fit(LinearModel, @formula(y ~ 0 + cat + x + z), covarsdf)
+yhat = predict(lm1, covarsdf[1:10,:])
+mm = lm1
+mdf = covarsdf[1:10,:]
+mm.mf.terms
+mm.mf.terms.intercept = false
+newTerms = StatsModels.dropresponse!(mm.mf.terms)
+# create new model frame/matrix
+mf = ModelFrame(newTerms, mdf; contrasts = mm.mf.contrasts)
+newX = ModelMatrix(mf).m
+
+# m2.mm.m
+# trmszero = HurdleDMR.getrhsterms(mf, :h)
+# trmspos = HurdleDMR.getrhsterms(mf, :c)
+# trms, inzero, inpos = HurdleDMR.mergerhsterms(trmszero,trmspos)
+# mf, mm, counts = HurdleDMR.createmodelmatrix(trms, covarsdf, counts, Dict())
+# inzero
+#
+# inzero, inpos = HurdleDMR.mapins(inzero, inpos, mm)
+# projdir = HurdleDMR.ixprojdir(trms, :y, mm)
 # where the h ~ equation is the model for zeros (hurdle crossing) and c ~ is the model for positive counts
 
 # in either case we can get the coefficients matrix for each variable + intercept as usual with
@@ -69,7 +93,7 @@ yhat_nocounts = predict(cir, covarsdf[1:10,:], counts[1:10,:]; nocounts=true)
 m = dmr(covars, counts)
 
 # or with a dataframe and formula
-mf = @model(c ~ x + z + y)
+mf = @model(c ~ vy + v1 + v2)
 m = fit(DMR, mf, covarsdf, counts)
 
 # in either case we can get the coefficients matrix for each variable + intercept as usual with
@@ -113,7 +137,7 @@ covered_lines, total_lines = get_summary(coverage)
 function focus(X; j=:)
   X[:,j]
 end
-function focus2(X; j=indices(X,2))
+function focus2(X; j=axes(X,2))
   X[:,j]
 end
 
@@ -123,15 +147,15 @@ focus2(A)
 focus(A; j=3)
 focus2(A; j=3)
 
-j = indices(A,2)
+j = axes(A,2)
 j == 3:3
 A
-in(4000,indices(A,2))
+in(4000,axes(A,2))
 in(4000,3)
-A[indices(A,1),indices(A,2)]
+A[axes(A,1),axes(A,2)]
 j = 4
-focusj = to_indices(A,(:,4))
-A[indices(A,1),indices(A,2)]
+focusj = to_axes(A,(:,4))
+A[axes(A,1),axes(A,2)]
 A[:,4]
 A[focusj[1],focusj[2]]
 
