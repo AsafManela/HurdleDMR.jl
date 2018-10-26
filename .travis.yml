@@ -20,7 +20,7 @@ matrix:
 
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/AsafManela/Lasso.jl", rev="am/0.7upgrade")); Pkg.clone(pwd()); Pkg.build("HurdleDMR"); Pkg.test("HurdleDMR"; coverage=true)'
+  - julia -e 'using Pkg; Pkg.clone(pwd()); Pkg.build("HurdleDMR"); Pkg.test("HurdleDMR"; coverage=true)'
 
 after_success:
   - julia -e 'Pkg.add("Documenter")'

@@ -15,7 +15,7 @@ bioChemists[:marMarried]=bioChemists[:mar] .== "Married"
 bioChemists[:femWomen]=bioChemists[:fem] .== "Women"
 bioChemists[:art] = convert(Array{Union{Float64, Missings.Missing},1}, bioChemists[:art])
 
-X=convert(Array{Float64,2},bioChemists[:,[:femWomen,:marMarried,:kid5,:phd,:ment]])
+X=convert(Array{Float64,2},bioChemists[[:femWomen,:marMarried,:kid5,:phd,:ment]])
 Xwconst=[ones(size(X,1)) X]
 y=convert(Array{Float64,1},bioChemists[:art])
 const ixpartial = 50:60

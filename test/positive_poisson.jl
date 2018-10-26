@@ -122,7 +122,7 @@ import CSV
 pdata=CSV.read(joinpath(testdir,"data","positive_poisson_pdata.csv"))
 coefsR=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","positive_poisson_coefsR.csv"))))
 
-X=convert(Array{Float64,2},pdata[:,[:x2]])
+X=convert(Array{Float64,2},pdata[[:x2]])
 Xwconst=[ones(size(X,1)) X]
 y=convert(Array{Float64,1},pdata[:y1])
 

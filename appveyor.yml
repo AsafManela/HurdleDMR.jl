@@ -45,7 +45,6 @@ build_script:
   - IF EXIST .git\shallow (git fetch --unshallow)
   - C:\projects\julia\bin\julia -e "using InteractiveUtils; versioninfo();
       using Pkg;
-      Pkg.add(PackageSpec(url=\"https://github.com/AsafManela/Lasso.jl\", rev=\"am/0.7upgrade\"));
       Pkg.clone(pwd(), \"HurdleDMR\"); Pkg.build(\"HurdleDMR\")"
 
 test_script:
