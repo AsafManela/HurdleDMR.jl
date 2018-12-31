@@ -366,7 +366,7 @@ y0or1[y.==0] .= 1
 
 hurdle = @test_logs (:warn, r"I\(y\) is all ones") fit(Hurdle,GammaLassoPath,X,y0or1; verbose=true, showwarnings=true)
 coefs0or1=vcat(coef(hurdle;select=:AICc)...)
-@test vec(coefs0or1) ≈ [-7.34062, 0.0, 0.0, 0.0] rtol=1e-4
+@test vec(coefs0or1) ≈ [-9.02427, 0.39707, 0.0, 0.0] rtol=1e-4
 coefs0or1pos, coefs0or1zero = coef(hurdle;select=:all)
 @test all(iszero,coefs0or1zero)
 
@@ -381,7 +381,7 @@ y0or1 = zero(y)
 include(joinpath(testdir,"data","degenerate_hurdle_2.jl"))
 hurdle = @test_logs (:warn, r"not enough variation in ypos") fit(Hurdle,GammaLassoPath,X,y; showwarnings=true)
 coefsJ=vcat(coef(hurdle;select=:AICc)...)
-@test vec(coefsJ) ≈ [0.0,0.0,-5.30128195796556,0.1854148891565171]'' rtol=1e-4
+@test vec(coefsJ) ≈ [0.0,0.0,-5.30128195796556,0.1854148891565171] rtol=1e-4
 coefsJpos, coefsJzero = coef(hurdle;select=:all)
 @test size(coefsJpos,1) == 2
 @test coefsJpos == zero(coefsJpos)
@@ -391,8 +391,9 @@ coefsJpos, coefsJzero = coef(hurdle;select=:all)
 include(joinpath(testdir,"data","degenerate_hurdle_3.jl"))
 hurdle = @test_logs (:warn, r"ypos has no elements larger than 1") fit(Hurdle,GammaLassoPath,X,y; showwarnings=true)
 coefsJ=vcat(coef(hurdle;select=:AICc)...)
-@test vec(coefsJ) ≈ [0.0,0.0,-4.541820686620407,0.0]'' rtol=1e-4
+@test vec(coefsJ) ≈ [0.0, 0.0, -4.54363, 0.000458273] rtol=1e-4
 coefsJpos, coefsJzero = coef(hurdle;select=:all)
+Matrix( coefsJzero)
 @test size(coefsJpos,1) == 2
 @test coefsJpos == zero(coefsJpos)
 @test size(coefsJzero,1) == 2
