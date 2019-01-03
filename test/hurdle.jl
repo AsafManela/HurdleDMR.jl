@@ -363,10 +363,11 @@ coefs0or1pos, coefs0or1zero = coef(hurdle;select=:all)
 # degenerate positive counts data case 1 without zeros
 y0or1 = deepcopy(y)
 y0or1[y.==0] .= 1
+y0or1[1] = 3.0
 
 hurdle = @test_logs (:warn, r"I\(y\) is all ones") fit(Hurdle,GammaLassoPath,X,y0or1; verbose=true, showwarnings=true)
 coefs0or1=vcat(coef(hurdle;select=:AICc)...)
-@test vec(coefs0or1) ≈ [-9.02427, 0.39707, 0.0, 0.0] rtol=1e-4
+@test vec(coefs0or1) ≈ [-10.2903, 0.820934, 0.0, 0.0] rtol=1e-4
 coefs0or1pos, coefs0or1zero = coef(hurdle;select=:all)
 @test all(iszero,coefs0or1zero)
 
