@@ -11782,8 +11782,7 @@ div#notebook {
 <h2 id="Setup">Setup<a class="anchor-link" href="#Setup">&#182;</a></h2><h3 id="Install-Julia">Install Julia<a class="anchor-link" href="#Install-Julia">&#182;</a></h3><p>First, install Julia itself. The easiest way to do that is from the download site <a href="https://julialang.org/downloads/">https://julialang.org/downloads/</a>. An alternative is to install JuliaPro from <a href="https://juliacomputing.com">https://juliacomputing.com</a></p>
 <p>Once installed, open julia in a terminal (or in Atom), press <code>]</code> to activate package manager and add the following packages:</p>
 
-<pre><code>pkg&gt; add https://github.com/JuliaStats/Lasso.jl
-pkg&gt; add https://github.com/AsafManela/HurdleDMR.jl</code></pre>
+<pre><code>pkg&gt; add HurdleDMR</code></pre>
 
 </div>
 </div>
@@ -11827,10 +11826,7 @@ pkg&gt; add https://github.com/AsafManela/HurdleDMR.jl</code></pre>
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>if not installed, install following package with</p>
 
-<pre><code>pkg&gt; add CSV
-pkg&gt; add GLM
-pkg&gt; add DataFrames
-pkg&gt; add Distributions</code></pre>
+<pre><code>pkg&gt; add CSV GLM DataFrames Distributions</code></pre>
 
 </div>
 </div>
@@ -11862,6 +11858,18 @@ pkg&gt; add Distributions</code></pre>
 <div class="output_wrapper">
 <div class="output">
 
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>┌ Info: Recompiling stale cache file /Users/xua/.julia/compiled/v1.0/CSV/HHBkp.ji for CSV [336ed68f-0bac-5ca0-87d4-7b16caf5d00b]
+└ @ Base loading.jl:1190
+</pre>
+</div>
+</div>
 
 <div class="output_area">
 
@@ -11915,9 +11923,9 @@ on the <code>covars</code>.</p>
 
 <div class="output_subarea output_stream output_stderr output_text">
 <pre>┌ Info: fitting 100 observations on 4 categories, 3 covariates 
-└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/47KEz/src/dmr.jl:272
+└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/XuBHA/src/dmr.jl:272
 ┌ Info: distributed poisson run on local cluster with 2 nodes
-└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/47KEz/src/dmr.jl:281
+└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/XuBHA/src/dmr.jl:281
 </pre>
 </div>
 </div>
@@ -11971,13 +11979,10 @@ on the <code>covars</code>.</p>
 
 
 <div class="output_subarea output_stream output_stderr output_text">
-<pre>┌ Warning: In the future eachcol will have names argument set to false by default
-│   caller = evalcontrasts(::DataFrame, ::Dict{Any,Any}) at modelframe.jl:124
-└ @ StatsModels /Users/xua/.julia/packages/StatsModels/AYB2E/src/modelframe.jl:124
-┌ Info: fitting 100 observations on 4 categories, 3 covariates 
-└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/47KEz/src/dmr.jl:272
+<pre>┌ Info: fitting 100 observations on 4 categories, 3 covariates 
+└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/XuBHA/src/dmr.jl:272
 ┌ Info: distributed poisson run on local cluster with 2 nodes
-└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/47KEz/src/dmr.jl:281
+└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/XuBHA/src/dmr.jl:281
 </pre>
 </div>
 </div>
@@ -12078,9 +12083,9 @@ To also get back the entire regulatrization paths, run</p>
 
 <div class="output_subarea output_stream output_stderr output_text">
 <pre>┌ Info: fitting 100 observations on 4 categories, 3 covariates 
-└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/47KEz/src/dmr.jl:318
+└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/XuBHA/src/dmr.jl:318
 ┌ Info: distributed poisson run on remote cluster with 2 nodes
-└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/47KEz/src/dmr.jl:336
+└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/XuBHA/src/dmr.jl:336
 </pre>
 </div>
 </div>
@@ -12396,9 +12401,9 @@ path.</p>
 <div class="output_subarea output_stream output_stderr output_text">
 <pre>┌ Info: fitting 100 observations on 4 categories 
 │ 2 covariates for positive and 3 for zero counts
-└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/47KEz/src/hdmr.jl:409
+└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/XuBHA/src/hdmr.jl:409
 ┌ Info: distributed hurdle run on local cluster with 2 nodes
-└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/47KEz/src/hdmr.jl:419
+└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/XuBHA/src/hdmr.jl:419
 </pre>
 </div>
 </div>
@@ -12454,9 +12459,9 @@ path.</p>
 <div class="output_subarea output_stream output_stderr output_text">
 <pre>┌ Info: fitting 100 observations on 4 categories 
 │ 2 covariates for positive and 3 for zero counts
-└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/47KEz/src/hdmr.jl:409
+└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/XuBHA/src/hdmr.jl:409
 ┌ Info: distributed hurdle run on local cluster with 2 nodes
-└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/47KEz/src/hdmr.jl:419
+└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/XuBHA/src/hdmr.jl:419
 </pre>
 </div>
 </div>
@@ -12557,9 +12562,9 @@ To also get back the entire regulatrization paths, run</p>
 <div class="output_subarea output_stream output_stderr output_text">
 <pre>┌ Info: fitting 100 observations on 4 categories 
 │ 2 covariates for positive and 3 for zero counts
-└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/47KEz/src/hdmr.jl:289
+└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/XuBHA/src/hdmr.jl:289
 ┌ Info: distributed hurdle run on remote cluster with 2 nodes
-└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/47KEz/src/hdmr.jl:314
+└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/XuBHA/src/hdmr.jl:314
 </pre>
 </div>
 </div>
@@ -12709,9 +12714,9 @@ This can be accomplished with a single command, by fitting a CIR{HDMR,FM} where 
 <div class="output_subarea output_stream output_stderr output_text">
 <pre>┌ Info: fitting 100 observations on 4 categories 
 │ 2 covariates for positive and 3 for zero counts
-└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/47KEz/src/hdmr.jl:409
+└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/XuBHA/src/hdmr.jl:409
 ┌ Info: distributed hurdle run on local cluster with 2 nodes
-└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/47KEz/src/hdmr.jl:419
+└ @ HurdleDMR /Users/xua/.julia/packages/HurdleDMR/XuBHA/src/hdmr.jl:419
 </pre>
 </div>
 </div>
@@ -12858,19 +12863,6 @@ x3    0.0921372 0.0909831   1.01269   0.3137
 <div class="output_wrapper">
 <div class="output">
 
-
-<div class="output_area">
-
-<div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>┌ Warning: In the future eachcol will have names argument set to false by default
-│   caller = evalcontrasts(::DataFrame, ::Dict{Symbol,StatsModels.ContrastsMatrix}) at modelframe.jl:124
-└ @ StatsModels /Users/xua/.julia/packages/StatsModels/AYB2E/src/modelframe.jl:124
-</pre>
-</div>
-</div>
 
 <div class="output_area">
 
