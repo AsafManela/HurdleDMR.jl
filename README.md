@@ -21,24 +21,25 @@ pkg> add HurdleDMR
 
 Add parallel workers and make package available to workers
 ```julia
-addprocs(Sys.CPU_CORES-2)
+using Distributed
+addprocs(Sys.CPU_THREADS-2)
 import HurdleDMR; @everywhere using HurdleDMR
 ```
 
 Setup your data into an n-by-p covars matrix, and a (sparse) n-by-d counts matrix.
 Here we generate some random data.
 ```julia
-using CSV, GLM, DataFrames, Distributions
+using CSV, GLM, DataFrames, Distributions, Random, LinearAlgebra, SparseArrays
 n = 100
 p = 3
 d = 4
 
-srand(13)
-m = 1+rand(Poisson(5),n)
+Random.seed!(13)
+m = 1 .+ rand(Poisson(5),n)
 covars = rand(n,p)
 ηfn(vi) = exp.([0 + i*sum(vi) for i=1:d])
 q = [ηfn(covars[i,:]) for i=1:n]
-scale!.(q,ones(n)./sum.(q))
+rmul!.(q,ones(n)./sum.(q))
 counts = convert(SparseMatrixCSC{Float64,Int},hcat(broadcast((qi,mi)->rand(Multinomial(mi, qi)),q,m)...)')
 covarsdf = DataFrame(covars,[:vy, :v1, :v2])
 ```
