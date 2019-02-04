@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" />
-<title>HurdleDMR</title>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>HurdleDMR</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
 
 <style type="text/css">
@@ -13,8 +11,8 @@
 *
 */
 /*!
- * Bootstrap v3.3.6 (http://getbootstrap.com)
- * Copyright 2011-2015 Twitter, Inc.
+ * Bootstrap v3.3.7 (http://getbootstrap.com)
+ * Copyright 2011-2016 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  */
 /*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */
@@ -1109,7 +1107,6 @@ a:focus {
   text-decoration: underline;
 }
 a:focus {
-  outline: thin dotted;
   outline: 5px auto -webkit-focus-ring-color;
   outline-offset: -2px;
 }
@@ -2538,7 +2535,6 @@ select[size] {
 input[type="file"]:focus,
 input[type="radio"]:focus,
 input[type="checkbox"]:focus {
-  outline: thin dotted;
   outline: 5px auto -webkit-focus-ring-color;
   outline-offset: -2px;
 }
@@ -3029,7 +3025,6 @@ select[multiple].input-lg {
 .btn.focus,
 .btn:active.focus,
 .btn.active.focus {
-  outline: thin dotted;
   outline: 5px auto -webkit-focus-ring-color;
   outline-offset: -2px;
 }
@@ -8760,6 +8755,9 @@ body > #header .header-bar {
     margin-left: 10px;
   }
 }
+[dir="rtl"] #ipython_notebook {
+  float: right !important;
+}
 #noscript {
   width: auto;
   padding-top: 16px;
@@ -8962,8 +8960,14 @@ span#login_widget > .button .badge,
  *
  * Author: Jupyter Development Team
  */
+[dir="rtl"] #tabs li {
+  float: right;
+}
 ul#tabs {
   margin-bottom: 4px;
+}
+[dir="rtl"] ul#tabs {
+  margin-right: 0px;
 }
 ul#tabs a {
   padding-top: 6px;
@@ -8986,6 +8990,16 @@ ul.breadcrumb span {
 }
 .list_toolbar .tree-buttons {
   padding-top: 1px;
+}
+[dir="rtl"] .list_toolbar .tree-buttons {
+  float: left !important;
+}
+[dir="rtl"] .list_toolbar .pull-right {
+  padding-top: 1px;
+  float: left !important;
+}
+[dir="rtl"] .list_toolbar .pull-left {
+  float: right !important;
 }
 .dynamic-buttons {
   padding-top: 3px;
@@ -9122,6 +9136,9 @@ ul.breadcrumb span {
 #tree-selector {
   padding-right: 0px;
 }
+[dir="rtl"] #tree-selector a {
+  float: right;
+}
 #button-select-all {
   min-width: 50px;
 }
@@ -9211,6 +9228,9 @@ ul#new-menu {
   left: auto;
   right: 0;
 }
+[dir="rtl"] #new-menu {
+  text-align: right;
+}
 .kernel-menu-icon {
   padding-right: 12px;
   width: 24px;
@@ -9255,6 +9275,9 @@ ul#new-menu {
 }
 #running .panel-group .panel .panel-body .list_container .list_item:last-child {
   border-bottom: 0px;
+}
+[dir="rtl"] #running .col-sm-8 {
+  float: right !important;
 }
 .delete-button {
   display: none;
@@ -9551,6 +9574,7 @@ div.cell.selected.jupyter-soft-selected {
   }
 }
 div.inner_cell {
+  min-width: 0;
   /* Old browsers */
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -9571,11 +9595,6 @@ div.inner_cell {
   box-flex: 1;
   /* Modern browsers */
   flex: 1;
-}
-@-moz-document url-prefix() {
-  div.inner_cell {
-    overflow-x: hidden;
-  }
 }
 /* input_area and input_prompt must match in top border and margin for alignment */
 div.input_area {
@@ -11246,7 +11265,7 @@ div#pager .ui-resizable-handle::after {
 }
 .shortcut_key {
   display: inline-block;
-  width: 20ex;
+  width: 21ex;
   text-align: right;
   font-family: monospace;
 }
@@ -11558,6 +11577,7 @@ ul.typeahead-list > li > a {
   box-shadow: 0px 0px 12px 1px rgba(87, 87, 87, 0.2);
 }
 .terminal-app .terminal {
+  width: 100%;
   float: left;
   font-family: monospace;
   color: white;
@@ -11571,6 +11591,9 @@ ul.typeahead-list > li > a {
 .terminal-app .terminal dummy-screen {
   line-height: 1em;
   font-size: 14px;
+}
+.terminal-app .terminal .xterm-rows {
+  padding: 10px;
 }
 .terminal-app .terminal-cursor {
   color: black;
@@ -11631,8 +11654,10 @@ ul.typeahead-list > li > a {
 .highlight .mh { color: #666666 } /* Literal.Number.Hex */
 .highlight .mi { color: #666666 } /* Literal.Number.Integer */
 .highlight .mo { color: #666666 } /* Literal.Number.Oct */
+.highlight .sa { color: #BA2121 } /* Literal.String.Affix */
 .highlight .sb { color: #BA2121 } /* Literal.String.Backtick */
 .highlight .sc { color: #BA2121 } /* Literal.String.Char */
+.highlight .dl { color: #BA2121 } /* Literal.String.Delimiter */
 .highlight .sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
 .highlight .s2 { color: #BA2121 } /* Literal.String.Double */
 .highlight .se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
@@ -11643,9 +11668,11 @@ ul.typeahead-list > li > a {
 .highlight .s1 { color: #BA2121 } /* Literal.String.Single */
 .highlight .ss { color: #19177C } /* Literal.String.Symbol */
 .highlight .bp { color: #008000 } /* Name.Builtin.Pseudo */
+.highlight .fm { color: #0000FF } /* Name.Function.Magic */
 .highlight .vc { color: #19177C } /* Name.Variable.Class */
 .highlight .vg { color: #19177C } /* Name.Variable.Global */
 .highlight .vi { color: #19177C } /* Name.Variable.Instance */
+.highlight .vm { color: #19177C } /* Name.Variable.Magic */
 .highlight .il { color: #666666 } /* Literal.Number.Integer.Long */
     </style>
 <style type="text/css">
@@ -11699,9 +11726,7 @@ body {
 div#notebook {
   overflow: visible;
   border-top: none;
-}
-
-@media print {
+}@media print {
   div.cell {
     display: block;
     page-break-inside: avoid;
@@ -11722,7 +11747,7 @@ div#notebook {
 
 <!-- Loading mathjax macro -->
 <!-- Load mathjax -->
-    <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML"></script>
     <!-- MathJax configuration -->
     <script type="text/x-mathjax-config">
     MathJax.Hub.Config({
@@ -11746,8 +11771,7 @@ div#notebook {
   <div tabindex="-1" id="notebook" class="border-box-sizing">
     <div class="container" id="notebook-container">
 
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -11756,27 +11780,14 @@ div#notebook {
 <p>It includes a Julia implementation of the Distributed Multinomial Regression (DMR) model of <a href="https://arxiv.org/abs/1311.6139">Taddy (2015)</a>.</p>
 <p>This tutorial explains how to use this package.</p>
 <h2 id="Setup">Setup<a class="anchor-link" href="#Setup">&#182;</a></h2><h3 id="Install-Julia">Install Julia<a class="anchor-link" href="#Install-Julia">&#182;</a></h3><p>First, install Julia itself. The easiest way to do that is from the download site <a href="https://julialang.org/downloads/">https://julialang.org/downloads/</a>. An alternative is to install JuliaPro from <a href="https://juliacomputing.com">https://juliacomputing.com</a></p>
-<p>Once installed, open julia in a terminal (or in Atom) and add the following packages:</p>
+<p>Once installed, open julia in a terminal (or in Atom), press <code>]</code> to activate package manager and add the following packages:</p>
+
+<pre><code>pkg&gt; add HurdleDMR</code></pre>
 
 </div>
 </div>
 </div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[&nbsp;]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">Pkg</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="s">&quot;https://github.com/AsafManela/Lasso.jl&quot;</span><span class="p">)</span>
-<span class="n">Pkg</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="s">&quot;https://github.com/AsafManela/HurdleDMR.jl&quot;</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -11790,8 +11801,9 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[1]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">addprocs</span><span class="p">(</span><span class="n">Sys</span><span class="o">.</span><span class="n">CPU_CORES</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
-<span class="k">import</span> <span class="n">HurdleDMR</span><span class="p">;</span> <span class="p">@</span><span class="n">everywhere</span> <span class="k">using</span> <span class="n">HurdleDMR</span>
+<div class=" highlight hl-julia"><pre><span></span><span class="k">using</span> <span class="n">Distributed</span>
+<span class="n">addprocs</span><span class="p">(</span><span class="n">Sys</span><span class="o">.</span><span class="n">CPU_THREADS</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+<span class="k">import</span> <span class="n">HurdleDMR</span><span class="p">;</span> <span class="nd">@everywhere</span> <span class="k">using</span> <span class="n">HurdleDMR</span>
 </pre></div>
 
 </div>
@@ -11799,12 +11811,22 @@ div#notebook {
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h3 id="Example-Data">Example Data<a class="anchor-link" href="#Example-Data">&#182;</a></h3><p>Setup your data into an n-by-p covars matrix, and a (sparse) n-by-d counts matrix. Here we generate some random data.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p>if not installed, install following package with</p>
+
+<pre><code>pkg&gt; add CSV GLM DataFrames Distributions</code></pre>
 
 </div>
 </div>
@@ -11814,19 +11836,19 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="k">using</span> <span class="n">CSV</span><span class="p">,</span> <span class="n">GLM</span><span class="p">,</span> <span class="n">DataFrames</span><span class="p">,</span> <span class="n">Distributions</span>
+<div class=" highlight hl-julia"><pre><span></span><span class="k">using</span> <span class="n">CSV</span><span class="p">,</span> <span class="n">GLM</span><span class="p">,</span> <span class="n">DataFrames</span><span class="p">,</span> <span class="n">Distributions</span><span class="p">,</span> <span class="n">Random</span><span class="p">,</span> <span class="n">LinearAlgebra</span><span class="p">,</span> <span class="n">SparseArrays</span>
 <span class="n">n</span> <span class="o">=</span> <span class="mi">100</span>
 <span class="n">p</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="n">d</span> <span class="o">=</span> <span class="mi">4</span>
 
-<span class="n">srand</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>
-<span class="n">m</span> <span class="o">=</span> <span class="mi">1</span><span class="o">+</span><span class="n">rand</span><span class="p">(</span><span class="n">Poisson</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span><span class="n">n</span><span class="p">)</span>
+<span class="n">Random</span><span class="o">.</span><span class="n">seed!</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>
+<span class="n">m</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">.+</span> <span class="n">rand</span><span class="p">(</span><span class="n">Poisson</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span><span class="n">n</span><span class="p">)</span>
 <span class="n">covars</span> <span class="o">=</span> <span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">p</span><span class="p">)</span>
-<span class="n">ηfn</span><span class="p">(</span><span class="n">vi</span><span class="p">)</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="p">([</span><span class="mi">0</span> <span class="o">+</span> <span class="n">i</span><span class="o">*</span><span class="n">sum</span><span class="p">(</span><span class="n">vi</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">:</span><span class="n">d</span><span class="p">])</span>
-<span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="n">ηfn</span><span class="p">(</span><span class="n">covars</span><span class="p">[</span><span class="n">i</span><span class="p">,:])</span> <span class="k">for</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">:</span><span class="n">n</span><span class="p">]</span>
-<span class="n">scale!</span><span class="o">.</span><span class="p">(</span><span class="n">q</span><span class="p">,</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">./</span><span class="n">sum</span><span class="o">.</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
-<span class="n">counts</span> <span class="o">=</span> <span class="nb">convert</span><span class="p">(</span><span class="n">SparseMatrixCSC</span><span class="p">{</span><span class="kt">Float64</span><span class="p">,</span><span class="kt">Int</span><span class="p">},</span><span class="n">hcat</span><span class="p">(</span><span class="n">broadcast</span><span class="p">((</span><span class="n">qi</span><span class="p">,</span><span class="n">mi</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">rand</span><span class="p">(</span><span class="n">Multinomial</span><span class="p">(</span><span class="n">mi</span><span class="p">,</span> <span class="n">qi</span><span class="p">)),</span><span class="n">q</span><span class="p">,</span><span class="n">m</span><span class="p">)</span><span class="o">...</span><span class="p">)</span><span class="o">&#39;</span><span class="p">)</span>
-<span class="n">covarsdf</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">covars</span><span class="p">,[:</span><span class="n">vy</span><span class="p">,</span> <span class="p">:</span><span class="n">v1</span><span class="p">,</span> <span class="p">:</span><span class="n">v2</span><span class="p">])</span>
+<span class="n">ηfn</span><span class="p">(</span><span class="n">vi</span><span class="p">)</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="p">([</span><span class="mi">0</span> <span class="o">+</span> <span class="n">i</span><span class="o">*</span><span class="n">sum</span><span class="p">(</span><span class="n">vi</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="o">:</span><span class="n">d</span><span class="p">])</span>
+<span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="n">ηfn</span><span class="p">(</span><span class="n">covars</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="o">:</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="o">:</span><span class="n">n</span><span class="p">]</span>
+<span class="n">rmul!</span><span class="o">.</span><span class="p">(</span><span class="n">q</span><span class="p">,</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">./</span><span class="n">sum</span><span class="o">.</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+<span class="n">counts</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="kt">SparseMatrixCSC</span><span class="p">{</span><span class="kt">Float64</span><span class="p">,</span><span class="kt">Int</span><span class="p">},</span><span class="n">hcat</span><span class="p">(</span><span class="n">broadcast</span><span class="p">((</span><span class="n">qi</span><span class="p">,</span><span class="n">mi</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">rand</span><span class="p">(</span><span class="n">Multinomial</span><span class="p">(</span><span class="n">mi</span><span class="p">,</span> <span class="n">qi</span><span class="p">)),</span><span class="n">q</span><span class="p">,</span><span class="n">m</span><span class="p">)</span><span class="o">...</span><span class="p">)</span><span class="o">&#39;</span><span class="p">)</span>
+<span class="n">covarsdf</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">covars</span><span class="p">,[</span><span class="o">:</span><span class="n">vy</span><span class="p">,</span> <span class="o">:</span><span class="n">v1</span><span class="p">,</span> <span class="o">:</span><span class="n">v2</span><span class="p">])</span>
 </pre></div>
 
 </div>
@@ -11837,10 +11859,26 @@ div#notebook {
 <div class="output">
 
 
-<div class="output_area"><div class="prompt output_prompt">Out[2]:</div>
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>┌ Info: Recompiling stale cache file /Users/root/.julia/compiled/v1.0/CSV/HHBkp.ji for CSV [336ed68f-0bac-5ca0-87d4-7b16caf5d00b]
+└ @ Base loading.jl:1190
+</pre>
+</div>
+</div>
+
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[2]:</div>
+
+
 
 <div class="output_html rendered_html output_subarea output_execute_result">
-<table class="data-frame"><thead><tr><th></th><th>vy</th><th>v1</th><th>v2</th></tr></thead><tbody><tr><th>1</th><td>0.693073</td><td>0.877116</td><td>0.401554</td></tr><tr><th>2</th><td>0.938163</td><td>0.737491</td><td>0.997271</td></tr><tr><th>3</th><td>0.755878</td><td>0.743268</td><td>0.595892</td></tr><tr><th>4</th><td>0.191058</td><td>0.296443</td><td>0.30533</td></tr><tr><th>5</th><td>0.00753542</td><td>0.360474</td><td>0.335553</td></tr><tr><th>6</th><td>0.410974</td><td>0.773871</td><td>0.657641</td></tr><tr><th>7</th><td>0.279942</td><td>0.154284</td><td>0.321258</td></tr><tr><th>8</th><td>0.208454</td><td>0.849653</td><td>0.22147</td></tr><tr><th>9</th><td>0.639872</td><td>0.926706</td><td>0.444675</td></tr><tr><th>10</th><td>0.269132</td><td>0.83785</td><td>0.0137366</td></tr><tr><th>11</th><td>0.704959</td><td>0.120137</td><td>0.401541</td></tr><tr><th>12</th><td>0.820248</td><td>0.379542</td><td>0.704862</td></tr><tr><th>13</th><td>0.752849</td><td>0.745383</td><td>0.907775</td></tr><tr><th>14</th><td>0.634401</td><td>0.383528</td><td>0.276991</td></tr><tr><th>15</th><td>0.370604</td><td>0.595542</td><td>0.0999965</td></tr><tr><th>16</th><td>0.400454</td><td>0.596132</td><td>0.00424357</td></tr><tr><th>17</th><td>0.331037</td><td>0.777271</td><td>0.963936</td></tr><tr><th>18</th><td>0.109256</td><td>0.45404</td><td>0.873842</td></tr><tr><th>19</th><td>0.0384627</td><td>0.358023</td><td>0.369017</td></tr><tr><th>20</th><td>0.655115</td><td>0.984853</td><td>0.284056</td></tr><tr><th>21</th><td>0.961148</td><td>0.425115</td><td>0.836061</td></tr><tr><th>22</th><td>0.313693</td><td>0.631212</td><td>0.33691</td></tr><tr><th>23</th><td>0.468663</td><td>0.203475</td><td>0.0895971</td></tr><tr><th>24</th><td>0.130995</td><td>0.416474</td><td>0.25323</td></tr><tr><th>25</th><td>0.510355</td><td>0.418123</td><td>0.542134</td></tr><tr><th>26</th><td>0.763879</td><td>0.501635</td><td>0.257008</td></tr><tr><th>27</th><td>0.139297</td><td>0.337539</td><td>0.143543</td></tr><tr><th>28</th><td>0.315356</td><td>0.838806</td><td>0.0502037</td></tr><tr><th>29</th><td>0.359166</td><td>0.992776</td><td>0.882517</td></tr><tr><th>30</th><td>0.511267</td><td>0.983282</td><td>0.976795</td></tr><tr><th>&vellip;</th><td>&vellip;</td><td>&vellip;</td><td>&vellip;</td></tr></tbody></table>
+<table class="data-frame"><thead><tr><th></th><th>vy</th><th>v1</th><th>v2</th></tr><tr><th></th><th>Float64</th><th>Float64</th><th>Float64</th></tr></thead><tbody><p>100 rows × 3 columns</p><tr><th>1</th><td>0.693073</td><td>0.877116</td><td>0.401554</td></tr><tr><th>2</th><td>0.938163</td><td>0.737491</td><td>0.997271</td></tr><tr><th>3</th><td>0.755878</td><td>0.743268</td><td>0.595892</td></tr><tr><th>4</th><td>0.191058</td><td>0.296443</td><td>0.30533</td></tr><tr><th>5</th><td>0.00753542</td><td>0.360474</td><td>0.335553</td></tr><tr><th>6</th><td>0.410974</td><td>0.773871</td><td>0.657641</td></tr><tr><th>7</th><td>0.279942</td><td>0.154284</td><td>0.321258</td></tr><tr><th>8</th><td>0.208454</td><td>0.849653</td><td>0.22147</td></tr><tr><th>9</th><td>0.639872</td><td>0.926706</td><td>0.444675</td></tr><tr><th>10</th><td>0.269132</td><td>0.83785</td><td>0.0137366</td></tr><tr><th>11</th><td>0.704959</td><td>0.120137</td><td>0.401541</td></tr><tr><th>12</th><td>0.820248</td><td>0.379542</td><td>0.704862</td></tr><tr><th>13</th><td>0.752849</td><td>0.745383</td><td>0.907775</td></tr><tr><th>14</th><td>0.634401</td><td>0.383528</td><td>0.276991</td></tr><tr><th>15</th><td>0.370604</td><td>0.595542</td><td>0.0999965</td></tr><tr><th>16</th><td>0.400454</td><td>0.596132</td><td>0.00424357</td></tr><tr><th>17</th><td>0.331037</td><td>0.777271</td><td>0.963936</td></tr><tr><th>18</th><td>0.109256</td><td>0.45404</td><td>0.873842</td></tr><tr><th>19</th><td>0.0384627</td><td>0.358023</td><td>0.369017</td></tr><tr><th>20</th><td>0.655115</td><td>0.984853</td><td>0.284056</td></tr><tr><th>21</th><td>0.961148</td><td>0.425115</td><td>0.836061</td></tr><tr><th>22</th><td>0.313693</td><td>0.631212</td><td>0.33691</td></tr><tr><th>23</th><td>0.468663</td><td>0.203475</td><td>0.0895971</td></tr><tr><th>24</th><td>0.130995</td><td>0.416474</td><td>0.25323</td></tr><tr><th>25</th><td>0.510355</td><td>0.418123</td><td>0.542134</td></tr><tr><th>26</th><td>0.763879</td><td>0.501635</td><td>0.257008</td></tr><tr><th>27</th><td>0.139297</td><td>0.337539</td><td>0.143543</td></tr><tr><th>28</th><td>0.315356</td><td>0.838806</td><td>0.0502037</td></tr><tr><th>29</th><td>0.359166</td><td>0.992776</td><td>0.882517</td></tr><tr><th>30</th><td>0.511267</td><td>0.983282</td><td>0.976795</td></tr><tr><th>&vellip;</th><td>&vellip;</td><td>&vellip;</td><td>&vellip;</td></tr></tbody></table>
 </div>
 
 </div>
@@ -11849,8 +11887,7 @@ div#notebook {
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -11879,19 +11916,29 @@ on the <code>covars</code>.</p>
 <div class="output">
 
 
-<div class="output_area"><div class="prompt"></div>
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
 <div class="output_subarea output_stream output_stderr output_text">
-<pre><span class="ansi-cyan-intense-fg ansi-bold">INFO: </span><span class="ansi-cyan-fg">fitting 100 observations on 4 categories, 3 covariates 
-</span><span class="ansi-cyan-intense-fg ansi-bold">INFO: </span><span class="ansi-cyan-fg">distributed poisson run on local cluster with 18 nodes
-</span></pre>
+<pre>┌ Info: fitting 100 observations on 4 categories, 3 covariates 
+└ @ HurdleDMR /Users/root/.julia/packages/HurdleDMR/XuBHA/src/dmr.jl:272
+┌ Info: distributed poisson run on local cluster with 2 nodes
+└ @ HurdleDMR /Users/root/.julia/packages/HurdleDMR/XuBHA/src/dmr.jl:281
+</pre>
 </div>
 </div>
 
-<div class="output_area"><div class="prompt output_prompt">Out[3]:</div>
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[3]:</div>
+
+
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>HurdleDMR.DMRCoefs([-0.277378 -1.10612 -1.18168 -0.746987; -3.94502 -1.7695 -0.387265 0.355981; -2.83456 -1.82878 0.0 0.212385; -2.72819 -0.983448 -0.346102 0.247442], true, 100, 4, 3)</pre>
+<pre>DMRCoefs([-0.277378 -1.10612 -1.18168 -0.746987; -3.94502 -1.7695 -0.387265 0.355981; -2.83456 -1.82878 0.0 0.212385; -2.72819 -0.983448 -0.346102 0.247442], true, 100, 4, 3)</pre>
 </div>
 
 </div>
@@ -11900,8 +11947,7 @@ on the <code>covars</code>.</p>
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -11915,7 +11961,7 @@ on the <code>covars</code>.</p>
 <div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">mf</span> <span class="o">=</span> <span class="p">@</span><span class="n">model</span><span class="p">(</span><span class="n">c</span> <span class="o">~</span> <span class="n">vy</span> <span class="o">+</span> <span class="n">v1</span> <span class="o">+</span> <span class="n">v2</span><span class="p">)</span>
+<div class=" highlight hl-julia"><pre><span></span><span class="n">mf</span> <span class="o">=</span> <span class="nd">@model</span><span class="p">(</span><span class="n">c</span> <span class="o">~</span> <span class="n">vy</span> <span class="o">+</span> <span class="n">v1</span> <span class="o">+</span> <span class="n">v2</span><span class="p">)</span>
 <span class="n">m</span> <span class="o">=</span> <span class="n">fit</span><span class="p">(</span><span class="n">DMR</span><span class="p">,</span> <span class="n">mf</span><span class="p">,</span> <span class="n">covarsdf</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
 </pre></div>
 
@@ -11927,19 +11973,29 @@ on the <code>covars</code>.</p>
 <div class="output">
 
 
-<div class="output_area"><div class="prompt"></div>
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
 <div class="output_subarea output_stream output_stderr output_text">
-<pre><span class="ansi-cyan-intense-fg ansi-bold">INFO: </span><span class="ansi-cyan-fg">fitting 100 observations on 4 categories, 3 covariates 
-</span><span class="ansi-cyan-intense-fg ansi-bold">INFO: </span><span class="ansi-cyan-fg">distributed poisson run on local cluster with 18 nodes
-</span></pre>
+<pre>┌ Info: fitting 100 observations on 4 categories, 3 covariates 
+└ @ HurdleDMR /Users/root/.julia/packages/HurdleDMR/XuBHA/src/dmr.jl:272
+┌ Info: distributed poisson run on local cluster with 2 nodes
+└ @ HurdleDMR /Users/root/.julia/packages/HurdleDMR/XuBHA/src/dmr.jl:281
+</pre>
 </div>
 </div>
 
-<div class="output_area"><div class="prompt output_prompt">Out[4]:</div>
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[4]:</div>
+
+
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>HurdleDMR.DMRCoefs([-0.277378 -1.10612 -1.18168 -0.746987; -3.94502 -1.7695 -0.387265 0.355981; -2.83456 -1.82878 0.0 0.212385; -2.72819 -0.983448 -0.346102 0.247442], true, 100, 4, 3)</pre>
+<pre>DMRCoefs([-0.277378 -1.10612 -1.18168 -0.746987; -3.94502 -1.7695 -0.387265 0.355981; -2.83456 -1.82878 0.0 0.212385; -2.72819 -0.983448 -0.346102 0.247442], true, 100, 4, 3)</pre>
 </div>
 
 </div>
@@ -11948,8 +12004,7 @@ on the <code>covars</code>.</p>
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -11974,11 +12029,15 @@ on the <code>covars</code>.</p>
 <div class="output">
 
 
-<div class="output_area"><div class="prompt output_prompt">Out[5]:</div>
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[5]:</div>
+
+
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>4×4 SharedArray{Float64,2}:
+<pre>4×4 SharedArrays.SharedArray{Float64,2}:
  -0.277378  -1.10612   -1.18168   -0.746987
  -3.94502   -1.7695    -0.387265   0.355981
  -2.83456   -1.82878    0.0        0.212385
@@ -11991,8 +12050,7 @@ on the <code>covars</code>.</p>
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -12018,19 +12076,29 @@ To also get back the entire regulatrization paths, run</p>
 <div class="output">
 
 
-<div class="output_area"><div class="prompt"></div>
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
 <div class="output_subarea output_stream output_stderr output_text">
-<pre><span class="ansi-cyan-intense-fg ansi-bold">INFO: </span><span class="ansi-cyan-fg">fitting 100 observations on 4 categories, 3 covariates 
-</span><span class="ansi-cyan-intense-fg ansi-bold">INFO: </span><span class="ansi-cyan-fg">distributed poisson run on remote cluster with 18 nodes
-</span></pre>
+<pre>┌ Info: fitting 100 observations on 4 categories, 3 covariates 
+└ @ HurdleDMR /Users/root/.julia/packages/HurdleDMR/XuBHA/src/dmr.jl:318
+┌ Info: distributed poisson run on remote cluster with 2 nodes
+└ @ HurdleDMR /Users/root/.julia/packages/HurdleDMR/XuBHA/src/dmr.jl:336
+</pre>
 </div>
 </div>
 
-<div class="output_area"><div class="prompt output_prompt">Out[6]:</div>
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[6]:</div>
+
+
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>HurdleDMR.DMRPaths(Nullable{Lasso.GammaLassoPath}[Poisson GammaLassoPath (56) solutions for 4 predictors in 330 iterations):
+<pre>DMRPaths(Union{Missing, GammaLassoPath}[Poisson GammaLassoPath (56) solutions for 4 predictors in 330 iterations):
                 λ   pct_dev ncoefs
  [1]     0.108369       0.0      0
  [2]     0.098742 0.0275025      1
@@ -12088,18 +12156,18 @@ To also get back the entire regulatrization paths, run</p>
 [54]  0.000782513  0.369975      3
 [55]  0.000712997  0.369986      3
 [56]  0.000649656  0.369995      3
-, Poisson GammaLassoPath (48) solutions for 4 predictors in 243 iterations):
+, Poisson GammaLassoPath (48) solutions for 4 predictors in 242 iterations):
                λ   pct_dev ncoefs
  [1]    0.130638       0.0      0
  [2]    0.119032 0.0262986      2
  [3]    0.108458 0.0497641      2
  [4]   0.0988228 0.0695382      2
- [5]   0.0900437 0.0882711      3
+ [5]   0.0900437  0.088271      3
  [6]   0.0820444  0.105895      3
  [7]   0.0747558  0.120782      3
  [8]   0.0681147  0.133357      3
  [9]   0.0620636  0.143978      3
-[10]     0.05655  0.152945      3
+[10]     0.05655  0.152946      3
 [11]   0.0515263  0.160513      3
 [12]   0.0469488  0.166898      3
 [13]    0.042778  0.172277      3
@@ -12138,7 +12206,7 @@ To also get back the entire regulatrization paths, run</p>
 [46]  0.00198558  0.200337      3
 [47]  0.00180919  0.200348      3
 [48]  0.00164846  0.200358      3
-, Poisson GammaLassoPath (44) solutions for 4 predictors in 216 iterations):
+, Poisson GammaLassoPath (44) solutions for 4 predictors in 218 iterations):
                λ   pct_dev ncoefs
  [1]     0.23463       0.0      0
  [2]    0.213786 0.0129647      2
@@ -12184,7 +12252,7 @@ To also get back the entire regulatrization paths, run</p>
 [42]   0.0051739 0.0828924      3
 [43]  0.00471426 0.0829028      3
 [44]  0.00429546 0.0829113      3
-, Poisson GammaLassoPath (49) solutions for 4 predictors in 232 iterations):
+, Poisson GammaLassoPath (49) solutions for 4 predictors in 231 iterations):
                λ   pct_dev ncoefs
  [1]    0.471659       0.0      0
  [2]    0.429758  0.023192      1
@@ -12244,8 +12312,7 @@ To also get back the entire regulatrization paths, run</p>
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -12259,7 +12326,7 @@ To also get back the entire regulatrization paths, run</p>
 <div class="prompt input_prompt">In&nbsp;[7]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">coef</span><span class="p">(</span><span class="n">paths</span><span class="p">;</span> <span class="n">select</span><span class="o">=</span><span class="p">:</span><span class="n">CVmin</span><span class="p">)</span>
+<div class=" highlight hl-julia"><pre><span></span><span class="n">coef</span><span class="p">(</span><span class="n">paths</span><span class="p">;</span> <span class="n">select</span><span class="o">=:</span><span class="n">CVmin</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12270,15 +12337,19 @@ To also get back the entire regulatrization paths, run</p>
 <div class="output">
 
 
-<div class="output_area"><div class="prompt output_prompt">Out[7]:</div>
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[7]:</div>
+
+
 
 
 <div class="output_text output_subarea output_execute_result">
 <pre>4×4 Array{Float64,2}:
- -1.04233  -1.27898   -1.1979    -0.733303
- -3.08667  -1.61234   -0.368288   0.346255
- -2.03017  -1.65467    0.0        0.202824
- -1.92495  -0.857511  -0.329399   0.240294</pre>
+ -0.920603  -1.27898   -1.1979    -0.733303
+ -3.22034   -1.61234   -0.368288   0.346255
+ -2.15417   -1.65467    0.0        0.202824
+ -2.04289   -0.857511  -0.329399   0.240294</pre>
 </div>
 
 </div>
@@ -12287,8 +12358,7 @@ To also get back the entire regulatrization paths, run</p>
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -12298,7 +12368,7 @@ Kelly, Manela, and Moreira (2018), may be superior to the DMR. It approximates
 a higher dispersion Multinomial using distributed (independent, parallel)
 Hurdle regressions, one for each of the d categories (columns) of a large <code>counts</code> matrix,
 on the <code>covars</code>. It allows a potentially different sets of covariates to explain
-category inclusion ($h=1{c>0}$), and repetition ($c>0$).</p>
+category inclusion ($h=1{c&gt;0}$), and repetition ($c&gt;0$).</p>
 <p>Both the model for zeroes and for positive counts are regularized by default,
 using <code>GammaLassoPath</code>, picking the AICc optimal segment of the regularization
 path.</p>
@@ -12312,7 +12382,7 @@ path.</p>
 <div class="prompt input_prompt">In&nbsp;[8]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">hdmr</span><span class="p">(</span><span class="n">covars</span><span class="p">,</span> <span class="n">counts</span><span class="p">;</span> <span class="n">inpos</span><span class="o">=</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="n">inzero</span><span class="o">=</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">)</span>
+<div class=" highlight hl-julia"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">hdmr</span><span class="p">(</span><span class="n">covars</span><span class="p">,</span> <span class="n">counts</span><span class="p">;</span> <span class="n">inpos</span><span class="o">=</span><span class="mi">1</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="n">inzero</span><span class="o">=</span><span class="mi">1</span><span class="o">:</span><span class="mi">3</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12323,20 +12393,30 @@ path.</p>
 <div class="output">
 
 
-<div class="output_area"><div class="prompt"></div>
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
 <div class="output_subarea output_stream output_stderr output_text">
-<pre><span class="ansi-cyan-intense-fg ansi-bold">INFO: </span><span class="ansi-cyan-fg">fitting 100 observations on 4 categories 
-2 covariates for positive and 3 for zero counts
-</span><span class="ansi-cyan-intense-fg ansi-bold">INFO: </span><span class="ansi-cyan-fg">distributed hurdle run on local cluster with 18 nodes
-</span></pre>
+<pre>┌ Info: fitting 100 observations on 4 categories 
+│ 2 covariates for positive and 3 for zero counts
+└ @ HurdleDMR /Users/root/.julia/packages/HurdleDMR/XuBHA/src/hdmr.jl:409
+┌ Info: distributed hurdle run on local cluster with 2 nodes
+└ @ HurdleDMR /Users/root/.julia/packages/HurdleDMR/XuBHA/src/hdmr.jl:419
+</pre>
 </div>
 </div>
 
-<div class="output_area"><div class="prompt output_prompt">Out[8]:</div>
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[8]:</div>
+
+
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>HurdleDMR.HDMRCoefs([-2.97869 -3.39104 -1.37637 -0.690629; 0.0 0.0 -0.724477 0.426105; 0.0 0.0 0.0 0.244869], [0.629668 -0.00316568 -0.521496 2.98134; -4.68583 -2.4084 0.0 0.0; -3.37301 -2.30744 0.0 0.0; -3.37706 -1.50431 0.0 0.0], true, 100, 4, 1:2, 1:3)</pre>
+<pre>HDMRCoefs([-2.97869 -3.39104 -1.37637 -0.690629; 0.0 0.0 -0.724477 0.426105; 0.0 0.0 0.0 0.244869], [0.629667 -0.00316577 -0.521496 2.98134; -4.68583 -2.4084 0.0 0.0; -3.37301 -2.30744 0.0 0.0; -3.37706 -1.50431 0.0 0.0], true, 100, 4, 1:2, 1:3)</pre>
 </div>
 
 </div>
@@ -12345,8 +12425,7 @@ path.</p>
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -12360,7 +12439,7 @@ path.</p>
 <div class="prompt input_prompt">In&nbsp;[9]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">mf</span> <span class="o">=</span> <span class="p">@</span><span class="n">model</span><span class="p">(</span><span class="n">h</span> <span class="o">~</span> <span class="n">vy</span> <span class="o">+</span> <span class="n">v1</span> <span class="o">+</span> <span class="n">v2</span><span class="p">,</span> <span class="n">c</span> <span class="o">~</span> <span class="n">vy</span> <span class="o">+</span> <span class="n">v1</span><span class="p">)</span>
+<div class=" highlight hl-julia"><pre><span></span><span class="n">mf</span> <span class="o">=</span> <span class="nd">@model</span><span class="p">(</span><span class="n">h</span> <span class="o">~</span> <span class="n">vy</span> <span class="o">+</span> <span class="n">v1</span> <span class="o">+</span> <span class="n">v2</span><span class="p">,</span> <span class="n">c</span> <span class="o">~</span> <span class="n">vy</span> <span class="o">+</span> <span class="n">v1</span><span class="p">)</span>
 <span class="n">m</span> <span class="o">=</span> <span class="n">fit</span><span class="p">(</span><span class="n">HDMR</span><span class="p">,</span> <span class="n">mf</span><span class="p">,</span> <span class="n">covarsdf</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
 </pre></div>
 
@@ -12372,20 +12451,30 @@ path.</p>
 <div class="output">
 
 
-<div class="output_area"><div class="prompt"></div>
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
 <div class="output_subarea output_stream output_stderr output_text">
-<pre><span class="ansi-cyan-intense-fg ansi-bold">INFO: </span><span class="ansi-cyan-fg">fitting 100 observations on 4 categories 
-2 covariates for positive and 3 for zero counts
-</span><span class="ansi-cyan-intense-fg ansi-bold">INFO: </span><span class="ansi-cyan-fg">distributed hurdle run on local cluster with 18 nodes
-</span></pre>
+<pre>┌ Info: fitting 100 observations on 4 categories 
+│ 2 covariates for positive and 3 for zero counts
+└ @ HurdleDMR /Users/root/.julia/packages/HurdleDMR/XuBHA/src/hdmr.jl:409
+┌ Info: distributed hurdle run on local cluster with 2 nodes
+└ @ HurdleDMR /Users/root/.julia/packages/HurdleDMR/XuBHA/src/hdmr.jl:419
+</pre>
 </div>
 </div>
 
-<div class="output_area"><div class="prompt output_prompt">Out[9]:</div>
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[9]:</div>
+
+
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>HurdleDMR.HDMRCoefs([-2.97869 -3.39104 -1.37637 -0.690629; 0.0 0.0 -0.724477 0.426105; 0.0 0.0 0.0 0.244869], [0.629668 -0.00316568 -0.521496 2.98134; -4.68583 -2.4084 0.0 0.0; -3.37301 -2.30744 0.0 0.0; -3.37706 -1.50431 0.0 0.0], true, 100, 4, [1, 2], [1, 2, 3])</pre>
+<pre>HDMRCoefs([-2.97869 -3.39104 -1.37637 -0.690629; 0.0 0.0 -0.724477 0.426105; 0.0 0.0 0.0 0.244869], [0.629667 -0.00316577 -0.521496 2.98134; -4.68583 -2.4084 0.0 0.0; -3.37301 -2.30744 0.0 0.0; -3.37706 -1.50431 0.0 0.0], true, 100, 4, [1, 2], [1, 2, 3])</pre>
 </div>
 
 </div>
@@ -12394,8 +12483,7 @@ path.</p>
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -12421,11 +12509,15 @@ path.</p>
 <div class="output">
 
 
-<div class="output_area"><div class="prompt output_prompt">Out[10]:</div>
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[10]:</div>
+
+
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>([-2.97869 -3.39104 -1.37637 -0.690629; 0.0 0.0 -0.724477 0.426105; 0.0 0.0 0.0 0.244869], [0.629668 -0.00316568 -0.521496 2.98134; -4.68583 -2.4084 0.0 0.0; -3.37301 -2.30744 0.0 0.0; -3.37706 -1.50431 0.0 0.0])</pre>
+<pre>([-2.97869 -3.39104 -1.37637 -0.690629; 0.0 0.0 -0.724477 0.426105; 0.0 0.0 0.0 0.244869], [0.629667 -0.00316577 -0.521496 2.98134; -4.68583 -2.4084 0.0 0.0; -3.37301 -2.30744 0.0 0.0; -3.37706 -1.50431 0.0 0.0])</pre>
 </div>
 
 </div>
@@ -12434,8 +12526,7 @@ path.</p>
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -12452,7 +12543,7 @@ To also get back the entire regulatrization paths, run</p>
     <div class="input_area">
 <div class=" highlight hl-julia"><pre><span></span><span class="n">paths</span> <span class="o">=</span> <span class="n">fit</span><span class="p">(</span><span class="n">HDMRPaths</span><span class="p">,</span> <span class="n">mf</span><span class="p">,</span> <span class="n">covarsdf</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
 
-<span class="n">coef</span><span class="p">(</span><span class="n">paths</span><span class="p">;</span> <span class="n">select</span><span class="o">=</span><span class="p">:</span><span class="n">all</span><span class="p">)</span>
+<span class="n">coef</span><span class="p">(</span><span class="n">paths</span><span class="p">;</span> <span class="n">select</span><span class="o">=:</span><span class="n">all</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12463,16 +12554,26 @@ To also get back the entire regulatrization paths, run</p>
 <div class="output">
 
 
-<div class="output_area"><div class="prompt"></div>
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
 <div class="output_subarea output_stream output_stderr output_text">
-<pre><span class="ansi-cyan-intense-fg ansi-bold">INFO: </span><span class="ansi-cyan-fg">fitting 100 observations on 4 categories 
-2 covariates for positive and 3 for zero counts
-</span><span class="ansi-cyan-intense-fg ansi-bold">INFO: </span><span class="ansi-cyan-fg">distributed hurdle run on remote cluster with 18 nodes
-</span></pre>
+<pre>┌ Info: fitting 100 observations on 4 categories 
+│ 2 covariates for positive and 3 for zero counts
+└ @ HurdleDMR /Users/root/.julia/packages/HurdleDMR/XuBHA/src/hdmr.jl:289
+┌ Info: distributed hurdle run on remote cluster with 2 nodes
+└ @ HurdleDMR /Users/root/.julia/packages/HurdleDMR/XuBHA/src/hdmr.jl:314
+</pre>
 </div>
 </div>
 
-<div class="output_area"><div class="prompt output_prompt">Out[11]:</div>
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[11]:</div>
+
+
 
 
 <div class="output_text output_subarea output_execute_result">
@@ -12482,7 +12583,7 @@ To also get back the entire regulatrization paths, run</p>
 
 [-1.68781 0.0 0.0; -1.65155 -0.0792342 0.0; … ; 0.0 0.0 0.0; 0.0 0.0 0.0]
 
-[-0.352618 0.0 0.0; -0.370878 0.037995 0.0; … ; 0.0 0.0 0.0; 0.0 0.0 0.0], [-3.87231 0.0 0.0 0.0; -3.72971 -0.30193 0.0 0.0; … ; 0.62351 -4.679 -3.36716 -3.37106; 0.629668 -4.68583 -3.37301 -3.37706]
+[-0.352618 0.0 0.0; -0.370878 0.037995 0.0; … ; 0.0 0.0 0.0; 0.0 0.0 0.0], [-3.87231 0.0 0.0 0.0; -3.72971 -0.30193 0.0 0.0; … ; 0.623512 -4.679 -3.36716 -3.37106; 0.629667 -4.68583 -3.37301 -3.37706]
 
 [-2.86015 0.0 0.0 0.0; -2.74269 -0.19503 -0.0481219 0.0; … ; 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0]
 
@@ -12497,8 +12598,7 @@ To also get back the entire regulatrization paths, run</p>
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -12527,7 +12627,11 @@ example</p>
 <div class="output">
 
 
-<div class="output_area"><div class="prompt output_prompt">Out[12]:</div>
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[12]:</div>
+
+
 
 
 <div class="output_text output_subarea output_execute_result">
@@ -12566,8 +12670,7 @@ example</p>
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -12576,8 +12679,7 @@ example</p>
 </div>
 </div>
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -12593,7 +12695,7 @@ This can be accomplished with a single command, by fitting a CIR{HDMR,FM} where 
 <div class="prompt input_prompt">In&nbsp;[13]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">cir</span> <span class="o">=</span> <span class="n">fit</span><span class="p">(</span><span class="n">CIR</span><span class="p">{</span><span class="n">HDMR</span><span class="p">,</span><span class="n">LinearModel</span><span class="p">},</span><span class="n">mf</span><span class="p">,</span><span class="n">covarsdf</span><span class="p">,</span><span class="n">counts</span><span class="p">,:</span><span class="n">vy</span><span class="p">;</span> <span class="n">nocounts</span><span class="o">=</span><span class="n">true</span><span class="p">)</span>
+<div class=" highlight hl-julia"><pre><span></span><span class="n">cir</span> <span class="o">=</span> <span class="n">fit</span><span class="p">(</span><span class="n">CIR</span><span class="p">{</span><span class="n">HDMR</span><span class="p">,</span><span class="n">LinearModel</span><span class="p">},</span><span class="n">mf</span><span class="p">,</span><span class="n">covarsdf</span><span class="p">,</span><span class="n">counts</span><span class="p">,</span><span class="o">:</span><span class="n">vy</span><span class="p">;</span> <span class="n">nocounts</span><span class="o">=</span><span class="kc">true</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12604,20 +12706,30 @@ This can be accomplished with a single command, by fitting a CIR{HDMR,FM} where 
 <div class="output">
 
 
-<div class="output_area"><div class="prompt"></div>
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
 <div class="output_subarea output_stream output_stderr output_text">
-<pre><span class="ansi-cyan-intense-fg ansi-bold">INFO: </span><span class="ansi-cyan-fg">fitting 100 observations on 4 categories 
-2 covariates for positive and 3 for zero counts
-</span><span class="ansi-cyan-intense-fg ansi-bold">INFO: </span><span class="ansi-cyan-fg">distributed hurdle run on local cluster with 18 nodes
-</span></pre>
+<pre>┌ Info: fitting 100 observations on 4 categories 
+│ 2 covariates for positive and 3 for zero counts
+└ @ HurdleDMR /Users/root/.julia/packages/HurdleDMR/XuBHA/src/hdmr.jl:409
+┌ Info: distributed hurdle run on local cluster with 2 nodes
+└ @ HurdleDMR /Users/root/.julia/packages/HurdleDMR/XuBHA/src/hdmr.jl:419
+</pre>
 </div>
 </div>
 
-<div class="output_area"><div class="prompt output_prompt">Out[13]:</div>
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[13]:</div>
+
+
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>HurdleDMR.CIR{HurdleDMR.HDMR,GLM.LinearModel}(1, [1, 2], HurdleDMR.HDMRCoefs([-2.97869 -3.39104 -1.37637 -0.690629; 0.0 0.0 -0.724477 0.426105; 0.0 0.0 0.0 0.244869], [0.629668 -0.00316568 -0.521496 2.98134; -4.68583 -2.4084 0.0 0.0; -3.37301 -2.30744 0.0 0.0; -3.37706 -1.50431 0.0 0.0], true, 100, 4, [1, 2], [1, 2, 3]), GLM.LinearModel{GLM.LmResp{Array{Float64,1}},GLM.DensePredChol{Float64,Base.LinAlg.Cholesky{Float64,Array{Float64,2}}}}:
+<pre>CIR{HDMR,LinearModel}(1, [1, 2], HDMRCoefs([-2.97869 -3.39104 -1.37637 -0.690629; 0.0 0.0 -0.724477 0.426105; 0.0 0.0 0.0 0.244869], [0.629667 -0.00316577 -0.521496 2.98134; -4.68583 -2.4084 0.0 0.0; -3.37301 -2.30744 0.0 0.0; -3.37706 -1.50431 0.0 0.0], true, 100, 4, [1, 2], [1, 2, 3]), LinearModel{LmResp{Array{Float64,1}},DensePredChol{Float64,Cholesky{Float64,Array{Float64,2}}}}:
 
 Coefficients:
        Estimate Std.Error   t value Pr(&gt;|t|)
@@ -12628,7 +12740,7 @@ x4     0.283205  0.126589   2.23721   0.0276
 x5     0.160959 0.0471665   3.41257   0.0010
 x6   0.00293183 0.0116717  0.251192   0.8022
 
-, GLM.LinearModel{GLM.LmResp{Array{Float64,1}},GLM.DensePredChol{Float64,Base.LinAlg.Cholesky{Float64,Array{Float64,2}}}}:
+, LinearModel{LmResp{Array{Float64,1}},DensePredChol{Float64,Cholesky{Float64,Array{Float64,2}}}}:
 
 Coefficients:
        Estimate Std.Error   t value Pr(&gt;|t|)
@@ -12645,8 +12757,7 @@ x3    0.0921372 0.0909831   1.01269   0.3137
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -12672,11 +12783,15 @@ x3    0.0921372 0.0909831   1.01269   0.3137
 <div class="output">
 
 
-<div class="output_area"><div class="prompt output_prompt">Out[14]:</div>
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[14]:</div>
+
+
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>([-2.97869 -3.39104 -1.37637 -0.690629; 0.0 0.0 -0.724477 0.426105; 0.0 0.0 0.0 0.244869], [0.629668 -0.00316568 -0.521496 2.98134; -4.68583 -2.4084 0.0 0.0; -3.37301 -2.30744 0.0 0.0; -3.37706 -1.50431 0.0 0.0])</pre>
+<pre>([-2.97869 -3.39104 -1.37637 -0.690629; 0.0 0.0 -0.724477 0.426105; 0.0 0.0 0.0 0.244869], [0.629667 -0.00316577 -0.521496 2.98134; -4.68583 -2.4084 0.0 0.0; -3.37301 -2.30744 0.0 0.0; -3.37706 -1.50431 0.0 0.0])</pre>
 </div>
 
 </div>
@@ -12701,17 +12816,21 @@ x3    0.0921372 0.0909831   1.01269   0.3137
 <div class="output">
 
 
-<div class="output_area"><div class="prompt output_prompt">Out[15]:</div>
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[15]:</div>
+
+
 
 
 <div class="output_text output_subarea output_execute_result">
 <pre>6-element Array{Float64,1}:
-  0.596995  
- -0.165407  
- -0.059985  
-  0.283205  
-  0.160959  
-  0.00293183</pre>
+  0.5969947545574932   
+ -0.16540667532095363  
+ -0.05998499041491726  
+  0.28320494243822064  
+  0.16095913754958308  
+  0.0029318257220388305</pre>
 </div>
 
 </div>
@@ -12720,8 +12839,7 @@ x3    0.0921372 0.0909831   1.01269   0.3137
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -12735,7 +12853,7 @@ x3    0.0921372 0.0909831   1.01269   0.3137
 <div class="prompt input_prompt">In&nbsp;[16]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">yhat</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span><span class="n">cir</span><span class="p">,</span> <span class="n">covarsdf</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">10</span><span class="p">,:],</span> <span class="n">counts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">10</span><span class="p">,:])</span>
+<div class=" highlight hl-julia"><pre><span></span><span class="n">yhat</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span><span class="n">cir</span><span class="p">,</span> <span class="n">covarsdf</span><span class="p">[</span><span class="mi">1</span><span class="o">:</span><span class="mi">10</span><span class="p">,</span><span class="o">:</span><span class="p">],</span> <span class="n">counts</span><span class="p">[</span><span class="mi">1</span><span class="o">:</span><span class="mi">10</span><span class="p">,</span><span class="o">:</span><span class="p">])</span>
 </pre></div>
 
 </div>
@@ -12746,21 +12864,25 @@ x3    0.0921372 0.0909831   1.01269   0.3137
 <div class="output">
 
 
-<div class="output_area"><div class="prompt output_prompt">Out[16]:</div>
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[16]:</div>
+
+
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>10-element Array{Union{Float64, Missings.Missing},1}:
- 0.545235
- 0.532596
- 0.567779
- 0.353053
- 0.329678
- 0.524191
- 0.465097
- 0.444719
- 0.561167
- 0.532235</pre>
+<pre>10-element Array{Union{Missing, Float64},1}:
+ 0.545234930292324  
+ 0.5325958888465925 
+ 0.5677792380623129 
+ 0.35305282642966895
+ 0.32967807949439587
+ 0.5241906269283231 
+ 0.465096635838342  
+ 0.4447192784387671 
+ 0.5611672668012532 
+ 0.5322351641015849 </pre>
 </div>
 
 </div>
@@ -12769,8 +12891,7 @@ x3    0.0921372 0.0909831   1.01269   0.3137
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -12785,7 +12906,7 @@ is just a linear regression</p>
 <div class="prompt input_prompt">In&nbsp;[17]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">yhat_nocounts</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span><span class="n">cir</span><span class="p">,</span> <span class="n">covarsdf</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">10</span><span class="p">,:],</span> <span class="n">counts</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">10</span><span class="p">,:];</span> <span class="n">nocounts</span><span class="o">=</span><span class="n">true</span><span class="p">)</span>
+<div class=" highlight hl-julia"><pre><span></span><span class="n">yhat_nocounts</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span><span class="n">cir</span><span class="p">,</span> <span class="n">covarsdf</span><span class="p">[</span><span class="mi">1</span><span class="o">:</span><span class="mi">10</span><span class="p">,</span><span class="o">:</span><span class="p">],</span> <span class="n">counts</span><span class="p">[</span><span class="mi">1</span><span class="o">:</span><span class="mi">10</span><span class="p">,</span><span class="o">:</span><span class="p">];</span> <span class="n">nocounts</span><span class="o">=</span><span class="kc">true</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12796,21 +12917,25 @@ is just a linear regression</p>
 <div class="output">
 
 
-<div class="output_area"><div class="prompt output_prompt">Out[17]:</div>
+<div class="output_area">
+
+<div class="prompt output_prompt">Out[17]:</div>
+
+
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>10-element Array{Union{Float64, Missings.Missing},1}:
- 0.457317
- 0.517999
- 0.480777
- 0.472548
- 0.472676
- 0.485196
- 0.479915
- 0.441864
- 0.459232
- 0.423214</pre>
+<pre>10-element Array{Union{Missing, Float64},1}:
+ 0.45731660084749226
+ 0.5179985510761541 
+ 0.4807768729723196 
+ 0.47254808567420575
+ 0.47267552235044974
+ 0.48519627697522144
+ 0.4799151241219515 
+ 0.44186379731084846
+ 0.4592317510593359 
+ 0.4232136851484049 </pre>
 </div>
 
 </div>
@@ -12819,8 +12944,7 @@ is just a linear regression</p>
 </div>
 
 </div>
-<div class="cell border-box-sizing text_cell rendered">
-<div class="prompt input_prompt">
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
@@ -12833,4 +12957,8 @@ is just a linear regression</p>
     </div>
   </div>
 </body>
+
+ 
+
+
 </html>
