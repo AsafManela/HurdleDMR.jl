@@ -98,7 +98,7 @@ yhat = predict(cir, covarsdf[1:10,:], counts[1:10,:])
 We can also predict only with the other covariates, which in this case
 is just a linear regression
 ```julia
-yhat_nocounts = predict(hir, covarsdf[1:10,:], counts[1:10,:]; nocounts=true)
+yhat_nocounts = predict(cir, covarsdf[1:10,:], counts[1:10,:]; nocounts=true)
 ```
 
 ### Distribtued multinomial regression (DMR)
