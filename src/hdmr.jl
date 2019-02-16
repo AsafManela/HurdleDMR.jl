@@ -32,14 +32,15 @@ struct HDMRCoefs <: HDMR
   d::Int                      # number of categories (terms/words/phrases)
   inpos                         # indices of covars columns included in positives model
   inzero                        # indices of covars columns included in zeros model
+  select::Symbol              # path segment selector
 
   HDMRCoefs(coefspos::AbstractMatrix, coefszero::AbstractMatrix, intercept::Bool,
-    n::Int, d::Int, inpos, inzero) =
-    new(coefspos, coefszero, intercept, n, d, inpos, inzero)
+    n::Int, d::Int, inpos, inzero, select::Symbol) =
+    new(coefspos, coefszero, intercept, n, d, inpos, inzero, select)
 
-  function HDMRCoefs(m::HDMRPaths)
-    coefspos, coefszero = coef(m;select=:AICc)
-    new(coefspos, coefszero, m.intercept, m.n, m.d, m.inpos, m.inzero)
+  function HDMRCoefs(m::HDMRPaths; select=:AICc)
+    coefspos, coefszero = coef(m; select=select)
+    new(coefspos, coefszero, m.intercept, m.n, m.d, m.inpos, m.inzero, select)
   end
 end
 
@@ -50,7 +51,7 @@ end
 Fit a Hurdle Distributed Multiple Regression (HDMR) of counts on covars.
 
 HDMR fits independent hurdle lasso regressions to each column of counts to
-approximate a multinomial, picks the minimum AICc segement of each path, and
+approximate a multinomial, picks a segement of each path, and
 returns a coefficient matrix (wrapped in HDMRCoefs) representing point estimates
 for the entire multinomial (includes the intercept if one was included).
 
@@ -73,6 +74,7 @@ for the entire multinomial (includes the intercept if one was included).
     for which sharing memory is costly.
 - `verbose::Bool=true`
 - `showwarnings::Bool=false`
+- `select::Symbol=:AICc` path segment selection criterion
 - `kwargs...` additional keyword arguments passed along to fit(Hurdle,...)
 """
 function StatsBase.fit(::Type{H}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
@@ -136,16 +138,13 @@ Returns the AICc optimal coefficient matrices fitted with HDMR.
   m = fit(HDMR,covars,counts)
   coefspos, coefszero = coef(m)
 ```
-
-# Keywords
-- `select=:AICc` only supports AICc criterion. To get other segments see
-  [`coef(::HDMRPaths)`](@ref).
 """
-function StatsBase.coef(m::HDMRCoefs; select=:AICc)
-  if select == :AICc
+function StatsBase.coef(m::HDMRCoefs; select=m.select)
+  if select == m.select
     m.coefspos, m.coefszero
   else
-    error("coef(m::HDMRCoefs) currently supports only AICc regulatrization path segement selection.")
+    error("coef(m::HDMRCoefs) supports only the regulatrization path segement
+      selector $(m.select) specified during fit().")
   end
 end
 
@@ -256,7 +255,7 @@ end
 function StatsBase.predict(m::M, newcovars::AbstractMatrix{T};
   select=:AICc, kwargs...) where {T<:AbstractFloat, M<:HDMR}
 
-  error("Predict(m::HDMR,...) can currently only be evaluated for HDMRPaths structs returned from fit(HDMRPaths,...)")
+  error("predict(m::HDMR,...) can currently only be evaluated for HDMRPaths structs returned from fit(HDMRPaths,...)")
 end
 
 "Number of covariates used for HDMR estimation of zeros model"
@@ -349,12 +348,13 @@ end
 function hurdle_regression!(coefspos::AbstractMatrix{T}, coefszero::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V},
             inpos, inzero;
             offset::AbstractVector=similar(y, 0),
+            select=:AICc,
             kwargs...) where {T<:AbstractFloat,V}
   cj = Vector(counts[:,j])
   covarspos, covarszero = incovars(covars,inpos,inzero)
   # we use the same offsets for pos and zeros
   path = fit(Hurdle,GammaLassoPath,covarszero,cj; Xpos=covarspos, offsetpos=offset, offsetzero=offset, kwargs...)
-  (coefspos[:,j], coefszero[:,j]) = coef(path;select=:AICc)
+  (coefspos[:,j], coefszero[:,j]) = coef(path; select=select)
   nothing
 end
 
@@ -397,6 +397,7 @@ and outputs if run in parallel mode.
 """
 function hdmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
           inpos,inzero,intercept,parallel,verbose,showwarnings;
+          select=:AICc,
           kwargs...) where {T<:AbstractFloat,V}
   # get dimensions
   n, d = size(counts)
@@ -424,18 +425,22 @@ function hdmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
     # μ = convert(SharedArray,μ) incompatible with GLM
 
     @sync @distributed for j=1:d
-      tryfith!(coefspos, coefszero, j, covars, counts, inpos, inzero; offset=μ, verbose=false, showwarnings=showwarnings, intercept=intercept, kwargs...)
+      tryfith!(coefspos, coefszero, j, covars, counts, inpos, inzero; offset=μ,
+        verbose=false, showwarnings=showwarnings, intercept=intercept,
+        select=select, kwargs...)
     end
   else
     verbose && @info("serial hurdle run on a single node")
     coefszero = Matrix{T}(undef,ncoefzero,d)
     coefspos = Matrix{T}(undef,ncoefpos,d)
     for j=1:d
-      tryfith!(coefspos, coefszero, j, covars, counts, inpos, inzero; offset=μ, verbose=false, showwarnings=showwarnings, intercept=intercept, kwargs...)
+      tryfith!(coefspos, coefszero, j, covars, counts, inpos, inzero; offset=μ,
+        verbose=false, showwarnings=showwarnings, intercept=intercept,
+        select=select, kwargs...)
     end
   end
 
-  HDMRCoefs(coefspos, coefszero, intercept, n, d, inpos, inzero)
+  HDMRCoefs(coefspos, coefszero, intercept, n, d, inpos, inzero, select)
 end
 
 """
@@ -444,9 +449,9 @@ This version does not share memory across workers, so may be more efficient for
 """
 function hdmr_remote_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
           inpos,inzero,intercept,parallel,verbose,showwarnings;
-          kwargs...) where {T<:AbstractFloat,V}
+          select=:AICc, kwargs...) where {T<:AbstractFloat,V}
   paths = hdmrpaths(covars, counts; inpos=inpos, inzero=inzero, parallel=parallel, verbose=verbose, showwarnings=showwarnings, kwargs...)
-  HDMRCoefs(paths)
+  HDMRCoefs(paths; select=select)
 end
 
 """

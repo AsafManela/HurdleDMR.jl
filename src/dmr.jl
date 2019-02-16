@@ -33,13 +33,14 @@ struct DMRCoefs <: DMR
   n::Int                      # number of observations. May be lower than provided after removing all zero obs.
   d::Int                      # number of categories (terms/words/phrases)
   p::Int                      # number of covariates
+  select::Symbol              # path segment selector
 
-  DMRCoefs(coefs::AbstractMatrix, intercept::Bool, n::Int, d::Int, p::Int) =
-    new(coefs, intercept, n, d, p)
+  DMRCoefs(coefs::AbstractMatrix, intercept::Bool, n::Int, d::Int, p::Int, select::Symbol) =
+    new(coefs, intercept, n, d, p, select)
 
-  function DMRCoefs(m::DMRPaths)
-    coefs = coef(m;select=:AICc)
-    new(coefs, m.intercept, m.n, m.d, m.p)
+  function DMRCoefs(m::DMRPaths; select=:AICc)
+    coefs = coef(m; select=select)
+    new(coefs, m.intercept, m.n, m.d, m.p, select)
   end
 end
 
@@ -50,7 +51,7 @@ end
 Fit a Distributed Multinomial Regression (DMR) of counts on covars.
 
 DMR fits independent poisson gamma lasso regressions to each column of counts to
-approximate a multinomial, picks the minimum AICc segement of each path, and
+approximate a multinomial, picks a segement of each path, and
 returns a coefficient matrix (wrapped in DMRCoefs) representing point estimates
 for the entire multinomial (includes the intercept if one was included).
 
@@ -71,6 +72,7 @@ for the entire multinomial (includes the intercept if one was included).
     for which sharing memory is costly.
 - `verbose::Bool=true`
 - `showwarnings::Bool=false`
+- `select::Symbol=:AICc` which path segment to pick
 - `kwargs...` additional keyword arguments passed along to fit(GammaLassoPath,...)
 """
 function StatsBase.fit(::Type{D}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
@@ -125,16 +127,13 @@ Returns the AICc optimal coefficients matrix fitted with DMR.
   m = fit(DMR,covars,counts)
   coef(m)
 ```
-
-# Keywords
-- `select=:AICc` only supports AICc criterion. To get other segments see
-  [`coef(::DMRPaths)`](@ref).
 """
-function StatsBase.coef(m::DMRCoefs; select=:AICc)
-  if select == :AICc
+function StatsBase.coef(m::DMRCoefs; select=m.select)
+  if select == m.select
     m.coefs
   else
-    error("coef(m::DMRCoefs) currently supports only AICc regulatrization path segement selection.")
+    error("coef(m::DMRCoefs) supports only the regulatrization path segement
+      selector $(m.select) specified during fit().")
   end
 end
 
@@ -264,7 +263,7 @@ end
 This version is built for local clusters and shares memory used by both inputs and outputs if run in parallel mode.
 """
 function dmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
-          parallel,verbose,showwarnings,intercept; kwargs...) where {T<:AbstractFloat,V}
+          parallel,verbose,showwarnings,intercept; select=:AICc, kwargs...) where {T<:AbstractFloat,V}
   # get dimensions
   n, d = size(counts)
   n1,p = size(covars)
@@ -285,24 +284,26 @@ function dmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
     # μ = convert(SharedArray,μ) incompatible with GLM
 
     @sync @distributed for j=1:d
-      tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false, showwarnings=showwarnings, intercept=intercept, kwargs...)
+      tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false,
+        showwarnings=showwarnings, intercept=intercept, select=select, kwargs...)
     end
   else
     verbose && @info("serial poisson run on a single node")
     coefs = Matrix{T}(undef,ncoef,d)
     for j=1:d
-      tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false, showwarnings=showwarnings, intercept=intercept, kwargs...)
+      tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false,
+        showwarnings=showwarnings, intercept=intercept, select=select, kwargs...)
     end
   end
 
-  DMRCoefs(coefs, intercept, n, d, p)
+  DMRCoefs(coefs, intercept, n, d, p, select)
 end
 
 "This version does not share memory across workers, so may be more efficient for small problems, or on remote clusters."
 function dmr_remote_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
-          parallel,verbose,showwarnings,intercept; kwargs...) where {T<:AbstractFloat,V}
+          parallel,verbose,showwarnings,intercept; select=:AICc, kwargs...) where {T<:AbstractFloat,V}
   paths = dmrpaths(covars, counts; parallel=parallel, verbose=verbose, showwarnings=showwarnings, intercept=intercept, kwargs...)
-  DMRCoefs(paths)
+  DMRCoefs(paths; select=select)
 end
 
 "Shorthand for fit(DMRPaths,covars,counts). See also [`fit(::DMRPaths)`](@ref)"
@@ -347,10 +348,11 @@ function dmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
 end
 
 "Fits a regularized poisson regression counts[:,j] ~ covars saving the coefficients in coefs[:,j]"
-function poisson_regression!(coefs::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V}; kwargs...) where {T<:AbstractFloat,V}
+function poisson_regression!(coefs::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V};
+  select=:AICc, kwargs...) where {T<:AbstractFloat,V}
   cj = Vector(counts[:,j])
   path = fit(GammaLassoPath,covars,cj,Poisson(),LogLink(); kwargs...)
-  coefs[:,j] = coef(path;select=:AICc)
+  coefs[:,j] = coef(path; select=select)
   nothing
 end
 
@@ -444,5 +446,5 @@ end
 function StatsBase.predict(m::M, newcovars::AbstractMatrix{T};
   select=:AICc, kwargs...) where {T<:AbstractFloat, M<:DMR}
 
-  error("Predict(m::DMR,...) can currently only be evaluated for DMRPaths structs returned from fit(DMRPaths,...)")
+  error("predict(m::DMR,...) can currently only be evaluated for DMRPaths structs returned from fit(DMRPaths,...)")
 end

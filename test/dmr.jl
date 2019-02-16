@@ -21,12 +21,18 @@ coefsint = coef(dmrcoefsint)
 @test coefsint == coefs
 
 dmrcoefsb = fit(DMRCoefs, covars, counts; testargs...)
-@test coef(dmrcoefs) == coefs
+@test coef(dmrcoefsb) == coefs
 dmrb = fit(DMR, covars, counts; testargs...)
 @test coef(dmrb) == coefs
-@test n == nobs(dmrcoefs)
-@test d == ncategories(dmrcoefs)
-@test p == ncovars(dmrcoefs)
+@test n == nobs(dmrcoefsb)
+@test d == ncategories(dmrcoefsb)
+@test p == ncovars(dmrcoefsb)
+
+# select=:BIC
+dmrcoefsb = fit(DMRCoefs, covars, counts; select=:BIC, testargs...)
+@test coef(dmrcoefsb) != coefs
+dmrb = fit(DMR, covars, counts; select=:BIC, testargs...)
+@test coef(dmrb) != coefs
 
 # serial run
 dmrcoefss = dmr(covars, counts; parallel=false, testargs...)
@@ -167,6 +173,12 @@ mnirdf = fit(CIR{DMR,LinearModel},f,covarsdf,counts,:y; nocounts=true, testargs.
 mnirglmdf = fit(CIR{DMR,GeneralizedLinearModel},f,covarsdf,counts,:y,Gamma(); nocounts=false, testargs...)
 @test coefbwd(mnirglmdf) ≈ coef(dmrcoefs)
 @test_throws ErrorException coeffwd(mnirglmdf; nocounts=true)
+
+# select=:BIC
+mnirdfb = fit(CIR{DMR,LinearModel},f,covarsdf,counts,:y; nocounts=true, select=:BIC, testargs...)
+@test coefbwd(mnirdf) != coefbwd(mnirdfb)
+@test coeffwd(mnirdf) != coeffwd(mnirdfb)
+
 # #### debug start
 # mm = mnirdf
 # mdf = covarsdf[1:10,:]

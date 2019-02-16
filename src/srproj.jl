@@ -10,8 +10,11 @@ your original covariates/attributes, are independent of text counts C given SR
 projections Z=[z_1 ... z_K].
 dir == nothing returns projections in all directions.
 """
-srproj(m::DMR, counts, dir::Union{Nothing,Int}=nothing; focusj=axes(counts,2), select=:AICc) =
+srproj(m::DMRPaths, counts, dir::Union{Nothing,Int}=nothing; focusj=axes(counts,2), select=:AICc) =
   srproj(coef(m; select=select), counts, dir; intercept=hasintercept(m), focusj=focusj)
+
+srproj(m::DMRCoefs, counts, dir::Union{Nothing,Int}=nothing; focusj=axes(counts,2)) =
+  srproj(coef(m), counts, dir; intercept=hasintercept(m), focusj=focusj)
 
 """
 srproj calculates the MNIR Sufficient Reduction projection from text counts on
@@ -94,7 +97,10 @@ function srprojX(coefs::AbstractMatrix{T},counts,covars,projdir; includem=true, 
 
   X, X_nocounts, inz
 end
-srprojX(m::DMR,counts,covars,projdir; select=:AICc, inz=[1], testrank=false, kwargs...) = srprojX(coef(m;select=select),counts,covars,projdir; kwargs...)
+srprojX(m::DMRCoefs,counts,covars,projdir; inz=[1], testrank=false,
+  kwargs...) = srprojX(coef(m),counts,covars,projdir; kwargs...)
+srprojX(m::DMRPaths,counts,covars,projdir; select=:AICc, inz=[1], testrank=false,
+  kwargs...) = srprojX(coef(m;select=select),counts,covars,projdir; kwargs...)
 
 """
 srproj for hurdle dmr takes two coefficent matrices
@@ -104,7 +110,9 @@ dirpos = 0 omits positive counts projections and
 dirzero = 0 omits zero counts projections.
 Setting any of these to nothing will return projections in all directions.
 """
-srproj(m::HDMR, counts, dirpos::D=nothing, dirzero::D=nothing; select=:AICc, kwargs...) where {D<:Union{Nothing,Int}}=
+srproj(m::HDMRCoefs, counts, dirpos::D=nothing, dirzero::D=nothing; kwargs...) where {D<:Union{Nothing,Int}}=
+  srproj(coef(m)..., counts, dirpos, dirzero; intercept=hasintercept(m), kwargs...)
+srproj(m::HDMRPaths, counts, dirpos::D=nothing, dirzero::D=nothing; select=:AICc, kwargs...) where {D<:Union{Nothing,Int}}=
   srproj(coef(m; select=select)..., counts, dirpos, dirzero; intercept=hasintercept(m), kwargs...)
 
 """
@@ -191,4 +199,5 @@ function srprojX(coefspos::M, coefszero::M, counts, covars, projdir::Int;
 
   X, X_nocounts, inz
 end
-srprojX(m::HDMR,counts,covars,projdir; select=:AICc, kwargs...) = srprojX(coef(m;select=select)...,counts,covars,projdir; inpos=m.inpos, inzero=m.inzero, kwargs...)
+srprojX(m::HDMRCoefs,counts,covars,projdir; kwargs...) = srprojX(coef(m)...,counts,covars,projdir; inpos=m.inpos, inzero=m.inzero, kwargs...)
+srprojX(m::HDMRPaths,counts,covars,projdir; select=:AICc, kwargs...) = srprojX(coef(m;select=select)...,counts,covars,projdir; inpos=m.inpos, inzero=m.inzero, kwargs...)

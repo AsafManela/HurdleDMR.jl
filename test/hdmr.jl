@@ -33,6 +33,14 @@ hdmrcoefsb = fit(HDMRCoefs, covars, counts; parallel=true, testargs...)
 @test p == ncovarspos(hdmrcoefs)
 @test p == ncovarszero(hdmrcoefs)
 
+# select=:BIC
+hdmrcoefsb = fit(HDMRCoefs, covars, counts; select=:BIC, testargs...)
+@test coef(hdmrcoefsb)[1] != coefsHppos
+@test coef(hdmrcoefsb)[2] != coefsHpzero
+hdmrb = fit(HDMR, covars, counts; select=:BIC, testargs...)
+@test coef(hdmrb)[1] == coef(hdmrcoefsb)[1]
+@test coef(hdmrb)[2] == coef(hdmrcoefsb)[2]
+
 # hurdle dmr parallel remote cluster
 hdmrcoefs2 = hdmr(covars, counts; parallel=true, local_cluster=false, testargs...)
 coefsHppos2, coefsHpzero2 = coef(hdmrcoefs2)
@@ -164,6 +172,13 @@ hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:y,Gamma(); no
 @test coefbwd(hirglmdf)[2] ≈ coef(hdmrcoefs)[2]
 @test !(coeffwd(hirglmdf)[2] ≈ coeffwd(hirdf)[2])
 @test !(coeffwd(hirglmdf)[1] ≈ coeffwd(hirdf)[1])
+
+# select=:BIC
+hirdfb = fit(CIR{HDMR,LinearModel},f,covarsdf,counts,:y; nocounts=true, select=:BIC, testargs...)
+@test coefbwd(hirdf)[1] != coefbwd(hirdfb)[1]
+@test coefbwd(hirdf)[2] != coefbwd(hirdfb)[2]
+@test coeffwd(hirdf)[1] != coeffwd(hirdfb)[1]
+@test coeffwd(hirdf)[2] != coeffwd(hirdfb)[2]
 
 zlm = lm(hcat(ones(n,1),Z1,covars[:,1:4]),covars[:,projdir])
 @test r2(zlm) ≈ r2(hir)
