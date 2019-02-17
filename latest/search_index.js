@@ -109,7 +109,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "StatsBase.coef",
     "category": "method",
-    "text": "coef(m::DMRCoefs)\n\nReturns the AICc optimal coefficients matrix fitted with DMR.\n\nExample:\n\n  m = fit(DMR,covars,counts)\n  coef(m)\n\nKeywords\n\nselect=:AICc only supports AICc criterion. To get other segments see coef(::DMRPaths).\n\n\n\n\n\n"
+    "text": "coef(m::DMRCoefs)\n\nReturns the AICc optimal coefficients matrix fitted with DMR.\n\nExample:\n\n  m = fit(DMR,covars,counts)\n  coef(m)\n\n\n\n\n\n"
 },
 
 {
@@ -125,7 +125,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "StatsBase.fit",
     "category": "method",
-    "text": "fit(DMR,covars,counts; <keyword arguments>)\ndmr(covars,counts; <keyword arguments>)\n\nFit a Distributed Multinomial Regression (DMR) of counts on covars.\n\nDMR fits independent poisson gamma lasso regressions to each column of counts to approximate a multinomial, picks the minimum AICc segement of each path, and returns a coefficient matrix (wrapped in DMRCoefs) representing point estimates for the entire multinomial (includes the intercept if one was included).\n\nExample:\n\n  m = fit(DMR,covars,counts)\n\nArguments\n\ncovars n-by-p matrix of covariates\ncounts n-by-d matrix of counts (usually sparse)\n\nKeywords\n\nintercept::Bool=false include an intercept in each poisson\nparallel::Bool=true parallelize the poisson fits\nlocal_cluster::Bool=true use local_cluster mode that shares memory across   parallel workers that is appropriate on a single multicore machine, or   remote cluster mode that is more appropriate when distributing across machines   for which sharing memory is costly.\nverbose::Bool=true\nshowwarnings::Bool=false\nkwargs... additional keyword arguments passed along to fit(GammaLassoPath,...)\n\n\n\n\n\n"
+    "text": "fit(DMR,covars,counts; <keyword arguments>)\ndmr(covars,counts; <keyword arguments>)\n\nFit a Distributed Multinomial Regression (DMR) of counts on covars.\n\nDMR fits independent poisson gamma lasso regressions to each column of counts to approximate a multinomial, picks a segement of each path, and returns a coefficient matrix (wrapped in DMRCoefs) representing point estimates for the entire multinomial (includes the intercept if one was included).\n\nExample:\n\n  m = fit(DMR,covars,counts)\n\nArguments\n\ncovars n-by-p matrix of covariates\ncounts n-by-d matrix of counts (usually sparse)\n\nKeywords\n\nintercept::Bool=false include an intercept in each poisson\nparallel::Bool=true parallelize the poisson fits\nlocal_cluster::Bool=true use local_cluster mode that shares memory across   parallel workers that is appropriate on a single multicore machine, or   remote cluster mode that is more appropriate when distributing across machines   for which sharing memory is costly.\nverbose::Bool=true\nshowwarnings::Bool=false\nselect::Symbol=:AICc which path segment to pick\nkwargs... additional keyword arguments passed along to fit(GammaLassoPath,...)\n\n\n\n\n\n"
 },
 
 {
@@ -261,7 +261,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "StatsBase.coef",
     "category": "method",
-    "text": "coef(m::HDMRCoefs)\n\nReturns the AICc optimal coefficient matrices fitted with HDMR.\n\nExample:\n\n  m = fit(HDMR,covars,counts)\n  coefspos, coefszero = coef(m)\n\nKeywords\n\nselect=:AICc only supports AICc criterion. To get other segments see coef(::HDMRPaths).\n\n\n\n\n\n"
+    "text": "coef(m::HDMRCoefs)\n\nReturns the AICc optimal coefficient matrices fitted with HDMR.\n\nExample:\n\n  m = fit(HDMR,covars,counts)\n  coefspos, coefszero = coef(m)\n\n\n\n\n\n"
 },
 
 {
@@ -277,7 +277,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "StatsBase.fit",
     "category": "method",
-    "text": "fit(HDMR,covars,counts; <keyword arguments>)\nhdmr(covars,counts; <keyword arguments>)\n\nFit a Hurdle Distributed Multiple Regression (HDMR) of counts on covars.\n\nHDMR fits independent hurdle lasso regressions to each column of counts to approximate a multinomial, picks the minimum AICc segement of each path, and returns a coefficient matrix (wrapped in HDMRCoefs) representing point estimates for the entire multinomial (includes the intercept if one was included).\n\nExample:\n\n  m = fit(HDMR,covars,counts)\n\nArguments\n\ncovars n-by-p matrix of covariates\ncounts n-by-d matrix of counts (usually sparse)\n\nKeywords\n\ninpos=1:p indices of covars columns included in model for positive counts\ninzero=1:p indices of covars columns included in model for zero counts\nintercept::Bool=false include a intercepts in each hurdle regression\nparallel::Bool=true parallelize the poisson fits\nlocal_cluster::Bool=true use local_cluster mode that shares memory across   parallel workers that is appropriate on a single multicore machine, or   remote cluster mode that is more appropriate when distributing across machines   for which sharing memory is costly.\nverbose::Bool=true\nshowwarnings::Bool=false\nkwargs... additional keyword arguments passed along to fit(Hurdle,...)\n\n\n\n\n\n"
+    "text": "fit(HDMR,covars,counts; <keyword arguments>)\nhdmr(covars,counts; <keyword arguments>)\n\nFit a Hurdle Distributed Multiple Regression (HDMR) of counts on covars.\n\nHDMR fits independent hurdle lasso regressions to each column of counts to approximate a multinomial, picks a segement of each path, and returns a coefficient matrix (wrapped in HDMRCoefs) representing point estimates for the entire multinomial (includes the intercept if one was included).\n\nExample:\n\n  m = fit(HDMR,covars,counts)\n\nArguments\n\ncovars n-by-p matrix of covariates\ncounts n-by-d matrix of counts (usually sparse)\n\nKeywords\n\ninpos=1:p indices of covars columns included in model for positive counts\ninzero=1:p indices of covars columns included in model for zero counts\nintercept::Bool=false include a intercepts in each hurdle regression\nparallel::Bool=true parallelize the poisson fits\nlocal_cluster::Bool=true use local_cluster mode that shares memory across   parallel workers that is appropriate on a single multicore machine, or   remote cluster mode that is more appropriate when distributing across machines   for which sharing memory is costly.\nverbose::Bool=true\nshowwarnings::Bool=false\nselect::Symbol=:AICc path segment selection criterion\nkwargs... additional keyword arguments passed along to fit(Hurdle,...)\n\n\n\n\n\n"
 },
 
 {
@@ -329,7 +329,7 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "#HurdleDMR.srproj-Union{Tuple{D}, Tuple{HDMR,Any}, Tuple{HDMR,Any,D}, Tuple{HDMR,Any,D,D}} where D<:Union{Nothing, Int64}",
+    "location": "#HurdleDMR.srproj-Union{Tuple{D}, Tuple{HDMRCoefs,Any}, Tuple{HDMRCoefs,Any,D}, Tuple{HDMRCoefs,Any,D,D}} where D<:Union{Nothing, Int64}",
     "page": "Home",
     "title": "HurdleDMR.srproj",
     "category": "method",
