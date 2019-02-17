@@ -14,8 +14,6 @@ It includes a Julia implementation of the Distributed Multinomial Regression (DM
 
 Read the [documentation][docs-latest-url] and [tutorials][docs-latest-tutorials] to learn more.
 
-```
-
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-latest-url]: https://asafmanela.github.io/HurdleDMR.jl/latest
 [docs-latest-tutorials]: https://asafmanela.github.io/HurdleDMR.jl/latest/tutorials/
