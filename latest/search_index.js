@@ -21,7 +21,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Setup",
     "category": "section",
-    "text": "Install the HurdleDMR packagepkg> add HurdleDMRAdd parallel workers and make package available to workersaddprocs(Sys.CPU_CORES-2)\nimport HurdleDMR; @everywhere using HurdleDMRSetup your data into an n-by-p covars matrix, and a (sparse) n-by-d counts matrix. Here we generate some random data.using CSV, GLM, DataFrames, Distributions\nn = 100\np = 3\nd = 4\n\nsrand(13)\nm = 1+rand(Poisson(5),n)\ncovars = rand(n,p)\nηfn(vi) = exp.([0 + i*sum(vi) for i=1:d])\nq = [ηfn(covars[i,:]) for i=1:n]\nscale!.(q,ones(n)./sum.(q))\ncounts = convert(SparseMatrixCSC{Float64,Int},hcat(broadcast((qi,mi)->rand(Multinomial(mi, qi)),q,m)...)\')\ncovarsdf = DataFrame(covars,[:vy, :v1, :v2])"
+    "text": "Install the HurdleDMR packagepkg> add HurdleDMRAdd parallel workers and make package available to workersusing Distributed\naddprocs(Sys.CPU_THREADS-2)\nimport HurdleDMR; @everywhere using HurdleDMRSetup your data into an n-by-p covars matrix, and a (sparse) n-by-d counts matrix. Here we generate some random data.using CSV, GLM, DataFrames, Distributions, Random, LinearAlgebra, SparseArrays\nn = 100\np = 3\nd = 4\n\nRandom.seed!(13)\nm = 1 .+ rand(Poisson(5),n)\ncovars = rand(n,p)\nηfn(vi) = exp.([0 + i*sum(vi) for i=1:d])\nq = [ηfn(covars[i,:]) for i=1:n]\nrmul!.(q,ones(n)./sum.(q))\ncounts = convert(SparseMatrixCSC{Float64,Int},hcat(broadcast((qi,mi)->rand(Multinomial(mi, qi)),q,m)...)\')\ncovarsdf = DataFrame(covars,[:vy, :v1, :v2])"
 },
 
 {
