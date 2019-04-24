@@ -12,7 +12,6 @@ coefs = coef(dmrcoefs)
 @test size(coefs) == (p+1, d)
 @test_throws ErrorException coef(dmrcoefs; select=:all)
 @test coefs ≈ coefsRdistrom rtol=rtol
-coefs ./ coefsRdistrom
 # println("rdist(coefs,coefsRdistrom)=$(rdist(coefs,coefsRdistrom))")
 
 # test Int matrix for counts
@@ -254,7 +253,7 @@ zcoefs2 = coef(dmrzcoefs2)
 
 dmrzpaths3 = @test_logs (:warn, r"failed for countsj") dmrpaths(covars, zcounts; parallel=false, testargs...)
 zcoefs3 = coef(dmrzpaths3)
-@test zcoefs3 ≈ zcoefs
+@test zcoefs3 ≈ zcoefs rtol=rtol
 
 # test an observation with all zeros
 zcounts = deepcopy(counts)

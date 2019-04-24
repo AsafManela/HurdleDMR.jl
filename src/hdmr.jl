@@ -276,6 +276,7 @@ function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
       intercept=true,
       parallel=true,
       verbose=true, showwarnings=false,
+      m=nothing,
       kwargs...) where {T<:AbstractFloat}
   # get dimensions
   n, d = size(counts)
@@ -291,7 +292,7 @@ function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
   ncoefpos = ppos + (intercept ? 1 : 0)
   ncoefzero = pzero + (intercept ? 1 : 0)
 
-  covars, counts, μ, n = shifters(covars, counts, showwarnings)
+  covars, counts, μ, n = shifters(covars, counts, showwarnings, m)
 
   covarspos, covarszero = incovars(covars,inpos,inzero)
 
@@ -398,6 +399,7 @@ and outputs if run in parallel mode.
 function hdmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
           inpos,inzero,intercept,parallel,verbose,showwarnings;
           select=:AICc,
+          m=nothing,
           kwargs...) where {T<:AbstractFloat,V}
   # get dimensions
   n, d = size(counts)
@@ -413,7 +415,7 @@ function hdmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
   ncoefpos = ppos + (intercept ? 1 : 0)
   ncoefzero = pzero + (intercept ? 1 : 0)
 
-  covars, counts, μ, n = shifters(covars, counts, showwarnings)
+  covars, counts, μ, n = shifters(covars, counts, showwarnings, m)
 
   # fit separate GammaLassoPath's to each dimension of counts j=1:d and pick its min AICc segment
   if parallel

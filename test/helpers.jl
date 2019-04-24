@@ -36,32 +36,37 @@ Df = fpcounts(D)
 # test shifters
 shifters = HurdleDMR.shifters
 
-tcovars, tcounts, tμ, tn = shifters(covars, counts, false)
+tcovars, tcounts, tμ, tn = shifters(covars, counts, false, nothing)
 eμ = vec(log.(sum(tcounts, dims=2)))
 @test tμ == eμ
 @test tcounts == counts
 
 Cf = convert(Matrix{Float64},counts)
-tcovars, tcounts, tμ, tn = shifters(covars, Cf, false)
+tcovars, tcounts, tμ, tn = shifters(covars, Cf, false, nothing)
 @test tcounts === Cf
 @test tμ == eμ
 
-tcovars, tcounts, tμ, tn = shifters(covars, convert(SparseMatrixCSC{Int64},counts), false)
+tcovars, tcounts, tμ, tn = shifters(covars, convert(SparseMatrixCSC{Int64},counts), false, nothing)
 @test tcounts == counts
 @test tcounts !== counts
 @test tμ == eμ
 
-tcovars, tcounts, tμ, tn = shifters(covars, convert(Matrix{Int},counts), false)
+tcovars, tcounts, tμ, tn = shifters(covars, convert(Matrix{Int},counts), false, nothing)
 @test tcounts == Cf
 @test tcounts !== Cf
 @test tμ == eμ
 
 Cf[1,:] .= 0
-tcovars, tcounts, tμ, tn = shifters(covars, Cf, false)
+tcovars, tcounts, tμ, tn = shifters(covars, Cf, false, nothing)
 @test tcounts != Cf
 @test tcounts == Cf[2:end,:]
 @test tμ == eμ[2:end]
 @test tcovars == covars[2:end,:]
 
+prem = vec(sum(counts, dims=2))
+pcovars, pcounts, pμ, pn = shifters(covars, counts[:,1:3], false, prem)
+eμ = log.(prem)
+@test pμ == eμ
+@test pcounts == counts[:,1:3]
 
 end
