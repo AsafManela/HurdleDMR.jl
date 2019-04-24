@@ -158,7 +158,7 @@ covariates matrix Xpos used to model positive counts.
 # Example with Lasso regularization:
 ```julia
   m = fit(Hurdle,GammaLassoPath,X,y; Xpos=Xpos)
-  yhat = predict(m, X; Xpos=Xpos, select=:AICc)
+  yhat = predict(m, X; Xpos=Xpos, select=MinAICc())
 ```
 
 # Arguments
@@ -264,7 +264,6 @@ function StatsBase.fit(::Type{Hurdle},::Type{M},
 
   mpos, fittedpos = fitpos(M, mmpos.m, y[ixpos], dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, showwarnings, fitargs...)
 
-  Hurdle(mzero,mpos,fittedzero,fittedpos)
 end
 
 function Base.show(io::IO, hurdle::Hurdle)
@@ -285,17 +284,14 @@ function Base.show(io::IO, hurdle::Hurdle)
   end
 end
 
-# function copypad!{T}(destA::AbstractMatrix{T},srcA::AbstractMatrix{T},padvalue=zero(T))
-#   for i=eachindex(srcA)
-#     destA[i] = srcA[i]
-#   end
-#   destA
-# end
+"Selects the RegularizationPath segment according to `CVSegSelect` with `K`-fold cross-validation"
+abstract type MinCVKfold{T, K} where {T<:CVSegSelect, K<:Int} end
 
 """
-    coef(m::Hurdle; <keyword arguments>)
+    coef(m::Hurdle; select=MinAICc())
 
-Returns the AICc optimal coefficient matrices fitted the Hurdle.
+Returns a selected segment of the coefficient matrices of the fitted the Hurdle.
+By default returns the corrected AIC minimizing segment.
 
 # Example:
 ```julia
@@ -306,16 +302,27 @@ Returns the AICc optimal coefficient matrices fitted the Hurdle.
 # Keywords
 - `kwargs...` are passed along to two coef() calls on the two model parts.
 """
-function StatsBase.coef(hurdle::Hurdle; kwargs...)
-  czero = coef(hurdle.mzero; kwargs...)
-  cpos = coef(hurdle.mpos; kwargs...)
-  # # dimensions of this differ if regularization paths terminates early at
-  # # different segments
-  # if size(czero,2) > size(cpos,2)
-  #   cpos = copypad!(similar(czero),cpos)
-  # elseif size(czero,2) < size(cpos,2)
-  #   czero = copypad!(similar(cpos),czero)
-  # end
+StatsBase.coef(hurdle::Hurdle; select=MinAICc(), kwargs...) = coef(hurdle, select; kwargs...)
+
+function StatsBase.coef(hurdle::Hurdle, select::SegSelect; kwargs...)
+  czero = coef(hurdle.mzero, select; kwargs...)
+  cpos = coef(hurdle.mpos, select; kwargs...)
+  cpos,czero
+end
+
+function StatsBase.coef(hurdle::Hurdle, select::CVSegSelect; kwargs...)
+  error("""
+    Specifying an instance of a `CVSegSelect` is not supported because there is
+    more than one path and the generator has a fixed number of observation indices.
+    Instead, consider passing a `MinCVmseKfold{K}` or `MinCV1seKfold{K}` type.
+    """)
+end
+
+function StatsBase.coef(hurdle::Hurdle, select::Type{C}; kwargs...) where {C<:MinCVKfold{T, K}, T, K}
+  selectzero = T(hurdle.mzero, K)
+  selectpos = T(hurdle.mpos, K)
+  czero = coef(hurdle.mzero, selectzero; kwargs...)
+  cpos = coef(hurdle.mpos, selectpos; kwargs...)
   cpos,czero
 end
 
@@ -333,7 +340,7 @@ Predict using a fitted Hurdle given new X (and potentially Xpos).
 # Example with Lasso regularization:
 ```julia
   m = fit(Hurdle,GammaLassoPath,X,y; Xpos=Xpos)
-  yhat = predict(m, X; Xpos=Xpos, select=:AICc)
+  yhat = predict(m, X; Xpos=Xpos, select=MinAICc())
 ```
 
 # Arguments
@@ -366,7 +373,7 @@ function StatsBase.predict(hurdle::Hurdle, X::AbstractMatrix{T};
   muzero = predict(hurdle.mzero, X; offset=offsetzero, kwargs...)
   mupos = predict(hurdle.mpos, Xpos; offset=offsetpos, kwargs...)
 
-  @assert size(muzero) == size(mupos) "Predicted values from zero and positives models have different dimensions, $(size(muzero)) != $(size(mupos))\nCan result from fitting a RegularizationPath with autoλ and select=:all is specified."
+  @assert size(muzero) == size(mupos) "Predicted values from zero and positives models have different dimensions, $(size(muzero)) != $(size(mupos))\nCan result from fitting a RegularizationPath with autoλ and select=AllSeg() is specified."
 
   muzero .* mupos
 end

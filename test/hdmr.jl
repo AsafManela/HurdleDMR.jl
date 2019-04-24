@@ -17,7 +17,7 @@ hdmrcoefs = hdmr(covars, counts; parallel=true, testargs...)
 coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test size(coefsHppos) == (p+1, d)
 @test size(coefsHpzero) == (p+1, d)
-@test_throws ErrorException coef(hdmrcoefs; select=:all)
+@test_throws ErrorException coef(hdmrcoefs; select=AllSeg())
 
 # test Int matrix for counts
 hdmrcoefsint = hdmr(covars, countsint; parallel=true, testargs...)
@@ -62,7 +62,7 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 @test size(hdmrpaths3.nlpaths,1) == d
 η = predict(hdmrpaths3,newcovars)
 @test sum(η, dims=2) ≈ ones(size(η, 1))
-coefsallpos, coefsallzero = coef(hdmrpaths3; select=:all)
+coefsallpos, coefsallzero = coef(hdmrpaths3; select=AllSeg())
 @test size(coefsallpos,1) > 1
 @test size(coefsallpos,2) == p+1
 @test size(coefsallpos,3) == d

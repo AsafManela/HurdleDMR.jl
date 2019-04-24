@@ -88,31 +88,6 @@ function mapins(inzero, inpos, mm)
   mappedinzero, mappedinpos
 end
 
-# """
-#   getpart(m, lhs[, clearlhs=true])
-#
-# Returns part of model `m` with left-hand-side symbol `lhs`
-# """
-# function getpart(m::Model, lhs::Symbol, clearlhs=true)
-#   ix = findfirst(p->p.lhs==lhs,m.parts)
-#   @assert ix > 0 "The model is missing a formula with $lhs on its left-hand-side."
-#   f = m.parts[ix]
-#   if clearlhs
-#     f = copy(f)
-#     f.lhs = nothing
-#   end
-#   f
-# end
-#
-# function getformula(f::Formula, lhs::Symbol, clearlhs=true)
-#   @assert f.lhs == lhs "The model is missing a formula with $lhs on its left-hand-side."
-#   if clearlhs
-#     f = copy(f)
-#     f.lhs = nothing
-#   end
-#   f
-# end
-
 """
   getformula(m, lhs[, clearlhs=true])
 

@@ -28,17 +28,17 @@ struct HDMRCoefs <: HDMR
   coefspos::AbstractMatrix      # positives model coefficients
   coefszero::AbstractMatrix     # zeros model coefficients
   intercept::Bool               # whether to include an intercept in each Poisson regression
-  n::Int                      # number of observations. May be lower than provided after removing all zero obs.
-  d::Int                      # number of categories (terms/words/phrases)
+  n::Int                        # number of observations. May be lower than provided after removing all zero obs.
+  d::Int                        # number of categories (terms/words/phrases)
   inpos                         # indices of covars columns included in positives model
   inzero                        # indices of covars columns included in zeros model
-  select::Symbol              # path segment selector
+  select::SegSelect             # path segment selector
 
   HDMRCoefs(coefspos::AbstractMatrix, coefszero::AbstractMatrix, intercept::Bool,
-    n::Int, d::Int, inpos, inzero, select::Symbol) =
+    n::Int, d::Int, inpos, inzero, select::SegSelect) =
     new(coefspos, coefszero, intercept, n, d, inpos, inzero, select)
 
-  function HDMRCoefs(m::HDMRPaths; select=:AICc)
+  function HDMRCoefs(m::HDMRPaths; select=defsegselect)
     coefspos, coefszero = coef(m; select=select)
     new(coefspos, coefszero, m.intercept, m.n, m.d, m.inpos, m.inzero, select)
   end
@@ -74,7 +74,7 @@ for the entire multinomial (includes the intercept if one was included).
     for which sharing memory is costly.
 - `verbose::Bool=true`
 - `showwarnings::Bool=false`
-- `select::Symbol=:AICc` path segment selection criterion
+- `select::SegSelect=MinAICc()` path segment selection criterion
 - `kwargs...` additional keyword arguments passed along to fit(Hurdle,...)
 """
 function StatsBase.fit(::Type{H}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
@@ -149,20 +149,20 @@ function StatsBase.coef(m::HDMRCoefs; select=m.select)
 end
 
 """
-    coef(m::HDMRPaths; select=:all)
+    coef(m::HDMRPaths; select=AllSeg())
 
 Returns all or selected coefficient matrices fitted with HDMR.
 
 # Example:
 ```julia
   m = fit(HDMRPaths,covars,counts)
-  coefspos, coefszero = coef(m; select=:CVmin)
+  coefspos, coefszero = coef(m; select=MinCVmse(Kfold(size(covars,1), 5)))
 ```
 
 # Keywords
-- `select=:AICc` See [`coef(::RegularizationPath)`](@ref).
+- `select=MinAICc()` See [`coef(::RegularizationPath)`](@ref).
 """
-function StatsBase.coef(m::HDMRPaths; select=:AICc)
+function StatsBase.coef(m::HDMRPaths; select=defsegselect)
   # get dims
   d = length(m.nlpaths)
   d < 1 && return nothing, nothing
@@ -185,38 +185,16 @@ function StatsBase.coef(m::HDMRPaths; select=:AICc)
   # p = pzero + ppos
 
   # allocate space
-  if select==:all
-    coefszero = zeros(nλ,pzero,d)
-    coefspos = zeros(nλ,ppos,d)
-  else
-    coefszero = zeros(pzero,d)
-    coefspos = zeros(ppos,d)
-  end
+  coefszero = coefspace(pzero, d, nλ, select)
+  coefspos = coefspace(ppos, d, nλ, select)
 
   # iterate over paths
   for j=1:d
     path = m.nlpaths[j]
     if !ismissing(path)
-      cjpos, cjzero = coef(path;select=select)
-      if select==:all
-        for i=1:ppos
-          for s=1:size(cjpos,2)
-            coefspos[s,i,j] = cjpos[i,s]
-          end
-        end
-        for i=1:pzero
-          for s=1:size(cjzero,2)
-            coefszero[s,i,j] = cjzero[i,s]
-          end
-        end
-      else
-        for i=1:ppos
-          coefspos[i,j] = cjpos[i]
-        end
-        for i=1:pzero
-          coefszero[i,j] = cjzero[i]
-        end
-      end
+      cjpos, cjzero = coef(path, select)
+      coeffill!(coefspos, cjpos, ppos, j, select)
+      coeffill!(coefszero, cjzero, pzero, j, select)
     end
   end
 
@@ -232,7 +210,7 @@ Predict counts using a fitted HDMRPaths object and given newcovars.
 ```julia
   m = fit(HDMRPaths,covars,counts)
   newcovars = covars[1:10,:]
-  countshat = predict(m, newcovars; select=:AICc)
+  countshat = predict(m, newcovars; select=MinAICc())
 ```
 
 # Arguments
@@ -240,12 +218,12 @@ Predict counts using a fitted HDMRPaths object and given newcovars.
 - `newcovars` n-by-p matrix of covariates of same dimensions used to fit m.
 
 # Keywords
-- `select=:AICc` See [`coef(::RegularizationPath)`](@ref).
+- `select=MinAICc()` See [`coef(::RegularizationPath)`](@ref).
 - `kwargs...` additional keyword arguments passed along to predict() for each
   category j=1..size(counts,2)
 """
 function StatsBase.predict(m::HDMRPaths, newcovars::AbstractMatrix{T};
-  select=:AICc, kwargs...) where {T<:AbstractFloat}
+  select=defsegselect, kwargs...) where {T<:AbstractFloat}
 
   covarspos, covarszero = incovars(newcovars,m.inpos,m.inzero)
 
@@ -253,7 +231,7 @@ function StatsBase.predict(m::HDMRPaths, newcovars::AbstractMatrix{T};
 end
 
 function StatsBase.predict(m::M, newcovars::AbstractMatrix{T};
-  select=:AICc, kwargs...) where {T<:AbstractFloat, M<:HDMR}
+  select=defsegselect, kwargs...) where {T<:AbstractFloat, M<:HDMR}
 
   error("predict(m::HDMR,...) can currently only be evaluated for HDMRPaths structs returned from fit(HDMRPaths,...)")
 end
@@ -349,7 +327,7 @@ end
 function hurdle_regression!(coefspos::AbstractMatrix{T}, coefszero::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V},
             inpos, inzero;
             offset::AbstractVector=similar(y, 0),
-            select=:AICc,
+            select=defsegselect,
             kwargs...) where {T<:AbstractFloat,V}
   cj = Vector(counts[:,j])
   covarspos, covarszero = incovars(covars,inpos,inzero)
@@ -398,7 +376,7 @@ and outputs if run in parallel mode.
 """
 function hdmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
           inpos,inzero,intercept,parallel,verbose,showwarnings;
-          select=:AICc,
+          select=defsegselect,
           m=nothing,
           kwargs...) where {T<:AbstractFloat,V}
   # get dimensions
@@ -451,7 +429,7 @@ This version does not share memory across workers, so may be more efficient for
 """
 function hdmr_remote_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
           inpos,inzero,intercept,parallel,verbose,showwarnings;
-          select=:AICc, kwargs...) where {T<:AbstractFloat,V}
+          select=defsegselect, kwargs...) where {T<:AbstractFloat,V}
   paths = hdmrpaths(covars, counts; inpos=inpos, inzero=inzero, parallel=parallel, verbose=verbose, showwarnings=showwarnings, kwargs...)
   HDMRCoefs(paths; select=select)
 end

@@ -24,6 +24,8 @@ struct DMRPaths <: DMR
     new(nlpaths, intercept, n, d, p)
 end
 
+const defsegselect = MinAICc()
+
 """
 Relatively light object used to return DMR results when we only care about estimated coefficients.
 """
@@ -33,12 +35,12 @@ struct DMRCoefs <: DMR
   n::Int                      # number of observations. May be lower than provided after removing all zero obs.
   d::Int                      # number of categories (terms/words/phrases)
   p::Int                      # number of covariates
-  select::Symbol              # path segment selector
+  select::SegSelect           # path segment selector
 
-  DMRCoefs(coefs::AbstractMatrix, intercept::Bool, n::Int, d::Int, p::Int, select::Symbol) =
+  DMRCoefs(coefs::AbstractMatrix, intercept::Bool, n::Int, d::Int, p::Int, select::SegSelect) =
     new(coefs, intercept, n, d, p, select)
 
-  function DMRCoefs(m::DMRPaths; select=:AICc)
+  function DMRCoefs(m::DMRPaths; select=defsegselect)
     coefs = coef(m; select=select)
     new(coefs, m.intercept, m.n, m.d, m.p, select)
   end
@@ -72,7 +74,7 @@ for the entire multinomial (includes the intercept if one was included).
     for which sharing memory is costly.
 - `verbose::Bool=true`
 - `showwarnings::Bool=false`
-- `select::Symbol=:AICc` which path segment to pick
+- `select::SegSelect=MinAICc()` which path segment to pick
 - `kwargs...` additional keyword arguments passed along to fit(GammaLassoPath,...)
 """
 function StatsBase.fit(::Type{D}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
@@ -137,21 +139,38 @@ function StatsBase.coef(m::DMRCoefs; select=m.select)
   end
 end
 
+coefspace(p, d, nλ, select::SegSelect) = zeros(p,d)
+coefspace(p, d, nλ, select::AllSeg) = zeros(nλ,p,d)
+
+@inline function coeffill!(coefs, cj, p, j, select::SegSelect)
+  for i=1:p
+    coefs[i,j] = cj[i]
+  end
+end
+@inline function coeffill!(coefs, cj, p, j, select::AllSeg)
+  for i=1:p
+    for s=1:size(cj,2)
+      coefs[s,i,j] = cj[i,s]
+    end
+  end
+end
+
 """
-    coef(m::DMRPaths; select=:AICc)
+    coef(m::DMRPaths; select=MinAICc())
 
 Returns all or selected coefficients matrix fitted with DMR.
 
 # Example:
 ```julia
   m = fit(DMRPaths,covars,counts)
-  coef(m; select=:CVmin)
+  coef(m; select=MinCVmse(Kfold(size(covars,1), 5)))
 ```
 
 # Keywords
-- `select=:AICc` See [`coef(::RegularizationPath)`](@ref).
+- `select=MinAICc()` See [`coef(::RegularizationPath)`](@ref).
 """
-function StatsBase.coef(m::DMRPaths; select=:AICc)
+StatsBase.coef(m::DMRPaths; select=defsegselect) = coef(m, select)
+function StatsBase.coef(m::DMRPaths, select::SegSelect)
   # get dims
   d = length(m.nlpaths)
   d < 1 && return nothing
@@ -169,28 +188,14 @@ function StatsBase.coef(m::DMRPaths; select=:AICc)
   end
 
   # allocate space
-  if select==:all
-    coefs = zeros(nλ,p,d)
-  else
-    coefs = zeros(p,d)
-  end
+  coefs = coefspace(p, d, nλ, select)
 
   # iterate over paths
   for j=1:d
     path = m.nlpaths[j]
     if !ismissing(path)
-      cj = coef(path;select=select)
-      if select==:all
-        for i=1:p
-          for s=1:size(cj,2)
-            coefs[s,i,j] = cj[i,s]
-          end
-        end
-      else
-        for i=1:p
-          coefs[i,j] = cj[i]
-        end
-      end
+      cj = coef(path, select)
+      coeffill!(coefs, cj, p, j, select)
     end
   end
 
@@ -271,7 +276,7 @@ end
 This version is built for local clusters and shares memory used by both inputs and outputs if run in parallel mode.
 """
 function dmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
-          parallel,verbose,showwarnings,intercept; select=:AICc, m=nothing, kwargs...) where {T<:AbstractFloat,V}
+          parallel,verbose,showwarnings,intercept; select=defsegselect, m=nothing, kwargs...) where {T<:AbstractFloat,V}
   # get dimensions
   n, d = size(counts)
   n1,p = size(covars)
@@ -309,7 +314,7 @@ end
 
 "This version does not share memory across workers, so may be more efficient for small problems, or on remote clusters."
 function dmr_remote_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
-          parallel,verbose,showwarnings,intercept; select=:AICc, kwargs...) where {T<:AbstractFloat,V}
+          parallel,verbose,showwarnings,intercept; select=defsegselect, kwargs...) where {T<:AbstractFloat,V}
   paths = dmrpaths(covars, counts; parallel=parallel, verbose=verbose, showwarnings=showwarnings, intercept=intercept, kwargs...)
   DMRCoefs(paths; select=select)
 end
@@ -358,7 +363,7 @@ end
 
 "Fits a regularized poisson regression counts[:,j] ~ covars saving the coefficients in coefs[:,j]"
 function poisson_regression!(coefs::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V};
-  select=:AICc, kwargs...) where {T<:AbstractFloat,V}
+  select=defsegselect, kwargs...) where {T<:AbstractFloat,V}
   cj = Vector(counts[:,j])
   path = fit(GammaLassoPath,covars,cj,Poisson(),LogLink(); kwargs...)
   coefs[:,j] = coef(path; select=select)
@@ -409,7 +414,7 @@ Predict counts using a fitted DMRPaths object and given newcovars.
 ```julia
   m = fit(DMRPaths,covars,counts)
   newcovars = covars[1:10,:]
-  countshat = predict(m, newcovars; select=:AICc)
+  countshat = predict(m, newcovars; select=MinAICc())
 ```
 
 # Arguments
@@ -417,21 +422,21 @@ Predict counts using a fitted DMRPaths object and given newcovars.
 - `newcovars` n-by-p matrix of covariates of same dimensions used to fit m.
 
 # Keywords
-- `select=:AICc` See [`coef(::RegularizationPath)`](@ref).
+- `select=MinAICc()` See [`coef(::RegularizationPath)`](@ref).
 - `kwargs...` additional keyword arguments passed along to predict() for each
   category j=1..size(counts,2)
 """
 function StatsBase.predict(m::DMRPaths, newcovars::AbstractMatrix{T};
-  select=:AICc, kwargs...) where {T<:AbstractFloat}
+  select=defsegselect, kwargs...) where {T<:AbstractFloat}
 
   _predict(m,newcovars;select=select,kwargs...)
 end
 
 # internal mothod used by both dmr and hdmr
 function _predict(m, newcovars::AbstractMatrix{T};
-  select=:AICc, kwargs...) where {T<:AbstractFloat}
+  select=defsegselect, kwargs...) where {T<:AbstractFloat}
 
-  @assert select != :all "select cannot be :all and must choose a particular segment (e.g. select=:AICc)"
+  @assert !isa(select, AllSeg) "select cannot be AllSeg and must choose a particular segment (e.g. select=MinAICc())"
 
   # dimensions
   newn = size(newcovars,1)
@@ -453,7 +458,7 @@ function _predict(m, newcovars::AbstractMatrix{T};
 end
 
 function StatsBase.predict(m::M, newcovars::AbstractMatrix{T};
-  select=:AICc, kwargs...) where {T<:AbstractFloat, M<:DMR}
+  select=defsegselect, kwargs...) where {T<:AbstractFloat, M<:DMR}
 
   error("predict(m::DMR,...) can currently only be evaluated for DMRPaths structs returned from fit(DMRPaths,...)")
 end
