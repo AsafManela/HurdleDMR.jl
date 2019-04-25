@@ -131,8 +131,8 @@ end
 """
     coef(m::HDMRCoefs)
 
-Returns the coefficient matrices fitted with HDMR.
-By default returns the AICc optimal segment.
+Returns the coefficient matrices fitted with HDMR using
+the segment selected during fit (MinAICc by default).
 
 # Example:
 ```julia
@@ -141,17 +141,9 @@ By default returns the AICc optimal segment.
 ```
 """
 StatsBase.coef(m::HDMRCoefs) = m.coefspos, m.coefszero
-# function StatsBase.coef(m::HDMRCoefs, select=m.select)
-#   if select == m.select
-#     m.coefspos, m.coefszero
-#   else
-#     error("coef(m::HDMRCoefs) supports only the regulatrization path segement
-#       selector $(m.select) specified during fit().")
-#   end
-# end
 
 """
-    coef(m::HDMRPaths; select::SegSelect=MinAICc())
+    coef(m::HDMRPaths, select::SegSelect=MinAICc())
 
 Returns all or selected coefficient matrices fitted with HDMR.
 
