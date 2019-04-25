@@ -9,8 +9,8 @@ addprocs(Sys.CPU_THREADS-2)
 
 # Setup your data into an n-by-p covars matrix, and a (sparse) n-by-d counts matrix
 # Here we generate some random data
-using CSV, GLM, DataFrames, Distributions, Random, SparseArrays, CategoricalArrays#, StatsModels
-n = 100
+using CSV, GLM, DataFrames, Distributions, Random, SparseArrays, CategoricalArrays, InteractiveUtils #, StatsModels
+n = 200
 p = 3
 d = 4
 

@@ -17,7 +17,7 @@ hdmrcoefs = hdmr(covars, counts; parallel=true, testargs...)
 coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test size(coefsHppos) == (p+1, d)
 @test size(coefsHpzero) == (p+1, d)
-@test_throws ErrorException coef(hdmrcoefs; select=AllSeg())
+@test_throws ErrorException coef(hdmrcoefs, AllSeg())
 
 # test Int matrix for counts
 hdmrcoefsint = hdmr(covars, countsint; parallel=true, testargs...)
@@ -33,11 +33,11 @@ hdmrcoefsb = fit(HDMRCoefs, covars, counts; parallel=true, testargs...)
 @test p == ncovarspos(hdmrcoefs)
 @test p == ncovarszero(hdmrcoefs)
 
-# select=:BIC
-hdmrcoefsb = fit(HDMRCoefs, covars, counts; select=:BIC, testargs...)
+# select=MinBIC()
+hdmrcoefsb = fit(HDMRCoefs, covars, counts; select=MinBIC(), testargs...)
 @test coef(hdmrcoefsb)[1] != coefsHppos
 @test coef(hdmrcoefsb)[2] != coefsHpzero
-hdmrb = fit(HDMR, covars, counts; select=:BIC, testargs...)
+hdmrb = fit(HDMR, covars, counts; select=MinBIC(), testargs...)
 @test coef(hdmrb)[1] == coef(hdmrcoefsb)[1]
 @test coef(hdmrb)[2] == coef(hdmrcoefsb)[2]
 
@@ -62,7 +62,7 @@ coefsHppos3, coefsHpzero3 = coef(hdmrpaths3)
 @test size(hdmrpaths3.nlpaths,1) == d
 η = predict(hdmrpaths3,newcovars)
 @test sum(η, dims=2) ≈ ones(size(η, 1))
-coefsallpos, coefsallzero = coef(hdmrpaths3; select=AllSeg())
+coefsallpos, coefsallzero = coef(hdmrpaths3, AllSeg())
 @test size(coefsallpos,1) > 1
 @test size(coefsallpos,2) == p+1
 @test size(coefsallpos,3) == d
@@ -173,8 +173,8 @@ hirglmdf = fit(CIR{HDMR,GeneralizedLinearModel},f,covarsdf,counts,:y,Gamma(); no
 @test !(coeffwd(hirglmdf)[2] ≈ coeffwd(hirdf)[2])
 @test !(coeffwd(hirglmdf)[1] ≈ coeffwd(hirdf)[1])
 
-# select=:BIC
-hirdfb = fit(CIR{HDMR,LinearModel},f,covarsdf,counts,:y; nocounts=true, select=:BIC, testargs...)
+# select=MinBIC()
+hirdfb = fit(CIR{HDMR,LinearModel},f,covarsdf,counts,:y; nocounts=true, select=MinBIC(), testargs...)
 @test coefbwd(hirdf)[1] != coefbwd(hirdfb)[1]
 @test coefbwd(hirdf)[2] != coefbwd(hirdfb)[2]
 @test coeffwd(hirdf)[1] != coeffwd(hirdfb)[1]
@@ -193,9 +193,9 @@ zlmnocounts = lm(hcat(ones(n,1),covars[:,1:4]),covars[:,projdir])
 end
 
 ####################################################################
-# hurdle with covarspos ≠ covarszero, both models includes projdir
+# hurdle with covarspos ≠ covarszero, both models include projdir
 ####################################################################
-@testset "hurdle-dmr with covarspos ≠ covarszero, both models includes projdir" begin
+@testset "hurdle-dmr with covarspos ≠ covarszero, both models include projdir" begin
 
 f = @model(h ~ x + z + cat + y, c ~ z + cat + y)
 @test_show f "2-part model: [Formula: h ~ x + z + cat + y, Formula: c ~ z + cat + y]"

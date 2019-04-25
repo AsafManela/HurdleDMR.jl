@@ -264,6 +264,7 @@ function StatsBase.fit(::Type{Hurdle},::Type{M},
 
   mpos, fittedpos = fitpos(M, mmpos.m, y[ixpos], dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, showwarnings, fitargs...)
 
+  Hurdle(mzero,mpos,fittedzero,fittedpos)
 end
 
 function Base.show(io::IO, hurdle::Hurdle)
@@ -284,14 +285,10 @@ function Base.show(io::IO, hurdle::Hurdle)
   end
 end
 
-"Selects the RegularizationPath segment according to `CVSegSelect` with `K`-fold cross-validation"
-abstract type MinCVKfold{T, K} where {T<:CVSegSelect, K<:Int} end
-
 """
     coef(m::Hurdle; select=MinAICc())
 
 Returns a selected segment of the coefficient matrices of the fitted the Hurdle.
-By default returns the corrected AIC minimizing segment.
 
 # Example:
 ```julia
@@ -302,25 +299,40 @@ By default returns the corrected AIC minimizing segment.
 # Keywords
 - `kwargs...` are passed along to two coef() calls on the two model parts.
 """
-StatsBase.coef(hurdle::Hurdle; select=MinAICc(), kwargs...) = coef(hurdle, select; kwargs...)
+function StatsBase.coef(hurdle::Hurdle; kwargs...)
+  czero = coef(hurdle.mzero; kwargs...)
+  cpos = coef(hurdle.mpos; kwargs...)
+  cpos,czero
+end
 
+# the following coef definitions override those in Lasso for Hurdles
 function StatsBase.coef(hurdle::Hurdle, select::SegSelect; kwargs...)
   czero = coef(hurdle.mzero, select; kwargs...)
   cpos = coef(hurdle.mpos, select; kwargs...)
   cpos,czero
 end
 
-function StatsBase.coef(hurdle::Hurdle, select::CVSegSelect; kwargs...)
+function StatsBase.coef(hurdle::Hurdle, select::S; kwargs...) where {S<:CVSegSelect}
   error("""
     Specifying an instance of a `CVSegSelect` is not supported because there is
-    more than one path and the generator has a fixed number of observation indices.
-    Instead, consider passing a `MinCVmseKfold{K}` or `MinCV1seKfold{K}` type.
+    more than one path and its generator has a fixed number of observation indices.
+    Instead, consider passing a `MinCVKfold{$S}(k)`.
     """)
 end
 
-function StatsBase.coef(hurdle::Hurdle, select::Type{C}; kwargs...) where {C<:MinCVKfold{T, K}, T, K}
-  selectzero = T(hurdle.mzero, K)
-  selectpos = T(hurdle.mpos, K)
+"Selects the RegularizationPath segment according to `CVSegSelect` with `k`-fold cross-validation"
+struct MinCVKfold{S<:CVSegSelect}
+  k::Int  # number of CV folds
+
+  MinCVKfold{ST}(k::Int) where ST<:CVSegSelect = new{ST}(k)
+end
+
+"Selects the RegularizationPath segment coefficients according to `S` with `k`-fold cross-validation"
+function StatsBase.coef(hurdle::Hurdle, select::MinCVKfold{S};
+  kwargs...) where {S<:CVSegSelect}
+
+  selectzero = S(hurdle.mzero, select.k)
+  selectpos = S(hurdle.mpos, select.k)
   czero = coef(hurdle.mzero, selectzero; kwargs...)
   cpos = coef(hurdle.mpos, selectpos; kwargs...)
   cpos,czero
