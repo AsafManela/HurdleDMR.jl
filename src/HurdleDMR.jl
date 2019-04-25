@@ -6,7 +6,7 @@ using GLM: FPVector, FP
 
 export dmr, dmrpaths, hdmr, hdmrpaths, fit, coef, srproj, srprojX, @~, mcdmr, posindic,
   DCR, DMR, HDMR, DMRCoefs, DMRPaths, HDMRCoefs, HDMRPaths, @model, Model,
-  CIR, predict, coeffwd, coefbwd,
+  CIR, predict, coeffwd, coefbwd, MinCVKfold,
   hasintercept, ncategories, nobs, ncoefs, ncovars, ncovarszero, ncovarspos, ncoefszero, ncoefspos,
   Hurdle, PositivePoisson, LogProductLogLink, logpdf_exact, logpdf_approx
 

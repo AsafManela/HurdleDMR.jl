@@ -40,8 +40,8 @@ struct DMRCoefs <: DMR
   DMRCoefs(coefs::AbstractMatrix, intercept::Bool, n::Int, d::Int, p::Int, select::SegSelect) =
     new(coefs, intercept, n, d, p, select)
 
-  function DMRCoefs(m::DMRPaths; select=defsegselect)
-    coefs = coef(m; select=select)
+  function DMRCoefs(m::DMRPaths, select=defsegselect)
+    coefs = coef(m, select)
     new(coefs, m.intercept, m.n, m.d, m.p, select)
   end
 end
@@ -130,7 +130,7 @@ Returns the AICc optimal coefficients matrix fitted with DMR.
   coef(m)
 ```
 """
-function StatsBase.coef(m::DMRCoefs; select=m.select)
+function StatsBase.coef(m::DMRCoefs, select=m.select)
   if select == m.select
     m.coefs
   else
@@ -156,21 +156,18 @@ end
 end
 
 """
-    coef(m::DMRPaths; select=MinAICc())
+    coef(m::DMRPaths, select::SegSelect=MinAICc())
 
 Returns all or selected coefficients matrix fitted with DMR.
 
 # Example:
 ```julia
   m = fit(DMRPaths,covars,counts)
-  coef(m; select=MinCVmse(Kfold(size(covars,1), 5)))
+  coef(m, MinCVKfold{MinCVmse}(5))
 ```
-
-# Keywords
-- `select=MinAICc()` See [`coef(::RegularizationPath)`](@ref).
 """
-StatsBase.coef(m::DMRPaths; select=defsegselect) = coef(m, select)
-function StatsBase.coef(m::DMRPaths, select::SegSelect)
+# StatsBase.coef(m::DMRPaths; select=defsegselect) = coef(m, select)
+function StatsBase.coef(m::DMRPaths, select::SegSelect=defsegselect)
   # get dims
   d = length(m.nlpaths)
   d < 1 && return nothing
@@ -316,7 +313,7 @@ end
 function dmr_remote_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
           parallel,verbose,showwarnings,intercept; select=defsegselect, kwargs...) where {T<:AbstractFloat,V}
   paths = dmrpaths(covars, counts; parallel=parallel, verbose=verbose, showwarnings=showwarnings, intercept=intercept, kwargs...)
-  DMRCoefs(paths; select=select)
+  DMRCoefs(paths, select)
 end
 
 "Shorthand for fit(DMRPaths,covars,counts). See also [`fit(::DMRPaths)`](@ref)"
@@ -366,7 +363,7 @@ function poisson_regression!(coefs::AbstractMatrix{T}, j::Int, covars::AbstractM
   select=defsegselect, kwargs...) where {T<:AbstractFloat,V}
   cj = Vector(counts[:,j])
   path = fit(GammaLassoPath,covars,cj,Poisson(),LogLink(); kwargs...)
-  coefs[:,j] = coef(path; select=select)
+  coefs[:,j] = coef(path, select)
   nothing
 end
 

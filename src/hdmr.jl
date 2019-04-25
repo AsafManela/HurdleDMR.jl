@@ -38,8 +38,8 @@ struct HDMRCoefs <: HDMR
     n::Int, d::Int, inpos, inzero, select::SegSelect) =
     new(coefspos, coefszero, intercept, n, d, inpos, inzero, select)
 
-  function HDMRCoefs(m::HDMRPaths; select=defsegselect)
-    coefspos, coefszero = coef(m; select=select)
+  function HDMRCoefs(m::HDMRPaths, select::SegSelect=defsegselect)
+    coefspos, coefszero = coef(m, select)
     new(coefspos, coefszero, m.intercept, m.n, m.d, m.inpos, m.inzero, select)
   end
 end
@@ -131,7 +131,8 @@ end
 """
     coef(m::HDMRCoefs)
 
-Returns the AICc optimal coefficient matrices fitted with HDMR.
+Returns the coefficient matrices fitted with HDMR.
+By default returns the AICc optimal segment.
 
 # Example:
 ```julia
@@ -139,30 +140,28 @@ Returns the AICc optimal coefficient matrices fitted with HDMR.
   coefspos, coefszero = coef(m)
 ```
 """
-function StatsBase.coef(m::HDMRCoefs; select=m.select)
-  if select == m.select
-    m.coefspos, m.coefszero
-  else
-    error("coef(m::HDMRCoefs) supports only the regulatrization path segement
-      selector $(m.select) specified during fit().")
-  end
-end
+StatsBase.coef(m::HDMRCoefs) = m.coefspos, m.coefszero
+# function StatsBase.coef(m::HDMRCoefs, select=m.select)
+#   if select == m.select
+#     m.coefspos, m.coefszero
+#   else
+#     error("coef(m::HDMRCoefs) supports only the regulatrization path segement
+#       selector $(m.select) specified during fit().")
+#   end
+# end
 
 """
-    coef(m::HDMRPaths; select=AllSeg())
+    coef(m::HDMRPaths; select::SegSelect=MinAICc())
 
 Returns all or selected coefficient matrices fitted with HDMR.
 
 # Example:
 ```julia
   m = fit(HDMRPaths,covars,counts)
-  coefspos, coefszero = coef(m; select=MinCVmse(Kfold(size(covars,1), 5)))
+  coefspos, coefszero = coef(m, MinCVKfold{MinCVmse}(5))
 ```
-
-# Keywords
-- `select=MinAICc()` See [`coef(::RegularizationPath)`](@ref).
 """
-function StatsBase.coef(m::HDMRPaths; select=defsegselect)
+function StatsBase.coef(m::HDMRPaths, select::SegSelect=defsegselect)
   # get dims
   d = length(m.nlpaths)
   d < 1 && return nothing, nothing
@@ -333,7 +332,7 @@ function hurdle_regression!(coefspos::AbstractMatrix{T}, coefszero::AbstractMatr
   covarspos, covarszero = incovars(covars,inpos,inzero)
   # we use the same offsets for pos and zeros
   path = fit(Hurdle,GammaLassoPath,covarszero,cj; Xpos=covarspos, offsetpos=offset, offsetzero=offset, kwargs...)
-  (coefspos[:,j], coefszero[:,j]) = coef(path; select=select)
+  (coefspos[:,j], coefszero[:,j]) = coef(path, select)
   nothing
 end
 
@@ -431,7 +430,7 @@ function hdmr_remote_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V}
           inpos,inzero,intercept,parallel,verbose,showwarnings;
           select=defsegselect, kwargs...) where {T<:AbstractFloat,V}
   paths = hdmrpaths(covars, counts; inpos=inpos, inzero=inzero, parallel=parallel, verbose=verbose, showwarnings=showwarnings, kwargs...)
-  HDMRCoefs(paths; select=select)
+  HDMRCoefs(paths, select)
 end
 
 """

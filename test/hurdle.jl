@@ -91,9 +91,7 @@ showstr = String(take!(copy(showres)))
 # this one throws an error because we did not specify the same λ vector for both submodels so they have different lengths
 @test_throws AssertionError predict(hurdleglrfit, X; select=AllSeg())
 
-sort(vcat(collect(Kfold(length(y), 5))...))
-Juno.@enter coef(hurdleglrfit;select=MinCVmse(Kfold(length(y), 5)))
-coefsJCVmin=vcat(coef(hurdleglrfit;select=MinCVmse(Kfold(length(y), 5)))...)
+coefsJCVmin=vcat(coef(hurdleglrfit, MinCVKfold{MinCVmse}(5))...)
 @test coefsJCVmin ≈ coefsR1 rtol=0.30
 # rdist(coefsJCVmin,coefsR1)
 
