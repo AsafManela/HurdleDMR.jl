@@ -122,7 +122,8 @@ end
 """
     coef(m::DMRCoefs)
 
-Returns the AICc optimal coefficients matrix fitted with DMR.
+Returns the coefficient matrices fitted with DMR using
+the segment selected during fit (MinAICc by default).
 
 # Example:
 ```julia
@@ -130,14 +131,7 @@ Returns the AICc optimal coefficients matrix fitted with DMR.
   coef(m)
 ```
 """
-function StatsBase.coef(m::DMRCoefs, select=m.select)
-  if select == m.select
-    m.coefs
-  else
-    error("coef(m::DMRCoefs) supports only the regulatrization path segement
-      selector $(m.select) specified during fit().")
-  end
-end
+StatsBase.coef(m::DMRCoefs) = m.coefs
 
 coefspace(p, d, nλ, select::SegSelect) = zeros(p,d)
 coefspace(p, d, nλ, select::AllSeg) = zeros(nλ,p,d)

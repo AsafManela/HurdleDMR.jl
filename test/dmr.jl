@@ -10,7 +10,7 @@ f = @model(c ~ x + z + cat + y)
 dmrcoefs = dmr(covars, counts; testargs...)
 coefs = coef(dmrcoefs)
 @test size(coefs) == (p+1, d)
-@test_throws ErrorException coef(dmrcoefs, AllSeg())
+@test_throws MethodError coef(dmrcoefs, AllSeg())
 @test coefs ≈ coefsRdistrom rtol=rtol
 # println("rdist(coefs,coefsRdistrom)=$(rdist(coefs,coefsRdistrom))")
 

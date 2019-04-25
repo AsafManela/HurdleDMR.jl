@@ -17,7 +17,7 @@ hdmrcoefs = hdmr(covars, counts; parallel=true, testargs...)
 coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test size(coefsHppos) == (p+1, d)
 @test size(coefsHpzero) == (p+1, d)
-@test_throws ErrorException coef(hdmrcoefs, AllSeg())
+@test_throws MethodError coef(hdmrcoefs, AllSeg())
 
 # test Int matrix for counts
 hdmrcoefsint = hdmr(covars, countsint; parallel=true, testargs...)
