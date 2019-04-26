@@ -40,7 +40,7 @@ const SUITE = BenchmarkGroup()
 
 kwargs = Dict(:verbose=>false)
 
-BenchmarkTools.DEFAULT_PARAMETERS.seconds = 0.5
+BenchmarkTools.DEFAULT_PARAMETERS.seconds = 60
 
 n = 300
 p = 3
