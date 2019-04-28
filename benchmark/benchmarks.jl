@@ -1,7 +1,7 @@
 using BenchmarkTools
 
 # Add parallel workers and make package available to workers
-using Distributed, CSV, GLM, Distributions, Random, SparseArrays, CategoricalArrays
+using Distributed, CSV, GLM, Distributions, Random, SparseArrays
 import HurdleDMR
 addprocs(Sys.CPU_THREADS-2)
 @everywhere using HurdleDMR
@@ -69,4 +69,3 @@ for d in 10 .^ (1:4)
     end
   end
 end
-

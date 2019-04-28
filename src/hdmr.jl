@@ -8,40 +8,33 @@ abstract type HDMR <: DCR end
 """
 Relatively heavy object used to return HDMR results when we care about the regulatrization paths.
 """
-struct HDMRPaths <: HDMR
+struct HDMRPaths{X} <: HDMR
   nlpaths::Vector{Union{Missing,Hurdle}} # independent Hurdle{GammaLassoPath} for each phrase
   intercept::Bool               # whether to include an intercept in each Poisson regression
                                 # (only kept with remote cluster, not with local cluster)
-  n::Int                      # number of observations. May be lower than provided after removing all zero obs.
-  d::Int                      # number of categories (terms/words/phrases)
-  inpos                         # indices of covars columns included in positives model
-  inzero                        # indices of covars columns included in zeros model
-
-  HDMRPaths(nlpaths::Vector{Union{Missing,Hurdle}}, intercept::Bool, n::Int, d::Int, inpos, inzero) =
-    new(nlpaths, intercept, n, d, inpos, inzero)
+  n::Int                        # number of observations. May be lower than provided after removing all zero obs.
+  d::Int                        # number of categories (terms/words/phrases)
+  inpos::X                      # indices of covars columns included in positives model
+  inzero::X                     # indices of covars columns included in zeros model
 end
 
 """
 Relatively light object used to return HDMR results when we only care about estimated coefficients.
 """
-struct HDMRCoefs <: HDMR
-  coefspos::AbstractMatrix      # positives model coefficients
-  coefszero::AbstractMatrix     # zeros model coefficients
+struct HDMRCoefs{T<:AbstractMatrix, S<:SegSelect, X} <: HDMR
+  coefspos::T                   # positives model coefficients
+  coefszero::T                  # zeros model coefficients
   intercept::Bool               # whether to include an intercept in each Poisson regression
   n::Int                        # number of observations. May be lower than provided after removing all zero obs.
   d::Int                        # number of categories (terms/words/phrases)
-  inpos                         # indices of covars columns included in positives model
-  inzero                        # indices of covars columns included in zeros model
-  select::SegSelect             # path segment selector
+  inpos::X                      # indices of covars columns included in positives model
+  inzero::X                     # indices of covars columns included in zeros model
+  select::S                     # path segment selector
+end
 
-  HDMRCoefs(coefspos::AbstractMatrix, coefszero::AbstractMatrix, intercept::Bool,
-    n::Int, d::Int, inpos, inzero, select::SegSelect) =
-    new(coefspos, coefszero, intercept, n, d, inpos, inzero, select)
-
-  function HDMRCoefs(m::HDMRPaths, select::SegSelect=defsegselect)
-    coefspos, coefszero = coef(m, select)
-    new(coefspos, coefszero, m.intercept, m.n, m.d, m.inpos, m.inzero, select)
-  end
+function HDMRCoefs(m::HDMRPaths, select::SegSelect=defsegselect)
+  coefspos, coefszero = coef(m, select)
+  HDMRCoefs(coefspos, coefszero, m.intercept, m.n, m.d, m.inpos, m.inzero, select)
 end
 
 """
@@ -142,6 +135,14 @@ the segment selected during fit (MinAICc by default).
 """
 StatsBase.coef(m::HDMRCoefs) = m.coefspos, m.coefszero
 
+coeffill!(coefszero, coefspos, path::Missing, pzero, ppos, j, select::SegSelect) = nothing
+
+function coeffill!(coefszero, coefspos, path::Hurdle, pzero, ppos, j, select::SegSelect)
+  cjpos, cjzero = coef(path, select)
+  coeffill!(coefspos, cjpos, ppos, j, select)
+  coeffill!(coefszero, cjzero, pzero, j, select)
+end
+
 """
     coef(m::HDMRPaths, select::SegSelect=MinAICc())
 
@@ -182,11 +183,7 @@ function StatsBase.coef(m::HDMRPaths, select::SegSelect=defsegselect)
   # iterate over paths
   for j=1:d
     path = m.nlpaths[j]
-    if !ismissing(path)
-      cjpos, cjzero = coef(path, select)
-      coeffill!(coefspos, cjpos, ppos, j, select)
-      coeffill!(coefszero, cjzero, pzero, j, select)
-    end
+    coeffill!(coefszero, coefspos, path, pzero, ppos, j, select::SegSelect)
   end
 
   coefspos, coefszero
@@ -389,17 +386,20 @@ function hdmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
   # fit separate GammaLassoPath's to each dimension of counts j=1:d and pick its min AICc segment
   if parallel
     verbose && @info("distributed hurdle run on local cluster with $(nworkers()) nodes")
-    counts = convert(SharedArray,counts)
-    coefszero = SharedMatrix{T}(ncoefzero,d)
-    coefspos = SharedMatrix{T}(ncoefpos,d)
-    covars = convert(SharedArray,covars)
+    scounts = convert(SharedArray,counts)
+    scoefszero = SharedMatrix{T}(ncoefzero,d)
+    scoefspos = SharedMatrix{T}(ncoefpos,d)
+    scovars = convert(SharedArray,covars)
     # μ = convert(SharedArray,μ) incompatible with GLM
 
     @sync @distributed for j=1:d
-      tryfith!(coefspos, coefszero, j, covars, counts, inpos, inzero; offset=μ,
+      tryfith!(scoefspos, scoefszero, j, scovars, scounts, inpos, inzero; offset=μ,
         verbose=false, showwarnings=showwarnings, intercept=intercept,
         select=select, kwargs...)
     end
+
+    coefszero = convert(Matrix{T}, scoefszero)
+    coefspos = convert(Matrix{T}, scoefspos)
   else
     verbose && @info("serial hurdle run on a single node")
     coefszero = Matrix{T}(undef,ncoefzero,d)

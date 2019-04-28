@@ -18,10 +18,6 @@ struct DMRPaths <: DMR
   n::Int                      # number of observations. May be lower than provided after removing all zero obs.
   d::Int                      # number of categories (terms/words/phrases)
   p::Int                      # number of covariates
-
-  DMRPaths(nlpaths::Vector{Union{Missing,GammaLassoPath}}, intercept::Bool,
-    n::Int, d::Int, p::Int) =
-    new(nlpaths, intercept, n, d, p)
 end
 
 const defsegselect = MinAICc()
@@ -29,21 +25,18 @@ const defsegselect = MinAICc()
 """
 Relatively light object used to return DMR results when we only care about estimated coefficients.
 """
-struct DMRCoefs <: DMR
-  coefs::AbstractMatrix         # model coefficients
-  intercept::Bool               # whether to include an intercept in each Poisson regression
+struct DMRCoefs{T<:AbstractMatrix, S<:SegSelect} <: DMR
+  coefs::T                    # model coefficients
+  intercept::Bool             # whether to include an intercept in each Poisson regression
   n::Int                      # number of observations. May be lower than provided after removing all zero obs.
   d::Int                      # number of categories (terms/words/phrases)
   p::Int                      # number of covariates
-  select::SegSelect           # path segment selector
+  select::S                   # path segment selector
+end
 
-  DMRCoefs(coefs::AbstractMatrix, intercept::Bool, n::Int, d::Int, p::Int, select::SegSelect) =
-    new(coefs, intercept, n, d, p, select)
-
-  function DMRCoefs(m::DMRPaths, select=defsegselect)
-    coefs = coef(m, select)
-    new(coefs, m.intercept, m.n, m.d, m.p, select)
-  end
+function DMRCoefs(m::DMRPaths, select::SegSelect=defsegselect)
+  coefs = coef(m, select)
+  DMRCoefs(coefs, m.intercept, m.n, m.d, m.p, select)
 end
 
 """
@@ -136,12 +129,19 @@ StatsBase.coef(m::DMRCoefs) = m.coefs
 coefspace(p, d, nλ, select::SegSelect) = zeros(p,d)
 coefspace(p, d, nλ, select::AllSeg) = zeros(nλ,p,d)
 
-@inline function coeffill!(coefs, cj, p, j, select::SegSelect)
+coeffill!(coefs, path::Missing, p, j, select::SegSelect) = nothing
+
+function coeffill!(coefs, path::RegularizationPath, p, j, select::SegSelect)
+  cj = coef(path, select)
+  coeffill!(coefs, cj, p, j, select)
+end
+
+function coeffill!(coefs, cj::AbstractArray, p, j, select::SegSelect)
   for i=1:p
     coefs[i,j] = cj[i]
   end
 end
-@inline function coeffill!(coefs, cj, p, j, select::AllSeg)
+function coeffill!(coefs, cj::AbstractArray, p, j, select::AllSeg)
   for i=1:p
     for s=1:size(cj,2)
       coefs[s,i,j] = cj[i,s]
@@ -184,10 +184,7 @@ function StatsBase.coef(m::DMRPaths, select::SegSelect=defsegselect)
   # iterate over paths
   for j=1:d
     path = m.nlpaths[j]
-    if !ismissing(path)
-      cj = coef(path, select)
-      coeffill!(coefs, cj, p, j, select)
-    end
+    coeffill!(coefs, path, p, j, select)
   end
 
   coefs
@@ -282,15 +279,17 @@ function dmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
   # fit separate GammaLassoPath's to each dimension of counts j=1:d and pick its min AICc segment
   if parallel
     verbose && @info("distributed poisson run on local cluster with $(nworkers()) nodes")
-    counts = convert(SharedArray,counts)
-    coefs = SharedMatrix{T}(ncoef,d)
-    covars = convert(SharedArray,covars)
+    scounts = convert(SharedArray,counts)
+    scoefs = SharedMatrix{T}(ncoef,d)
+    scovars = convert(SharedArray,covars)
     # μ = convert(SharedArray,μ) incompatible with GLM
 
     @sync @distributed for j=1:d
-      tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false,
+      tryfitgl!(scoefs, j, scovars, scounts; offset=μ, verbose=false,
         showwarnings=showwarnings, intercept=intercept, select=select, kwargs...)
     end
+
+    coefs = convert(Matrix{T}, scoefs)
   else
     verbose && @info("serial poisson run on a single node")
     coefs = Matrix{T}(undef,ncoef,d)
