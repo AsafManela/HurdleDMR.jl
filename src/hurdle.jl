@@ -3,9 +3,9 @@
 #############################################
 
 "Hurdle returned object"
-mutable struct Hurdle <: RegressionModel
-  mzero::RegressionModel  # model for zeros
-  mpos::RegressionModel   # model for positive counts
+mutable struct Hurdle{Z<:RegressionModel,P<:RegressionModel} <: RegressionModel
+  mzero::Z                # model for zeros
+  mpos::P                 # model for positive counts
   fittedzero::Bool        # whether the model for zeros was fitted
   fittedpos::Bool         # whether the model for positives was fitted
 end

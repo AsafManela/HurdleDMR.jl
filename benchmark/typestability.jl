@@ -40,4 +40,7 @@ HDMRCoefs(paths, MinBIC())
 @code_warntype DMRCoefs(paths, MinCVKfold{MinCVmse}(5))
 @code_warntype coef(paths, MinCVKfold{MinCVmse}(10))
 
-@edit dmr_local_cluster(covars, counts)
+# @edit dmr_local_cluster(covars, counts)
+
+m = fit(Hurdle, GammaLassoPath, covars, Vector{Float64}(counts[:,1]))
+@code_warntype coef(m, AllSeg())
