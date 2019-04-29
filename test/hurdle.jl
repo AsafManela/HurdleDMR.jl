@@ -45,8 +45,8 @@ showres = IOBuffer()
 show(showres, hurdlefit)
 showstr = String(take!(copy(showres)))
 @test occursin("Hurdle regression",showstr)
-@test occursin("Count model coefficients",showstr)
-@test occursin("Zero hurdle coefficients",showstr)
+@test occursin("Positive part coefficients",showstr)
+@test occursin("Zero part coefficients",showstr)
 
 coefsJ=vcat(coef(hurdlefit)...)
 @test coefsJ ≈ coefsR1 rtol=1e-6
@@ -85,8 +85,8 @@ showres = IOBuffer()
 show(showres, hurdleglrfit)
 showstr = String(take!(copy(showres)))
 @test occursin("Hurdle regression",showstr)
-@test occursin("Count model regularization path",showstr)
-@test occursin("Zero hurdle regularization path",showstr)
+@test occursin("Positive part regularization path",showstr)
+@test occursin("Zero part regularization path",showstr)
 
 # this one throws an error because we did not specify the same λ vector for both submodels so they have different lengths
 @test_throws AssertionError predict(hurdleglrfit, X; select=AllSeg())

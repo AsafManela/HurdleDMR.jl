@@ -2,8 +2,10 @@
 # hurdle
 #############################################
 
+abstract type TwoPartModel <: RegressionModel end
+
 "Hurdle returned object"
-mutable struct Hurdle{Z<:RegressionModel,P<:RegressionModel} <: RegressionModel
+mutable struct Hurdle{Z<:RegressionModel,P<:RegressionModel} <: TwoPartModel
   mzero::Z                # model for zeros
   mpos::P                 # model for positive counts
   fittedzero::Bool        # whether the model for zeros was fitted
@@ -267,28 +269,29 @@ function StatsBase.fit(::Type{Hurdle},::Type{M},
   Hurdle(mzero,mpos,fittedzero,fittedpos)
 end
 
-function Base.show(io::IO, hurdle::Hurdle)
-  println(io, "Hurdle regression\n")
+function Base.show(io::IO, tpm::TwoPartModel)
+  name = typeof(tpm).name
+  println(io, "$name regression\n")
 
-  if typeof(hurdle.mpos) <: RegularizationPath
-    println(io, "Count model regularization path ($(distfun(hurdle.mpos)) with $(linkfun(hurdle.mpos)) link):")
-    println(io, hurdle.fittedpos ? hurdle.mpos : "Not Fitted")
+  if typeof(tpm.mpos) <: RegularizationPath
+    println(io, "Positive part regularization path ($(distfun(tpm.mpos)) with $(linkfun(tpm.mpos)) link):")
+    println(io, tpm.fittedpos ? tpm.mpos : "Not Fitted")
 
-    println(io, "Zero hurdle regularization path ($(distfun(hurdle.mzero)) with $(linkfun(hurdle.mzero)) link):")
-    println(io, hurdle.fittedzero ? hurdle.mzero : "Not Fitted")
+    println(io, "Zero part regularization path ($(distfun(tpm.mzero)) with $(linkfun(tpm.mzero)) link):")
+    println(io, tpm.fittedzero ? tpm.mzero : "Not Fitted")
   else
-    println(io, "Count model coefficients ($(Distribution(hurdle.mpos)) with $(Link(hurdle.mpos)) link):")
-    println(io, hurdle.fittedpos ? hurdle.mpos : "Not Fitted")
+    println(io, "Positive part coefficients ($(Distribution(tpm.mpos)) with $(Link(tpm.mpos)) link):")
+    println(io, tpm.fittedpos ? tpm.mpos : "Not Fitted")
 
-    println(io, "Zero hurdle coefficients ($(Distribution(hurdle.mzero)) with $(Link(hurdle.mzero)) link):")
-    println(io, hurdle.fittedzero ? hurdle.mzero : "Not Fitted")
+    println(io, "Zero part coefficients ($(Distribution(tpm.mzero)) with $(Link(tpm.mzero)) link):")
+    println(io, tpm.fittedzero ? tpm.mzero : "Not Fitted")
   end
 end
 
 """
     coef(m::Hurdle; select=MinAICc())
 
-Returns a selected segment of the coefficient matrices of the fitted the Hurdle.
+Returns a selected segment of the coefficient matrices of the fitted the TwoPartModel.
 
 # Example:
 ```julia
@@ -299,20 +302,20 @@ Returns a selected segment of the coefficient matrices of the fitted the Hurdle.
 # Keywords
 - `kwargs...` are passed along to two coef() calls on the two model parts.
 """
-function StatsBase.coef(hurdle::Hurdle; kwargs...)
-  czero = coef(hurdle.mzero; kwargs...)
-  cpos = coef(hurdle.mpos; kwargs...)
+function StatsBase.coef(tpm::TwoPartModel; kwargs...)
+  czero = coef(tpm.mzero; kwargs...)
+  cpos = coef(tpm.mpos; kwargs...)
   cpos,czero
 end
 
 # the following coef definitions override those in Lasso for Hurdles
-function StatsBase.coef(hurdle::Hurdle, select::SegSelect; kwargs...)
-  czero = coef(hurdle.mzero, select; kwargs...)
-  cpos = coef(hurdle.mpos, select; kwargs...)
+function StatsBase.coef(tpm::TwoPartModel, select::SegSelect; kwargs...)
+  czero = coef(tpm.mzero, select; kwargs...)
+  cpos = coef(tpm.mpos, select; kwargs...)
   cpos,czero
 end
 
-function StatsBase.coef(hurdle::Hurdle, select::S; kwargs...) where {S<:CVSegSelect}
+function StatsBase.coef(tpm::TwoPartModel, select::S; kwargs...) where {S<:CVSegSelect}
   error("""
     Specifying an instance of a `CVSegSelect` is not supported because there is
     more than one path and its generator has a fixed number of observation indices.
@@ -334,20 +337,23 @@ function StatsBase.coef(path::RegularizationPath, select::MinCVKfold{S};
 end
 
 "Selects the RegularizationPath segment coefficients according to `S` with `k`-fold cross-validation"
-function StatsBase.coef(hurdle::Hurdle, select::MinCVKfold{S};
+function StatsBase.coef(tpm::TwoPartModel, select::MinCVKfold{S};
   kwargs...) where {S<:CVSegSelect}
 
-  selectzero = S(hurdle.mzero, select.k)
-  selectpos = S(hurdle.mpos, select.k)
-  czero = coef(hurdle.mzero, selectzero; kwargs...)
-  cpos = coef(hurdle.mpos, selectpos; kwargs...)
+  selectzero = S(tpm.mzero, select.k)
+  selectpos = S(tpm.mpos, select.k)
+  czero = coef(tpm.mzero, selectzero; kwargs...)
+  cpos = coef(tpm.mpos, selectpos; kwargs...)
   cpos,czero
 end
+
+# predicted counts vector given expected inclusion (μzero) and repetition (μpos)
+μtpm(m::Hurdle, μzero, μpos) = μzero .* μpos
 
 """
     predict(m,X; Xpos=Xpos, <keyword arguments>)
 
-Predict using a fitted Hurdle given new X (and potentially Xpos).
+Predict using a fitted TwoPartModel given new X (and potentially Xpos).
 
 # Example with GLM:
 ```julia
@@ -371,7 +377,7 @@ Predict using a fitted Hurdle given new X (and potentially Xpos).
 - `kwargs...` additional keyword arguments passed along to predict() for each
   of the two model parts.
 """
-function StatsBase.predict(hurdle::Hurdle, X::AbstractMatrix{T};
+function StatsBase.predict(tpm::TwoPartModel, X::AbstractMatrix{T};
   Xpos::AbstractMatrix{T} = X,
   offsetzero::AbstractVector = Array{T}(undef, 0),
   offsetpos::AbstractVector = Array{T}(undef, 0),
@@ -388,10 +394,10 @@ function StatsBase.predict(hurdle::Hurdle, X::AbstractMatrix{T};
     end
   end
 
-  muzero = predict(hurdle.mzero, X; offset=offsetzero, kwargs...)
-  mupos = predict(hurdle.mpos, Xpos; offset=offsetpos, kwargs...)
+  μzero = predict(tpm.mzero, X; offset=offsetzero, kwargs...)
+  μpos = predict(tpm.mpos, Xpos; offset=offsetpos, kwargs...)
 
-  @assert size(muzero) == size(mupos) "Predicted values from zero and positives models have different dimensions, $(size(muzero)) != $(size(mupos))\nCan result from fitting a RegularizationPath with autoλ and select=AllSeg() is specified."
+  @assert size(μzero) == size(μpos) "Predicted values from zero and positives models have different dimensions, $(size(μzero)) != $(size(μpos))\nCan result from fitting a RegularizationPath with autoλ and select=AllSeg() is specified."
 
-  muzero .* mupos
+  μtpm(tpm, μzero, μpos)
 end

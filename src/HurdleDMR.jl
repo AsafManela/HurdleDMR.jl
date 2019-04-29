@@ -8,7 +8,8 @@ export dmr, dmrpaths, hdmr, hdmrpaths, fit, coef, srproj, srprojX, @~, mcdmr, po
   DCR, DMR, HDMR, DMRCoefs, DMRPaths, HDMRCoefs, HDMRPaths, @model, Model,
   CIR, predict, coeffwd, coefbwd, MinCVKfold,
   hasintercept, ncategories, nobs, ncoefs, ncovars, ncovarszero, ncovarspos, ncoefszero, ncoefspos,
-  Hurdle, PositivePoisson, LogProductLogLink, logpdf_exact, logpdf_approx
+  Hurdle, PositivePoisson, LogProductLogLink, logpdf_exact, logpdf_approx,
+  InclusionRepetition
 
 ##############################################
 # hurdle glm model involves
@@ -18,6 +19,7 @@ export dmr, dmrpaths, hdmr, hdmrpaths, fit, coef, srproj, srprojX, @~, mcdmr, po
 
 include("positive_poisson.jl")
 include("hurdle.jl")
+include("increp.jl")
 include("model.jl")
 include("dmr.jl")
 include("hdmr.jl")
