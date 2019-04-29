@@ -409,10 +409,3 @@ hurdle = fit(Hurdle,GammaLassoPath,X,y; Xpos=Xpos, offset=offset)
 @test typeof(hurdle.mzero) <: GammaLassoPath
 
 end
-
-# TODO never got this to work:
-# bioChemists[:art]=convert(Vector{Float64},bioChemists[:art])
-# hurdlefit = fit(Hurdle,GammaLassoPath,@formula(art ~ fem + mar + kid5 + phd + ment), bioChemists;intercept=false)
-# coefsJ=coef(hurdlefit)
-# @test coefsJ ≈ coefsR1 rtol=1e-6
-# rdist(coefsR1,coefsJ)
