@@ -34,4 +34,10 @@ HDMRCoefs(paths, HurdleDMR.defsegselect)
 @code_warntype HDMRCoefs(paths, HurdleDMR.defsegselect)
 @code_warntype coef(paths, HurdleDMR.defsegselect)
 
+using Lasso
+HDMRCoefs(paths, MinCVKfold{MinCVmse}(10))
+HDMRCoefs(paths, MinBIC())
+@code_warntype DMRCoefs(paths, MinCVKfold{MinCVmse}(5))
+@code_warntype coef(paths, MinCVKfold{MinCVmse}(10))
+
 @edit dmr_local_cluster(covars, counts)

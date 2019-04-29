@@ -321,10 +321,16 @@ function StatsBase.coef(hurdle::Hurdle, select::S; kwargs...) where {S<:CVSegSel
 end
 
 "Selects the RegularizationPath segment according to `CVSegSelect` with `k`-fold cross-validation"
-struct MinCVKfold{S<:CVSegSelect}
+struct MinCVKfold{S<:CVSegSelect} <: CVSegSelect
   k::Int  # number of CV folds
+end
 
-  MinCVKfold{ST}(k::Int) where ST<:CVSegSelect = new{ST}(k)
+"Selects the RegularizationPath segment coefficients according to `S` with `k`-fold cross-validation"
+function StatsBase.coef(path::RegularizationPath, select::MinCVKfold{S};
+  kwargs...) where {S<:CVSegSelect}
+
+  selector = S(path, select.k)
+  coef(path, selector; kwargs...)
 end
 
 "Selects the RegularizationPath segment coefficients according to `S` with `k`-fold cross-validation"
