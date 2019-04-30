@@ -230,14 +230,14 @@ fpcounts(counts::M) where {V<:GLM.FP, N, M<:SparseMatrixCSC{V,N}} = counts
 fpcounts(counts::M) where {V<:GLM.FP, M<:AbstractMatrix{V}} = counts
 
 totalcounts(counts, prespecifiedm::Nothing) = vec(sum(counts, dims=2))
-totalcounts(counts::AbstractMatrix{C}, prespecifiedm::AbstractVector{C}) where C = convert(Vector{GLM.FP}, prespecifiedm)
+totalcounts(counts, prespecifiedm::AbstractVector) = convert(Vector{GLM.FP}, prespecifiedm)
 
 """
 Computes DMR shifters (μ=log(m)) and removes all zero observations.
 Optionally uses a prespecifed total counts `m`, to allow computation in batches.
 """
-function shifters(covars::AbstractMatrix{T}, counts::AbstractMatrix{C}, showwarnings::Bool,
-  prespecifiedm::Union{Nothing, AbstractVector{C}}) where {T<:AbstractFloat,C}
+function shifters(::Type{DMR}, covars::AbstractMatrix, counts::AbstractMatrix{C}, showwarnings::Bool,
+  prespecifiedm::Union{Nothing, AbstractVector}) where C
 
   # standardize counts matrix to conform to GLM.FP
   counts = fpcounts(counts)
@@ -274,7 +274,7 @@ function dmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
   # add one coef for intercept
   ncoef = p + (intercept ? 1 : 0)
 
-  covars, counts, μ, n = shifters(covars, counts, showwarnings, m)
+  covars, counts, μ, n = shifters(DMR, covars, counts, showwarnings, m)
 
   # fit separate GammaLassoPath's to each dimension of counts j=1:d and pick its min AICc segment
   if parallel
@@ -322,7 +322,7 @@ function dmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
   @assert n==n1 "counts and covars should have the same number of observations"
   verbose && @info("fitting $n observations on $d categories, $p covariates ")
 
-  covars, counts, μ, n = shifters(covars, counts, showwarnings, m)
+  covars, counts, μ, n = shifters(DMR, covars, counts, showwarnings, m)
 
   function tryfitgl(countsj::AbstractVector)
     try

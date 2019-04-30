@@ -49,6 +49,19 @@ function getIy(y::AbstractVector{T}) where {T}
     ixpos, Iy
 end
 
+"Drops observations with infinite offset"
+function finiteoffsetobs(dist::U, X, y, offset, showwarnings) where U<:UnivariateDistribution
+  if any(isinf,offset)
+      ixfinite = isfinite.(offset)
+      showwarnings && @warn("omitting $(length(offset)-length(ixfinite)) observations with infinite offset from $U model")
+      offset = offset[ixfinite]
+      X = X[ixfinite, :]
+      y = y[ixfinite]
+  end
+
+  X, y, offset
+end
+
 "Fits the model for zeros Iy ~ X"
 function fitzero(::Type{M},
   X::AbstractMatrix{T}, Iy::V,
@@ -61,7 +74,8 @@ function fitzero(::Type{M},
   showwarnings::Bool,
   fitargs...) where {M<:RegressionModel,T<:FP,V<:FPVector}
 
-  # fit zero model to entire sample
+  X, Iy, offsetzero = finiteoffsetobs(dzero, X, Iy, offsetzero, showwarnings)
+
   mzero = nothing
   fittedzero = false
   if var(Iy) > zero(T)
@@ -113,10 +127,11 @@ function fitpos(::Type{TPM},::Type{M},
   showwarnings::Bool,
   fitargs...) where {TPM<:TwoPartModel, M<:RegressionModel,T<:FP,V<:FPVector}
 
-  # fit truncated counts model to positive subsample
+  excessy!(ypos, TPM)
+  Xpos, ypos, offsetpos = finiteoffsetobs(dpos, Xpos, ypos, offsetpos, showwarnings)
+
   mpos=nothing
   fittedpos = false
-  excessy!(ypos, TPM)
 
   if any(x->x>minypos(TPM), ypos)
     try

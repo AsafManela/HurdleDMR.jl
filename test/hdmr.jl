@@ -103,6 +103,16 @@ ms = sparse(m)
 Im = posindic(m)
 Ims = posindic(ms)
 @test Im == Ims
+@test eltype(Im) == Int64
+@test eltype(Ims) == Int64
+
+m = float.(m)
+ms = sparse(m)
+Im = posindic(m)
+Ims = posindic(ms)
+@test Im == Ims
+@test eltype(Im) == Float64
+@test eltype(Ims) == Float64
 
 zHpos = srproj(coefsHppos, counts)
 @test size(zHpos) == (n,p+1)
