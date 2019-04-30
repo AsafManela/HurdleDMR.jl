@@ -23,7 +23,7 @@ p = size(Xwconst,2)
 ###########################################################
 # Xpos == Xzero
 ###########################################################
-@testset "increp with Xpos == Xzero" begin
+@testset "inrep with Xpos == Xzero" begin
 
 ## logit-poisson
 # R"fm_hp1 <- hurdle(art ~ fem + mar + kid5 + phd + ment, data = bioChemists)"
@@ -39,7 +39,7 @@ coefsR1=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_coe
 yhatR1=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_yhatR1.csv"))))
 yhatR1partial=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_yhatR1partial.csv"))))
 
-# simple increp with GLM underlying
+# simple inrep with GLM underlying
 increpfit = fit(InclusionRepetition,GeneralizedLinearModel,Xwconst,y)
 showres = IOBuffer()
 show(showres, increpfit)
@@ -55,7 +55,7 @@ yhatJ=predict(increpfit, Xwconst)
 yhatJpartial=predict(increpfit, Xwconst[ixpartial,:])
 @test yhatJpartial ≈ yhatR1partial rtol=1e-2
 
-# same simple increp through UNREGULATED lasso path
+# same simple inrep through UNREGULATED lasso path
 increpglrfit = fit(InclusionRepetition,GammaLassoPath,X,y;λ=[0.0, 0.01])
 coefsJ=vcat(coef(increpglrfit;select=MinAICc())...)
 @test coefsJ[1+p:end] ≈ coefsR1[1+p:end] rtol=1e-4
@@ -137,7 +137,7 @@ end
 ###########################################################
 # Xpos ≠ Xzero
 ###########################################################
-@testset "increp with Xpos ≠ Xzero" begin
+@testset "inrep with Xpos ≠ Xzero" begin
 
 # regulated gamma lasso path with different Xpos and Xzero
 # R"fm_hp2 <- hurdle(art ~ fem + mar + kid5 | phd + ment, data = bioChemists)"
@@ -162,7 +162,7 @@ ppos = size(Xposwconst,2)
 # ypos = y[ixpos]
 # countmap(ypos)
 
-# simple increp with GLM underlying
+# simple inrep with GLM underlying
 increpfit = fit(InclusionRepetition,GeneralizedLinearModel,Xzerowconst,y; Xpos=Xposwconst)
 coefsJ=vcat(coef(increpfit)...)
 @test coefsJ[1+ppos:end] ≈ coefsR2[1+ppos:end] rtol=1e-5
@@ -171,7 +171,7 @@ yhatJ=predict(increpfit, Xzerowconst; Xpos=Xposwconst)
 yhatJpartial=predict(increpfit, Xzerowconst[ixpartial,:]; Xpos=Xposwconst[ixpartial,:])
 @test yhatJpartial ≈ yhatR2partial rtol=1e-2
 
-# same simple increp through UNREGULATED lasso path
+# same simple inrep through UNREGULATED lasso path
 increpglrfit = fit(InclusionRepetition,GammaLassoPath,Xzero,y; Xpos=Xpos, λ=[0.0,0.0001])
 coefsJ=vcat(coef(increpglrfit;select=MinAICc())...)
 @test coefsJ[1+ppos:end] ≈ coefsR2[1+ppos:end] rtol=1e-4
@@ -233,7 +233,7 @@ end
 ###########################################################
 # Xpos ≠ Xzero
 ###########################################################
-@testset "increp with Xpos ≠ Xzero AND offset specified" begin
+@testset "inrep with Xpos ≠ Xzero AND offset specified" begin
 
 # regulated gamma lasso path with different Xpos and Xzero and an offset
 # R"fm_hp3 <- hurdle(art ~ fem + mar + kid5 + offset(offpos) | phd + ment + offset(offzero), data = bioChemists)"
@@ -260,7 +260,7 @@ ppos = size(Xposwconst, 2)
 # ypos = y[ixpos]
 # countmap(ypos)
 
-# simple increp with GLM underlying
+# simple inrep with GLM underlying
 increpfit = fit(InclusionRepetition,GeneralizedLinearModel,Xzerowconst,y; Xpos=Xposwconst, offsetzero=offzero, offsetpos=offpos)
 coefsJ=vcat(coef(increpfit)...)
 @test coefsJ[1+ppos:end] ≈ coefsR3[1+ppos:end] rtol=1e-5
@@ -269,7 +269,7 @@ yhatJ=predict(increpfit, Xzerowconst; Xpos=Xposwconst, offsetzero=offzero, offse
 yhatJpartial=predict(increpfit, Xzerowconst[ixpartial,:]; Xpos=Xposwconst[ixpartial,:], offsetzero=offzero[ixpartial], offsetpos=offpos[ixpartial])
 @test yhatJpartial ≈ yhatR3partial rtol=0.2
 
-# same simple increp through UNREGULATED lasso path
+# same simple inrep through UNREGULATED lasso path
 increpglrfit = fit(InclusionRepetition,GammaLassoPath,Xzero,y; Xpos=Xpos, offsetzero=offzero, offsetpos=offpos, λ=[0.0,0.0001])
 coefsJ=vcat(coef(increpglrfit;select=MinAICc())...)
 @test coefsJ[1+ppos:end] ≈ coefsR3[1+ppos:end] rtol=1e-4
@@ -333,16 +333,15 @@ end
 ###########################################################
 # degenrate cases
 ###########################################################
-@testset "increp degenerate cases" begin
+@testset "inrep degenerate cases" begin
 
 # degenerate positive counts data case 1
 include(joinpath(testdir,"data","degenerate_hurdle_1.jl"))
-increp = @test_logs (:warn, r"ypos has no elements larger than 1") fit(InclusionRepetition,GammaLassoPath,X,y; showwarnings=true)
-coefsJ=vcat(coef(increp;select=MinAICc())...)
-@test vec(coefsJ) ≈ [0.0, 0.0, -6.04112, 0.675767] rtol=1e-4
-coefsJpos, coefsJzero = coef(increp;select=AllSeg())
+inrep = fit(InclusionRepetition,GammaLassoPath,X,y; showwarnings=true)
+coefsJ=vcat(coef(inrep;select=MinAICc())...)
+@test vec(coefsJ) ≈ [-4.8941, 0.0, -6.04112, 0.675767] rtol=1e-4
+coefsJpos, coefsJzero = coef(inrep;select=AllSeg())
 @test size(coefsJpos,1) == 2
-@test coefsJpos == zero(coefsJpos)
 @test size(coefsJzero,1) == 2
 
 ydeg = zero(y)
@@ -354,26 +353,24 @@ increpglm = @test_logs (:warn, r"failed to fit truncated counts model to positiv
 # degenerate positive counts data case 1 without >1
 y0or1 = deepcopy(y)
 y0or1[y.>1] .= 1
-increp = @test_logs (:warn, r"ypos has no elements larger than 1") fit(InclusionRepetition,GammaLassoPath,X,y0or1; showwarnings=true)
-coefs0or1=vcat(coef(increp;select=MinAICc())...)
-@test coefs0or1 == coefsJ
-coefs0or1pos, coefs0or1zero = coef(increp;select=AllSeg())
-@test coefs0or1pos == coefsJpos
+inrep = @test_logs (:warn, r"ypos has no elements larger than 0") fit(InclusionRepetition,GammaLassoPath,X,y0or1; showwarnings=true)
+coefs0or1=vcat(coef(inrep;select=MinAICc())...)
+@test coefs0or1 ≈ [0.0, 0.0, -6.04112, 0.675767] rtol=1e-4
+coefs0or1pos, coefs0or1zero = coef(inrep;select=AllSeg())
+@test all(iszero,coefs0or1pos)
 @test coefs0or1zero == coefsJzero
-
-@info("Testing increp degenerate cases. The following warnings about step-halving are expected ...")
 
 # degenerate positive counts data case 1 without zeros
 y0or1 = deepcopy(y)
 y0or1[y.==0] .= 1
 y0or1[1] = 3.0
 
-increp = @test_logs (:warn, r"I\(y\) is all ones") fit(InclusionRepetition,GammaLassoPath,X,y0or1; verbose=true, showwarnings=true)
-# coefs0or1=vcat(coef(increp;select=MinAICc())...)
-coefs0or1pos, coefs0or1zero = coef(increp;select=MinAICc())
+inrep = @test_logs (:warn, r"I\(y\) is all ones") fit(InclusionRepetition,GammaLassoPath,X,y0or1; verbose=true, showwarnings=true)
+# coefs0or1=vcat(coef(inrep;select=MinAICc())...)
+coefs0or1pos, coefs0or1zero = coef(inrep;select=MinAICc())
 @test coefs0or1pos ≈ [-10.2903, 0.820934] rtol=0.1
 @test all(iszero,coefs0or1zero)
-coefs0or1pos, coefs0or1zero = coef(increp;select=AllSeg())
+coefs0or1pos, coefs0or1zero = coef(inrep;select=AllSeg())
 @test all(iszero,coefs0or1zero)
 
 increpglm = @test_logs (:warn, r"I\(y\) is all ones") fit(InclusionRepetition,GeneralizedLinearModel,[ones(size(X,1)) X],y0or1; verbose=true, showwarnings=true)
@@ -385,21 +382,20 @@ y0or1 = zero(y)
 
 # degenerate positive counts data case 2
 include(joinpath(testdir,"data","degenerate_hurdle_2.jl"))
-increp = @test_logs (:warn, r"ypos has no elements larger than 1") fit(InclusionRepetition,GammaLassoPath,X,y; showwarnings=true)
-coefsJ=vcat(coef(increp;select=MinAICc())...)
-@test vec(coefsJ) ≈ [0.0,0.0,-5.30128195796556,0.1854148891565171] rtol=1e-4
-coefsJpos, coefsJzero = coef(increp;select=AllSeg())
+inrep = fit(InclusionRepetition,GammaLassoPath,X,y; showwarnings=true)
+coefsJ=vcat(coef(inrep;select=MinAICc())...)
+@test vec(coefsJ) ≈ [-3.26059, -0.220401, -5.3013, 0.185418] rtol=1e-4
+coefsJpos, coefsJzero = coef(inrep;select=AllSeg())
 @test size(coefsJpos,1) == 2
-@test coefsJpos == zero(coefsJpos)
 @test size(coefsJzero,1) == 2
 
 # degenerate positive counts data case 3
 include(joinpath(testdir,"data","degenerate_hurdle_3.jl"))
-increp = @test_logs (:warn, r"ypos has no elements larger than 1") fit(InclusionRepetition,GammaLassoPath,X,y; showwarnings=true)
-coefsJ=vcat(coef(increp;select=MinAICc())...)
+inrep = @test_logs (:warn, r"ypos has no elements larger than 0") fit(InclusionRepetition,GammaLassoPath,X,y; showwarnings=true)
+coefsJ=vcat(coef(inrep;select=MinAICc())...)
 # @test vec(coefsJ) ≈ [0.0, 0.0, -4.54363, 0.000458273] rtol=1e-4
 @test length(coefsJ) == 4
-coefsJpos, coefsJzero = coef(increp;select=AllSeg())
+coefsJpos, coefsJzero = coef(inrep;select=AllSeg())
 Matrix( coefsJzero)
 @test size(coefsJpos,1) == 2
 @test coefsJpos == zero(coefsJpos)
@@ -407,10 +403,10 @@ Matrix( coefsJzero)
 
 # this test case used to give numerical headaches to devresid(PositivePoisson(),...)
 include(joinpath(testdir,"data","degenerate_hurdle_5.jl"))
-increp = fit(InclusionRepetition,GammaLassoPath,X,y; Xpos=Xpos, offset=offset)
-@test !(ismissing(increp.mpos))
-@test !(ismissing(increp.mzero))
-@test typeof(increp.mpos) <: GammaLassoPath
-@test typeof(increp.mzero) <: GammaLassoPath
+inrep = fit(InclusionRepetition,GammaLassoPath,X,y; Xpos=Xpos, offset=offset)
+@test !(ismissing(inrep.mpos))
+@test !(ismissing(inrep.mzero))
+@test typeof(inrep.mpos) <: GammaLassoPath
+@test typeof(inrep.mzero) <: GammaLassoPath
 
 end

@@ -12,6 +12,12 @@ mutable struct Hurdle{Z<:RegressionModel,P<:RegressionModel} <: TwoPartModel
   fittedpos::Bool         # whether the model for positives was fitted
 end
 
+# does nothing for hurdle
+excessy!(ypos, ::Type{Hurdle}) = ypos
+
+# minimum ypos element
+minypos(::Type{Hurdle}) = 1.0
+
 "Returns an (offsetzero, offsetpos) tuple of offset vector"
 function setoffsets(y::AbstractVector, ixpos::Vector{Int}, offset::AbstractVector, offsetzero::AbstractVector, offsetpos::AbstractVector)
     # set offsets
@@ -96,7 +102,7 @@ function fitzero(::Type{M},
 end
 
 "Fits the model for positives ypos ~ Xpos"
-function fitpos(::Type{M},
+function fitpos(::Type{TPM},::Type{M},
   Xpos::AbstractMatrix{T}, ypos::V,
   dpos::UnivariateDistribution,
   lpos::Link,
@@ -105,12 +111,14 @@ function fitpos(::Type{M},
   offsetpos::AbstractVector,
   verbose::Bool,
   showwarnings::Bool,
-  fitargs...) where {M<:RegressionModel,T<:FP,V<:FPVector}
+  fitargs...) where {TPM<:TwoPartModel, M<:RegressionModel,T<:FP,V<:FPVector}
 
   # fit truncated counts model to positive subsample
   mpos=nothing
   fittedpos = false
-  if any(x->x>1, ypos)
+  excessy!(ypos, TPM)
+
+  if any(x->x>minypos(TPM), ypos)
     try
       mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=dofit, wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
       fittedpos = dofit
@@ -129,7 +137,7 @@ function fitpos(::Type{M},
     if length(ypos) == 0
       error("y is all zeros! There is nothing to explain.")
     else
-      showwarnings && @warn("ypos has no elements larger than 1! Data may be fully described by a probability model.")
+      showwarnings && @warn("ypos has no elements larger than $(minypos(TPM))! Data may be fully described by a probability model.")
     end
   end
 
@@ -214,7 +222,7 @@ function StatsBase.fit(::Type{Hurdle},::Type{M},
     Xpos = Xpos[ixpos,:]
   end
 
-  mpos, fittedpos = fitpos(M, Xpos, y[ixpos], dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, showwarnings, fitargs...)
+  mpos, fittedpos = fitpos(Hurdle, M, Xpos, y[ixpos], dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, showwarnings, fitargs...)
 
   Hurdle(mzero,mpos,fittedzero,fittedpos)
 end
@@ -264,7 +272,7 @@ function StatsBase.fit(::Type{Hurdle},::Type{M},
   mmpos = (f===fpos) ? mmzero : ModelMatrix(mfpos)
   mmpos.m = mmpos.m[ixpos,:]
 
-  mpos, fittedpos = fitpos(M, mmpos.m, y[ixpos], dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, showwarnings, fitargs...)
+  mpos, fittedpos = fitpos(Hurdle, M, mmpos.m, y[ixpos], dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, showwarnings, fitargs...)
 
   Hurdle(mzero,mpos,fittedzero,fittedpos)
 end

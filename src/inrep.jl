@@ -13,6 +13,15 @@ end
 # predicted counts vector given expected inclusion (μzero) and repetition (μpos)
 μtpm(m::InclusionRepetition, μzero::V, μpos::V) where {T, V<:AbstractArray{T}} = μzero .* (one(T) .+ μpos)
 
+function excessy!(ypos::V, ::Type{InclusionRepetition}) where {T, V<:AbstractVector{T}}
+  for i = eachindex(ypos)
+    ypos[i] -= one(T)
+  end
+  ypos
+end
+
+minypos(::Type{InclusionRepetition}) = 0.0
+
 """
     fit(InclusionRepetition,M,X,y; Xpos=Xpos, <keyword arguments>)
 
@@ -82,7 +91,7 @@ function StatsBase.fit(::Type{InclusionRepetition},::Type{M},
     Xpos = Xpos[ixpos,:]
   end
 
-  mpos, fittedpos = fitpos(M, Xpos, y[ixpos] .- one(T), dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, showwarnings, fitargs...)
+  mpos, fittedpos = fitpos(InclusionRepetition, M, Xpos, y[ixpos], dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, showwarnings, fitargs...)
 
   InclusionRepetition(mzero,mpos,fittedzero,fittedpos)
 end
@@ -132,7 +141,7 @@ function StatsBase.fit(::Type{InclusionRepetition},::Type{M},
   mmpos = (f===fpos) ? mmzero : ModelMatrix(mfpos)
   mmpos.m = mmpos.m[ixpos,:]
 
-  mpos, fittedpos = fitpos(M, mmpos.m, y[ixpos] .- 1.0, dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, showwarnings, fitargs...)
+  mpos, fittedpos = fitpos(InclusionRepetition, M, mmpos.m, y[ixpos], dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, showwarnings, fitargs...)
 
   InclusionRepetition(mzero,mpos,fittedzero,fittedpos)
 end

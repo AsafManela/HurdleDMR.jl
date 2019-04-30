@@ -19,7 +19,7 @@ export dmr, dmrpaths, hdmr, hdmrpaths, fit, coef, srproj, srprojX, @~, mcdmr, po
 
 include("positive_poisson.jl")
 include("hurdle.jl")
-include("increp.jl")
+include("inrep.jl")
 include("model.jl")
 include("dmr.jl")
 include("hdmr.jl")
