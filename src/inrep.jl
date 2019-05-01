@@ -3,7 +3,7 @@
 # repetition (counts in excess of 1), conditional on inclusion.
 
 "Selection returned object"
-mutable struct InclusionRepetition{Z<:RegressionModel,P<:RegressionModel} <: TwoPartModel
+mutable struct InclusionRepetition{Z<:RegressionModel,P<:RegressionModel} <: TwoPartModel{Z,P}
   mzero::Z                # model for zeros
   mpos::P                 # model for positive counts
   fittedzero::Bool        # whether the model for zeros was fitted

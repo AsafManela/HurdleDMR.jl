@@ -345,8 +345,7 @@ function dmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
     mapfn = map
   end
 
-  # TODO: the conversion here may be redudant
-  nlpaths = convert(Vector{Union{Missing,GammaLassoPath}},mapfn(tryfitgl,countscols))
+  nlpaths = allowmissing(mapfn(tryfitgl,countscols))
 
   DMRPaths(nlpaths, intercept, n, d, p)
 end

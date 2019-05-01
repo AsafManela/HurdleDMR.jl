@@ -2,10 +2,10 @@
 # hurdle
 #############################################
 
-abstract type TwoPartModel <: RegressionModel end
+abstract type TwoPartModel{Z<:RegressionModel,P<:RegressionModel} <: RegressionModel end
 
 "Hurdle returned object"
-mutable struct Hurdle{Z<:RegressionModel,P<:RegressionModel} <: TwoPartModel
+mutable struct Hurdle{Z<:RegressionModel,P<:RegressionModel} <: TwoPartModel{Z,P}
   mzero::Z                # model for zeros
   mpos::P                 # model for positive counts
   fittedzero::Bool        # whether the model for zeros was fitted

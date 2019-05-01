@@ -8,8 +8,8 @@ abstract type HDMR{M<:TwoPartModel} <: DCR end
 """
 Relatively heavy object used to return HDMR results when we care about the regulatrization paths.
 """
-struct HDMRPaths{M<:TwoPartModel, T<:Union{Missing, M}, X} <: HDMR{M}
-  nlpaths::Vector{T}            # independent TwoPartModel{GammaLassoPath} for each phrase
+struct HDMRPaths{M<:TwoPartModel, V<:Vector{Union{Missing, M}}, X} <: HDMR{M}
+  nlpaths::V                    # independent TwoPartModel{GammaLassoPath} for each phrase
   intercept::Bool               # whether to include an intercept in each Poisson regression
                                 # (only kept with remote cluster, not with local cluster)
   n::Int                        # number of observations. May be lower than provided after removing all zero obs.
@@ -74,14 +74,11 @@ for the entire multinomial (includes the intercept if one was included).
 - `select::SegSelect=MinAICc()` path segment selection criterion
 - `kwargs...` additional keyword arguments passed along to fit(Hurdle,...)
 """
-function StatsBase.fit(::Type{H}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
-  kwargs...) where {T<:AbstractFloat, M<:TwoPartModel, H<:HDMR{M}}
+function StatsBase.fit(::Type{HDMRCoefs{M}}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
+  kwargs...) where {T<:AbstractFloat, M<:TwoPartModel}
 
   hdmr(covars, counts, M; kwargs...)
 end
-
-# default is to use HDMR{Hurdle}
-StatsBase.fit(::Type{H}, args...; kwargs...) where H <: HDMR = fit(HDMR{Hurdle}, args...; kwargs...)
 
 """
     fit(HDMRPaths,covars,counts; <keyword arguments>)
@@ -92,14 +89,16 @@ the entire regulatrization paths, which may be useful for plotting or picking
 coefficients other than the AICc optimal ones. Same arguments as
 [`fit(::HDMR)`](@ref).
 """
-function StatsBase.fit(::Type{H}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
+function StatsBase.fit(::Type{HDMRPaths{M}}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
   local_cluster=false, # ignored. will always assume remote_cluster
-  kwargs...) where {T<:AbstractFloat, M<:TwoPartModel, H<:HDMRPaths{M}}
+  kwargs...) where {T<:AbstractFloat, M<:TwoPartModel}
 
   hdmrpaths(covars, counts, M; kwargs...)
 end
 
-# default is to use HDMRPaths{Hurdle}
+# default is to use Hurdle
+StatsBase.fit(::Type{HDMR}, args...; kwargs...) = fit(HDMRCoefs{Hurdle}, args...; kwargs...)
+StatsBase.fit(::Type{HDMRCoefs}, args...; kwargs...) = fit(HDMRCoefs{Hurdle}, args...; kwargs...)
 StatsBase.fit(::Type{HDMRPaths}, args...; kwargs...) = fit(HDMRPaths{Hurdle}, args...; kwargs...)
 
 # fit wrapper that takes a model (two formulas) and dataframe instead of the covars matrix
@@ -294,8 +293,7 @@ function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix,::Type{M}=Hu
     mapfn = map
   end
 
-  # TODO: the conversion here may be redudant
-  nlpaths = convert(Vector{Union{Missing,M}},mapfn(tryfith,countscols))
+  nlpaths = allowmissing(mapfn(tryfith,countscols))
 
   HDMRPaths(nlpaths, intercept, n, d, inpos, inzero)
 end
