@@ -8,8 +8,8 @@ abstract type HDMR{M<:TwoPartModel} <: DCR end
 """
 Relatively heavy object used to return HDMR results when we care about the regulatrization paths.
 """
-struct HDMRPaths{M<:TwoPartModel, V<:Vector{Union{Missing, M}}, X} <: HDMR{M}
-  nlpaths::V                    # independent TwoPartModel{GammaLassoPath} for each phrase
+struct HDMRPaths{M<:TwoPartModel, X} <: HDMR{M}
+  nlpaths::Vector{Union{Missing, M}} # independent TwoPartModel{GammaLassoPath} for each phrase
   intercept::Bool               # whether to include an intercept in each Poisson regression
                                 # (only kept with remote cluster, not with local cluster)
   n::Int                        # number of observations. May be lower than provided after removing all zero obs.
@@ -89,9 +89,9 @@ the entire regulatrization paths, which may be useful for plotting or picking
 coefficients other than the AICc optimal ones. Same arguments as
 [`fit(::HDMR)`](@ref).
 """
-function StatsBase.fit(::Type{HDMRPaths{M,V,X}}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
+function StatsBase.fit(::Type{HDMRPaths{M}}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
   local_cluster=false, # ignored. will always assume remote_cluster
-  kwargs...) where {T<:AbstractFloat, M<:TwoPartModel, X, V<:Vector{Union{Missing, M}}}
+  kwargs...) where {T<:AbstractFloat, M<:TwoPartModel}
 
   hdmrpaths(covars, counts, M; kwargs...)
 end
