@@ -89,17 +89,20 @@ the entire regulatrization paths, which may be useful for plotting or picking
 coefficients other than the AICc optimal ones. Same arguments as
 [`fit(::HDMR)`](@ref).
 """
-function StatsBase.fit(::Type{HDMRPaths{M}}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
+function StatsBase.fit(::Type{HDMRPaths{M,V,X}}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
   local_cluster=false, # ignored. will always assume remote_cluster
-  kwargs...) where {T<:AbstractFloat, M<:TwoPartModel}
+  kwargs...) where {T<:AbstractFloat, M<:TwoPartModel, X, V<:Vector{Union{Missing, M}}}
 
   hdmrpaths(covars, counts, M; kwargs...)
 end
 
 # default is to use Hurdle
-StatsBase.fit(::Type{HDMR}, args...; kwargs...) = fit(HDMRCoefs{Hurdle}, args...; kwargs...)
-StatsBase.fit(::Type{HDMRCoefs}, args...; kwargs...) = fit(HDMRCoefs{Hurdle}, args...; kwargs...)
-StatsBase.fit(::Type{HDMRPaths}, args...; kwargs...) = fit(HDMRPaths{Hurdle}, args...; kwargs...)
+StatsBase.fit(::Type{HDMR}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
+  kwargs...) where {T<:AbstractFloat} = fit(HDMRCoefs{Hurdle}, covars, counts; kwargs...)
+StatsBase.fit(::Type{HDMRCoefs}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
+    kwargs...) where {T<:AbstractFloat} = fit(HDMRCoefs{Hurdle}, covars, counts; kwargs...)
+StatsBase.fit(::Type{HDMRPaths}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
+  kwargs...) where {T<:AbstractFloat} = fit(HDMRPaths{Hurdle}, covars, counts; kwargs...)
 
 # fit wrapper that takes a model (two formulas) and dataframe instead of the covars matrix
 # e.g. @model(h ~ x1 + x2, c ~ x1)
