@@ -50,16 +50,17 @@ function getIy(y::AbstractVector{T}) where {T}
 end
 
 "Drops observations with infinite offset"
-function finiteoffsetobs(dist::U, X, y, offset, showwarnings) where U<:UnivariateDistribution
+function finiteoffsetobs(part::Symbol, X, y, offset, wts, showwarnings)
   if any(isinf,offset)
       ixfinite = isfinite.(offset)
-      showwarnings && @warn("omitting $(length(offset)-length(ixfinite)) observations with infinite offset from $U model")
+      showwarnings && @warn("omitting $(length(offset)-sum(ixfinite)) observations with infinite offset from $part model")
       offset = offset[ixfinite]
       X = X[ixfinite, :]
       y = y[ixfinite]
+      wts = wts[ixfinite]
   end
 
-  X, y, offset
+  X, y, offset, wts
 end
 
 "Fits the model for zeros Iy ~ X"
@@ -74,7 +75,7 @@ function fitzero(::Type{M},
   showwarnings::Bool,
   fitargs...) where {M<:RegressionModel,T<:FP,V<:FPVector}
 
-  X, Iy, offsetzero = finiteoffsetobs(dzero, X, Iy, offsetzero, showwarnings)
+  X, Iy, offsetzero, wts = finiteoffsetobs(:zeros, X, Iy, offsetzero, wts, showwarnings)
 
   mzero = nothing
   fittedzero = false
@@ -128,7 +129,7 @@ function fitpos(::Type{TPM},::Type{M},
   fitargs...) where {TPM<:TwoPartModel, M<:RegressionModel,T<:FP,V<:FPVector}
 
   excessy!(ypos, TPM)
-  Xpos, ypos, offsetpos = finiteoffsetobs(dpos, Xpos, ypos, offsetpos, showwarnings)
+  Xpos, ypos, offsetpos, wtspos = finiteoffsetobs(:positives, Xpos, ypos, offsetpos, wtspos, showwarnings)
 
   mpos=nothing
   fittedpos = false

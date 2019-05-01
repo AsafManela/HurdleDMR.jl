@@ -74,7 +74,7 @@ for the entire multinomial (includes the intercept if one was included).
 - `select::SegSelect=MinAICc()` path segment selection criterion
 - `kwargs...` additional keyword arguments passed along to fit(Hurdle,...)
 """
-function StatsBase.fit(::Type{HDMRCoefs{M}}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
+function StatsBase.fit(::Type{<:HDMR{M}}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
   kwargs...) where {T<:AbstractFloat, M<:TwoPartModel}
 
   hdmr(covars, counts, M; kwargs...)
@@ -296,10 +296,22 @@ function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix,::Type{M}=Hu
     mapfn = map
   end
 
-  nlpaths = allowmissing(mapfn(tryfith,countscols))
+  paths = mapfn(tryfith,countscols)
+
+  # this is necessary so that HDMRPath{} picks up the right eltype
+  # if all(ismissing, paths)
+  #   nlpaths = convert(Vector{Union{Missing, M}}, paths)
+  # else
+  #   nlpaths = allowmissing(paths)
+  # end
+  nlpaths = missingpaths(M, paths)
 
   HDMRPaths(nlpaths, intercept, n, d, inpos, inzero)
 end
+
+missingpaths(::Type{M}, paths::Vector{Missing}) where M = convert(Vector{Union{Missing, M}}, paths)
+missingpaths(::Type{M}, paths::Vector{T}) where {M,T} = convert(Vector{Union{Missing, T}}, paths)
+missingpaths(::Type{M}, paths::Vector{Union{T,Missing}}) where {M,T} = paths
 
 "Returns a (covarspos, covarszero) tuple with views into covars"
 function incovars(covars,inpos,inzero)
@@ -508,9 +520,23 @@ function posindic(A::AbstractArray{T}) where T
   Ia
 end
 
+function dropexplicitzeros(I, J, V::F) where {T, F<:AbstractVector{T}}
+  if any(iszero, V)
+    ixnonzero = broadcast(x->!iszero(x), V)
+    @inbounds I = I[ixnonzero]
+    @inbounds J = J[ixnonzero]
+    nnonzero = sum(ixnonzero)
+  else
+    nnonzero = length(V)
+  end
+
+  I, J, nnonzero
+end
+
 "Sparse version simply replaces all the non-zero values with ones."
 function posindic(A::SparseMatrixCSC{T}) where T
   m,n = size(A)
   I,J,V = findnz(A)
-  sparse(I, J, fill(one(T),length(V)), m, n)
+  I, J, nnonzero = dropexplicitzeros(I, J, V)
+  sparse(I, J, fill(one(T),nnonzero), m, n)
 end
