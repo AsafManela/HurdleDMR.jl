@@ -1,10 +1,11 @@
 # common args for all hdmr tests
 testargs = Dict(:verbose=>false,:showwarnings=>true)
 M = InclusionRepetition
+
 ###########################################################
 # hurdle with covarspos == covarszero
 ###########################################################
-@testset "hurdle-dmr with covarspos == covarszero" begin
+@testset "HDMR{$M} with covarspos == covarszero" begin
 
 f = @model(h ~ x + z + cat + y, c ~ x + z + cat + y)
 @test_show f "2-part model: [Formula: h ~ x + z + cat + y, Formula: c ~ x + z + cat + y]"
@@ -205,7 +206,7 @@ end
 ####################################################################
 # hurdle with covarspos ≠ covarszero, both models include projdir
 ####################################################################
-@testset "hurdle-dmr with covarspos ≠ covarszero, both models include projdir" begin
+@testset "HDMR{$M} with covarspos ≠ covarszero, both models include projdir" begin
 
 f = @model(h ~ x + z + cat + y, c ~ z + cat + y)
 @test_show f "2-part model: [Formula: h ~ x + z + cat + y, Formula: c ~ z + cat + y]"
@@ -339,7 +340,7 @@ end
 ####################################################################
 # hurdle with covarspos ≠ covarszero, only pos model includes projdir
 ####################################################################
-@testset "hurdle-dmr with covarspos ≠ covarszero, only pos model includes projdir" begin
+@testset "HDMR{$M} with covarspos ≠ covarszero, only pos model includes projdir" begin
 
 f = @model(h ~ x + z + cat, c ~ x + z + cat + y)
 @test_show f "2-part model: [Formula: h ~ x + z + cat, Formula: c ~ x + z + cat + y]"
@@ -469,7 +470,7 @@ end
 ########################################################################
 # hurdle with covarspos ≠ covarszero, v1 excluded from pos model
 ########################################################################
-@testset "hurdle-dmr with covarspos ≠ covarszero, v1 excluded from pos model" begin
+@testset "HDMR{$M} with covarspos ≠ covarszero, v1 excluded from pos model" begin
 
 f = @model(h ~ x + z + cat, c ~ z + cat + y)
 @test_show f "2-part model: [Formula: h ~ x + z + cat, Formula: c ~ z + cat + y]"

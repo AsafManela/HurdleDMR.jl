@@ -3,13 +3,13 @@
 ##############################################################
 
 "Abstract HDMR returned object"
-abstract type HDMR{M<:TwoPartModel} <: DCR end
+abstract type HDMR{M<:Union{Missing, <:TwoPartModel}} <: DCR end
 
 """
 Relatively heavy object used to return HDMR results when we care about the regulatrization paths.
 """
-struct HDMRPaths{M<:TwoPartModel, X} <: HDMR{M}
-  nlpaths::Vector{Union{Missing, M}} # independent TwoPartModel{GammaLassoPath} for each phrase
+struct HDMRPaths{M<:Union{Missing, <:TwoPartModel}, X} <: HDMR{M}
+  nlpaths::Vector{M} # independent TwoPartModel{GammaLassoPath} for each phrase
   intercept::Bool               # whether to include an intercept in each Poisson regression
                                 # (only kept with remote cluster, not with local cluster)
   n::Int                        # number of observations. May be lower than provided after removing all zero obs.
@@ -296,22 +296,10 @@ function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix,::Type{M}=Hu
     mapfn = map
   end
 
-  paths = mapfn(tryfith,countscols)
-
-  # this is necessary so that HDMRPath{} picks up the right eltype
-  # if all(ismissing, paths)
-  #   nlpaths = convert(Vector{Union{Missing, M}}, paths)
-  # else
-  #   nlpaths = allowmissing(paths)
-  # end
-  nlpaths = missingpaths(M, paths)
+  nlpaths = mapfn(tryfith,countscols)
 
   HDMRPaths(nlpaths, intercept, n, d, inpos, inzero)
 end
-
-missingpaths(::Type{M}, paths::Vector{Missing}) where M = convert(Vector{Union{Missing, M}}, paths)
-missingpaths(::Type{M}, paths::Vector{T}) where {M,T} = convert(Vector{Union{Missing, T}}, paths)
-missingpaths(::Type{M}, paths::Vector{Union{T,Missing}}) where {M,T} = paths
 
 "Returns a (covarspos, covarszero) tuple with views into covars"
 function incovars(covars,inpos,inzero)
