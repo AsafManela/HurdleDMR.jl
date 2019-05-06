@@ -2,7 +2,7 @@
 
 # load test data
 countsint = convert(Matrix{Int},CSV.read(joinpath(testdir,"data","countsint.csv.gz")))
-covarsdf = CSV.read(joinpath(testdir,"data","covarsdf.csv.gz"); allowmissing=:none)
+covarsdf = CSV.read(joinpath(testdir,"data","covarsdf.csv.gz"))
 categorical!(covarsdf, :cat)
 counts = convert(SparseMatrixCSC{Float64,Int}, countsint)
 

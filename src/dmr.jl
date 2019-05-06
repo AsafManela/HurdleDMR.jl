@@ -260,11 +260,41 @@ function shifters(::Type{DMR}, covars::AbstractMatrix, counts::AbstractMatrix{C}
   covars, counts, μ, n
 end
 
+"Destandardize coefficents estimated using a potentially standardized covars matrix"
+function destandardize!(coefs::AbstractMatrix{T}, covarsnorm::AbstractVector{T},
+    standardize, intercept) where T
+
+  if standardize
+    if intercept
+      covarsnorm = [one(T); covarsnorm]
+    end
+
+    # destandardize all coefs only once
+    lmul!(Diagonal(covarsnorm), coefs)
+  end
+  nothing
+end
+
+"Destandardize path.coefs estimated using a potentially standardized covars matrix"
+function destandardize!(path::RegularizationPath{S,T}, covarsnorm::AbstractVector{T},
+    standardize) where {S,T}
+
+  if standardize && isdefined(path,:coefs)
+    # destandardize all coefs only once
+    lmul!(Diagonal(covarsnorm), path.coefs)
+    # not really used but set just in case it is in the future
+    path.Xnorm = covarsnorm
+  end
+
+  path
+end
+
 """
 This version is built for local clusters and shares memory used by both inputs and outputs if run in parallel mode.
 """
 function dmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
-          parallel,verbose,showwarnings,intercept; select=defsegselect, m=nothing, kwargs...) where {T<:AbstractFloat,V}
+          parallel,verbose,showwarnings,intercept; select=defsegselect, m=nothing,
+          standardize=true, kwargs...) where {T<:AbstractFloat,V}
   # get dimensions
   n, d = size(counts)
   n1,p = size(covars)
@@ -276,6 +306,9 @@ function dmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
 
   covars, counts, μ, n = shifters(DMR, covars, counts, showwarnings, m)
 
+  # standardize covars only once if needed
+  covars, covarsnorm = Lasso.standardizeX(covars, standardize)
+
   # fit separate GammaLassoPath's to each dimension of counts j=1:d and pick its min AICc segment
   if parallel
     verbose && @info("distributed poisson run on local cluster with $(nworkers()) nodes")
@@ -286,7 +319,8 @@ function dmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
 
     @sync @distributed for j=1:d
       tryfitgl!(scoefs, j, scovars, scounts; offset=μ, verbose=false,
-        showwarnings=showwarnings, intercept=intercept, select=select, kwargs...)
+        showwarnings=showwarnings, intercept=intercept, select=select,
+        standardize=false, kwargs...)
     end
 
     coefs = convert(Matrix{T}, scoefs)
@@ -295,9 +329,13 @@ function dmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
     coefs = Matrix{T}(undef,ncoef,d)
     for j=1:d
       tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false,
-        showwarnings=showwarnings, intercept=intercept, select=select, kwargs...)
+        showwarnings=showwarnings, intercept=intercept, select=select,
+        standardize=false, kwargs...)
     end
   end
+
+  # destandardize coefs only once if needed
+  destandardize!(coefs, covarsnorm, standardize, intercept)
 
   DMRCoefs(coefs, intercept, n, d, p, select)
 end
@@ -315,6 +353,7 @@ function dmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
       parallel=true,
       verbose=true, showwarnings=false,
       m=nothing,
+      standardize=true,
       kwargs...) where {T<:AbstractFloat}
   # get dimensions
   n, d = size(counts)
@@ -324,10 +363,14 @@ function dmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
 
   covars, counts, μ, n = shifters(DMR, covars, counts, showwarnings, m)
 
+  # standardize covars only once if needed
+  covars, covarsnorm = Lasso.standardizeX(covars, standardize)
+
   function tryfitgl(countsj::AbstractVector)
     try
       # we make it dense remotely to reduce communication costs
-      fit(GammaLassoPath,covars,Vector(countsj),Poisson(),LogLink(); offset=μ, verbose=false, kwargs...)
+      path = fit(GammaLassoPath,covars,Vector(countsj),Poisson(),LogLink(); offset=μ, standardize=false, verbose=false, kwargs...)
+      destandardize!(path, covarsnorm, standardize)
     catch e
       showwarnings && @warn("fitgl failed for countsj with frequencies $(sort(countmap(countsj))) and will return missing path ($e)")
       missing

@@ -248,12 +248,23 @@ ncoefszero(m::HDMR) = ncovarszero(m) + (hasintercept(m) ? 1 : 0)
 "Number of coefficient potentially including intercept used by model for positives"
 ncoefspos(m::HDMR) = ncovarspos(m) + (hasintercept(m) ? 1 : 0)
 
+"Destandardize two part model estimated using a potentially standardized covars matrix"
+function destandardize!(tpm::TwoPartModel, covarsnorm::AbstractVector{T},
+    inpos, inzero, standardize) where T
+
+  destandardize!(tpm.mzero, covarsnorm[inzero], standardize)
+  destandardize!(tpm.mpos, covarsnorm[inpos], standardize)
+
+  tpm
+end
+
 "Shorthand for fit(HDMRPaths,covars,counts). See also [`fit(::HDMRPaths)`](@ref)"
 function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix,::Type{M}=Hurdle;
       inpos=1:size(covars,2), inzero=1:size(covars,2),
       intercept=true,
       parallel=true,
       verbose=true, showwarnings=false,
+      standardize=true,
       m=nothing, di=nothing, D=nothing,
       kwargs...) where {T<:AbstractFloat,M<:TwoPartModel}
   # get dimensions
@@ -272,13 +283,17 @@ function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix,::Type{M}=Hu
 
   covars, counts, μpos, μzero, n = shifters(M, covars, counts, showwarnings, m, di, D)
 
+  # standardize covars only once if needed
+  covars, covarsnorm = Lasso.standardizeX(covars, standardize)
+
   covarspos, covarszero = incovars(covars,inpos,inzero)
 
   function tryfith(countsj::AbstractVector)
     try
       # we make it dense remotely to reduce communication costs
       # we use the same offsets for pos and zeros
-      fit(M,GammaLassoPath,covarszero,Vector(countsj); Xpos=covarspos, offsetpos=μpos, offsetzero=μzero, verbose=false, showwarnings=showwarnings, kwargs...)
+      tpm = fit(M,GammaLassoPath,covarszero,Vector(countsj); Xpos=covarspos, offsetpos=μpos, offsetzero=μzero, verbose=false, standardize=false, showwarnings=showwarnings, kwargs...)
+      destandardize!(tpm, covarsnorm, inpos, inzero, standardize)
     catch e
       showwarnings && @warn("fit($M...) failed for countsj with frequencies $(sort(countmap(countsj))) and will return missing path ($e)")
       missing
@@ -434,7 +449,7 @@ function hdmr_local_cluster(::Type{M}, covars::AbstractMatrix{T},counts::Abstrac
           inpos,inzero,intercept,parallel,verbose,showwarnings;
           select=defsegselect,
           m=nothing, di=nothing, D=nothing,
-          kwargs...) where {T<:AbstractFloat,V,M<:TwoPartModel}
+          standardize=true, kwargs...) where {T<:AbstractFloat,V,M<:TwoPartModel}
   # get dimensions
   n, d = size(counts)
   n1,p = size(covars)
@@ -451,6 +466,9 @@ function hdmr_local_cluster(::Type{M}, covars::AbstractMatrix{T},counts::Abstrac
 
   covars, counts, μpos, μzero, n = shifters(M, covars, counts, showwarnings, m, di, D)
 
+  # standardize covars only once if needed
+  covars, covarsnorm = Lasso.standardizeX(covars, standardize)
+
   # fit separate GammaLassoPath's to each dimension of counts j=1:d and pick its min AICc segment
   if parallel
     verbose && @info("distributed $M run on local cluster with $(nworkers()) nodes")
@@ -463,7 +481,7 @@ function hdmr_local_cluster(::Type{M}, covars::AbstractMatrix{T},counts::Abstrac
     @sync @distributed for j=1:d
       tryfith!(M, scoefspos, scoefszero, j, scovars, scounts, inpos, inzero, μpos, μzero;
         verbose=false, showwarnings=showwarnings, intercept=intercept,
-        select=select, kwargs...)
+        standardize=false, select=select, kwargs...)
     end
 
     coefszero = convert(Matrix{T}, scoefszero)
@@ -475,9 +493,13 @@ function hdmr_local_cluster(::Type{M}, covars::AbstractMatrix{T},counts::Abstrac
     for j=1:d
       tryfith!(M, coefspos, coefszero, j, covars, counts, inpos, inzero, μpos, μzero;
         verbose=false, showwarnings=showwarnings, intercept=intercept,
-        select=select, kwargs...)
+        standardize=false, select=select, kwargs...)
     end
   end
+
+  # destandardize coefs only once if needed
+  destandardize!(coefspos, covarsnorm[inpos], standardize, intercept)
+  destandardize!(coefszero, covarsnorm[inzero], standardize, intercept)
 
   HDMRCoefs{M}(coefspos, coefszero, intercept, n, d, inpos, inzero, select)
 end
