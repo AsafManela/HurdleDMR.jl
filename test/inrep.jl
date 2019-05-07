@@ -1,39 +1,13 @@
-# code to generate R benchmark
-# using RCall
-# R"if(!require(pscl)){install.packages(\"pscl\");library(pscl)}"
-# R"library(pscl)"
-# R"data(\"bioChemists\", package = \"pscl\")"
-# R"n <- dim(bioChemists)[1]"
-# R"set.seed(13)"
-# R"bioChemists$offpos = runif(n, min=0, max=3)"
-# R"bioChemists$offzero = runif(n, min=0, max=3)"
-# bioChemists=rcopy(R"bioChemists")
-# writetable(joinpath(testdir,"data","bioChemists.csv"),bioChemists)
-
-bioChemists=CSV.read(joinpath(testdir,"data","bioChemists.csv"))
-bioChemists[:marMarried]=bioChemists[:mar] .== "Married"
-bioChemists[:femWomen]=bioChemists[:fem] .== "Women"
-bioChemists[:art] = convert(Array{Union{Float64, Missings.Missing},1}, bioChemists[:art])
-
+# reusing data loaded by test/hurdle.jl
 X=convert(Array{Float64,2},bioChemists[[:femWomen,:marMarried,:kid5,:phd,:ment]])
 Xwconst=[ones(size(X,1)) X]
 y=convert(Array{Float64,1},bioChemists[:art])
-const ixpartial = 50:60
 p = size(Xwconst,2)
+
 ###########################################################
 # Xpos == Xzero
 ###########################################################
 @testset "inrep with Xpos == Xzero" begin
-
-## logit-poisson
-# R"fm_hp1 <- hurdle(art ~ fem + mar + kid5 + phd + ment, data = bioChemists)"
-# print(R"summary(fm_hp1)")
-# coefsR1=vec(rcopy(R"coef(fm_hp1, matrix = TRUE)"))
-# yhatR1=vec(rcopy(R"predict(fm_hp1)"))
-# yhatR1partial=vec(rcopy(R"predict(fm_hp1, newdata = bioChemists[ixpartial,])"))
-# writetable(joinpath(testdir,"data","hurdle_coefsR1.csv"),DataFrame(coefsR=coefsR1))
-# writetable(joinpath(testdir,"data","hurdle_yhatR1.csv"),DataFrame(yhatR1=yhatR1))
-# writetable(joinpath(testdir,"data","hurdle_yhatR1partial.csv"),DataFrame(yhatR1partial=yhatR1partial))
 
 coefsR1=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_coefsR1.csv"))))
 yhatR1=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_yhatR1.csv"))))
@@ -91,6 +65,7 @@ showstr = String(take!(copy(showres)))
 # this one throws an error because we did not specify the same λ vector for both submodels so they have different lengths
 @test_throws AssertionError predict(increpglrfit, X; select=AllSeg())
 
+Random.seed!(1)
 coefsJCVmin=vcat(coef(increpglrfit, MinCVKfold{MinCVmse}(5))...)
 @test coefsJCVmin[1+p:end] ≈ coefsR1[1+p:end] rtol=0.30
 # rdist(coefsJCVmin,coefsR1)
@@ -138,16 +113,6 @@ end
 # Xpos ≠ Xzero
 ###########################################################
 @testset "inrep with Xpos ≠ Xzero" begin
-
-# regulated gamma lasso path with different Xpos and Xzero
-# R"fm_hp2 <- hurdle(art ~ fem + mar + kid5 | phd + ment, data = bioChemists)"
-# print(R"summary(fm_hp2)")
-# coefsR2=vec(rcopy(R"coef(fm_hp2, matrix = TRUE)"))
-# yhatR2=vec(rcopy(R"predict(fm_hp2)"))
-# yhatR2partial=vec(rcopy(R"predict(fm_hp2, newdata = bioChemists[ixpartial,])"))
-# writetable(joinpath(testdir,"data","hurdle_coefsR2.csv"),DataFrame(coefsR=coefsR2))
-# writetable(joinpath(testdir,"data","hurdle_yhatR2.csv"),DataFrame(yhatR2=yhatR2))
-# writetable(joinpath(testdir,"data","hurdle_yhatR2partial.csv"),DataFrame(yhatR2partial=yhatR2partial))
 
 coefsR2=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_coefsR2.csv"))))
 yhatR2=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_yhatR2.csv"))))
@@ -234,16 +199,6 @@ end
 # Xpos ≠ Xzero
 ###########################################################
 @testset "inrep with Xpos ≠ Xzero AND offset specified" begin
-
-# regulated gamma lasso path with different Xpos and Xzero and an offset
-# R"fm_hp3 <- hurdle(art ~ fem + mar + kid5 + offset(offpos) | phd + ment + offset(offzero), data = bioChemists)"
-# print(R"summary(fm_hp3)")
-# coefsR3=vec(rcopy(R"coef(fm_hp3, matrix = TRUE)"))
-# yhatR3=vec(rcopy(R"predict(fm_hp3)"))
-# yhatR3partial=vec(rcopy(R"predict(fm_hp3, newdata = bioChemists[ixpartial,])"))
-# writetable(joinpath(testdir,"data","hurdle_coefsR3.csv"),DataFrame(coefsR=coefsR3))
-# writetable(joinpath(testdir,"data","hurdle_yhatR3.csv"),DataFrame(yhatR3=yhatR3))
-# writetable(joinpath(testdir,"data","hurdle_yhatR3partial.csv"),DataFrame(yhatR3partial=yhatR3partial))
 
 coefsR3=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_coefsR3.csv"))))
 yhatR3=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_yhatR3.csv"))))

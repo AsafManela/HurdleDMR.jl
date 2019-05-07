@@ -292,7 +292,9 @@ function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix,::Type{M}=Hu
     try
       # we make it dense remotely to reduce communication costs
       # we use the same offsets for pos and zeros
-      tpm = fit(M,GammaLassoPath,covarszero,Vector(countsj); Xpos=covarspos, offsetpos=μpos, offsetzero=μzero, verbose=false, standardize=false, showwarnings=showwarnings, kwargs...)
+      tpm = fit(M,GammaLassoPath,covarszero,Vector(countsj); Xpos=covarspos, offsetpos=μpos, offsetzero=μzero, verbose=false, standardize=false,
+        # showwarnings=showwarnings, # uncomment do help with debugging
+        kwargs...)
       destandardize!(tpm, covarsnorm, inpos, inzero, standardize)
     catch e
       showwarnings && @warn("fit($M...) failed for countsj with frequencies $(sort(countmap(countsj))) and will return missing path ($e)")
@@ -414,7 +416,9 @@ function tryfith!(::Type{M}, coefspos::AbstractMatrix{T}, coefszero::AbstractMat
             kwargs...) where {T<:AbstractFloat,V,M<:TwoPartModel}
   try
     hurdle_regression!(M, coefspos, coefszero, j, covars, counts, inpos, inzero,
-      offsetpos, offsetzero; kwargs...)
+      offsetpos, offsetzero;
+      # showwarnings=showwarnings, # uncomment do help with debugging
+      kwargs...)
   catch e
     showwarnings && @warn("hurdle_regression! failed on count dimension $j with frequencies $(sort(countmap(counts[:,j]))) and will return zero coefs ($e)")
     # redudant ASSUMING COEFS ARRAY INTIAILLY FILLED WITH ZEROS, but can happen in serial mode

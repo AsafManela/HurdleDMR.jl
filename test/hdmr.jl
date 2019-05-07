@@ -155,11 +155,11 @@ X2b, X2_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; includem=fals
 @test X2_nocountsb == X2_nocountsb
 @test inzb == inzb
 
-X3, X3_nocounts, inz3 = srprojX(coefsHppos,coefsHpzero,zero(counts),covars,projdir; includem=true)
+X3, X3_nocounts, inz3 = @test_logs (:info, "rank(X) = 5 < 8 = size(X,2). dropping zpos.") srprojX(coefsHppos,coefsHpzero,zero(counts),covars,projdir; includem=true)
 @test X3_nocounts == [ones(n) covars[:,setdiff(1:p,[projdir])]]
 @test inz3 == [2]
 
-X3, X3_nocounts, inz3b = srprojX(coefsHppos,coefsHpzero,zero(counts),covars,projdir; includem=true, inz=inz3)
+X3, X3_nocounts, inz3b = @test_logs (:info, "includezpos == false. dropping zpos.") srprojX(coefsHppos,coefsHpzero,zero(counts),covars,projdir; includem=true, inz=inz3)
 @test X3_nocounts == [ones(n) covars[:,setdiff(1:p,[projdir])]]
 @test inz3 == inz3b
 
@@ -642,7 +642,7 @@ coefsHppos2, coefsHpzero2 = coef(hdmrcoefs)
 # rdist(η[:,3], ones(size(newcovars,1))*0.36)
 @test η[:,4] ≈ ones(size(newcovars,1))*0.6 rtol=0.06
 # hurdle dmr serial paths
-hdmrcoefs3 = @test_logs (:warn, r"fit\(Hurdle...\) failed for countsj") (:warn, r"ypos has no elements larger than 1") fit(HDMRPaths,covars, zcounts; parallel=false, testargs...)
+hdmrcoefs3 = @test_logs (:warn, r"fit\(Hurdle...\) failed for countsj") fit(HDMRPaths,covars, zcounts; parallel=false, testargs...)
 coefsHppos3, coefsHpzero3 = coef(hdmrcoefs3)
 @test coefsHppos ≈ coefsHppos3
 @test coefsHpzero ≈ coefsHpzero3

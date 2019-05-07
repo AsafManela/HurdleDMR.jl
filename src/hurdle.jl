@@ -63,6 +63,11 @@ function finiteoffsetobs(part::Symbol, X, y, offset, wts, showwarnings)
   X, y, offset, wts
 end
 
+mildexception(e::PosDefException) = true
+mildexception(e::DomainError) = true
+mildexception(e::ConvergenceException) = true
+mildexception(e::ErrorException) = (occursin("step-halving", e.msg) || occursin("failure to converge", e.msg) || occursin("failed to converge", e.msg))
+
 "Fits the model for zeros Iy ~ X"
 function fitzero(::Type{M},
   X::AbstractMatrix{T}, Iy::V,
@@ -85,8 +90,7 @@ function fitzero(::Type{M},
       fittedzero = dofit
     catch e
       showwarnings && @warn("failed to fit zero counts model, possibly not enough variation in I(y). countmap(Iy)=$(countmap(Iy))")
-      if typeof(e) <: ErrorException && (occursin("step-halving", e.msg) || occursin("failure to converge", e.msg) || occursin("failed to converge", e.msg)) ||
-          typeof(e) == PosDefException || typeof(e) == DomainError
+      if mildexception(e)
         fittedzero = false
       else
         showwarnings && @warn("X'=$(X')")
@@ -140,8 +144,7 @@ function fitpos(::Type{TPM},::Type{M},
       fittedpos = dofit
     catch e
       showwarnings && @warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos. countmap(ypos)=$(sort(countmap(ypos)))")
-      if typeof(e) <: ErrorException && (occursin("step-halving", e.msg) || occursin("failure to converge", e.msg) || occursin("failed to converge", e.msg)) ||
-          typeof(e) == PosDefException || typeof(e) == DomainError
+      if mildexception(e)
         fittedpos = false
       else
         showwarnings && @warn("Xpos'=$(Xpos')")

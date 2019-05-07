@@ -155,11 +155,11 @@ X2b, X2_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; includem=fals
 @test X2_nocountsb == X2_nocountsb
 @test inzb == inzb
 
-X3, X3_nocounts, inz3 = srprojX(coefsHppos,coefsHpzero,zero(counts),covars,projdir; includem=true)
+X3, X3_nocounts, inz3 = @test_logs (:info, "rank(X) = 5 < 8 = size(X,2). dropping zpos.") srprojX(coefsHppos,coefsHpzero,zero(counts),covars,projdir; includem=true)
 @test X3_nocounts == [ones(n) covars[:,setdiff(1:p,[projdir])]]
 @test inz3 == [2]
 
-X3, X3_nocounts, inz3b = srprojX(coefsHppos,coefsHpzero,zero(counts),covars,projdir; includem=true, inz=inz3)
+X3, X3_nocounts, inz3b = @test_logs (:info, "includezpos == false. dropping zpos.") srprojX(coefsHppos,coefsHpzero,zero(counts),covars,projdir; includem=true, inz=inz3)
 @test X3_nocounts == [ones(n) covars[:,setdiff(1:p,[projdir])]]
 @test inz3 == inz3b
 
@@ -609,7 +609,7 @@ end
 
 @testset "degenerate cases" begin
 
-@info("Testing hdmr degenerate cases. The 3 following warnings by workers are expected ...")
+@info("Testing hdmr degenerate cases. The 2 following warnings by workers are expected ...")
 
 # column j is never zero, so hj=1 for all observations
 zcounts = deepcopy(counts)
@@ -643,7 +643,7 @@ coefsHppos2, coefsHpzero2 = coef(hdmrcoefs)
 @test η[:,4] ≈ ones(size(newcovars,1))*0.64 rtol=0.06
 # hurdle dmr serial paths
 rx = Regex("fit\\($M...\\) failed for countsj")
-hdmrcoefs3 = @test_logs (:warn, r"observations with infinite offset from positives model") (:warn, rx) (:warn, r"observations with infinite offset from positives model") (:warn, r"ypos has no elements larger than") (:warn, r"observations with infinite offset from positives model") fit(HDMRPaths{M},covars, zcounts; parallel=false, testargs...)
+hdmrcoefs3 = @test_logs (:warn, rx) fit(HDMRPaths{M},covars, zcounts; parallel=false, testargs...)
 coefsHppos3, coefsHpzero3 = coef(hdmrcoefs3)
 @test coefsHppos ≈ coefsHppos3
 @test coefsHpzero ≈ coefsHpzero3
@@ -666,6 +666,8 @@ coefsHppos4, coefsHpzero4 = coef(hdmrcoefs4)
 end
 
 @testset "degenerate case of no hurdle variation (all counts > 0)" begin
+
+@info("Testing hdmr degenerate cases. The 12 following warnings by workers are expected ...")
 
 zcounts = Matrix(deepcopy(counts))
 Random.seed!(13)
@@ -704,7 +706,9 @@ coefsHppos3, coefsHpzero3 = coef(hdmrcoefs3)
 @test coefsHpzero2 == coefsHpzero3
 
 # hurdle dmr parallel remote cluster
-hdmrcoefs4 = fit(HDMRPaths{M},covars, zcounts; parallel=false, testargs...)
+rx = Regex("fit\\($M...\\) failed for countsj")
+warnings = [(:warn, rx) for i=1:4]
+hdmrcoefs4 = @test_logs(warnings..., fit(HDMRPaths{M},covars, zcounts; parallel=false, testargs...))
 coefsHppos4, coefsHpzero4 = coef(hdmrcoefs4)
 @test coefsHppos ≈ coefsHppos4
 @test coefsHpzero ≈ coefsHpzero4
