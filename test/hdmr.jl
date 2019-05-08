@@ -135,7 +135,7 @@ Z1b = srproj(hdmrcoefs, counts, projdir, projdir; intercept=true)
 
 Z0pos = srproj(coefsHppos, coefsHpzero, counts, 0, projdir; intercept=true)
 Z0zero = srproj(coefsHppos, coefsHpzero, counts, projdir, 0; intercept=true)
-@test Z0pos == z1zero
+@test Z0pos == z1zero[:,1:1]
 @test Z0zero == z1pos
 @test_throws ErrorException srproj(coefsHppos, coefsHpzero, counts, 0, 0; intercept=true)
 
@@ -629,6 +629,7 @@ coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test coefsHpzero[:,2] == zeros(p+1)
 @test coefsHppos[:,3] == zeros(p+1)
 @test coefsHpzero[:,3] == zeros(p+1)
+@test HurdleDMR.includelinX(hdmrcoefs) == false
 
 # hurdle dmr parallel remote cluster
 hdmrcoefs2 = fit(HDMRPaths,covars, zcounts; parallel=true, local_cluster=false, testargs...)
@@ -641,6 +642,8 @@ coefsHppos2, coefsHpzero2 = coef(hdmrcoefs)
 @test η[:,3] ≈ ones(size(newcovars,1))*0.36 rtol=0.05
 # rdist(η[:,3], ones(size(newcovars,1))*0.36)
 @test η[:,4] ≈ ones(size(newcovars,1))*0.6 rtol=0.06
+@test HurdleDMR.includelinX(hdmrcoefs2) == false
+
 # hurdle dmr serial paths
 hdmrcoefs3 = @test_logs (:warn, r"fit\(Hurdle...\) failed for countsj") fit(HDMRPaths,covars, zcounts; parallel=false, testargs...)
 coefsHppos3, coefsHpzero3 = coef(hdmrcoefs3)
@@ -651,6 +654,7 @@ coefsHppos3, coefsHpzero3 = coef(hdmrcoefs3)
 @test η[:,2] == zeros(size(newcovars,1))
 @test η[:,3] ≈ ones(size(newcovars,1))*0.36 rtol=0.05
 @test η[:,4] ≈ ones(size(newcovars,1))*0.6 rtol=0.06
+@test HurdleDMR.includelinX(hdmrcoefs3) == false
 
 # hurdle dmr serial coefs
 hdmrcoefs4 = @test_logs (:warn, r"failed on count dimension 2") fit(HDMR,covars, zcounts; parallel=false, testargs...)
@@ -661,6 +665,7 @@ coefsHppos4, coefsHpzero4 = coef(hdmrcoefs4)
 @test coefsHpzero4[:,2] == zeros(p+1)
 @test coefsHppos4[:,3] == zeros(p+1)
 @test coefsHpzero4[:,3] == zeros(p+1)
+@test HurdleDMR.includelinX(hdmrcoefs4) == false
 
 end
 
@@ -687,23 +692,27 @@ coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test coefsHpzero[:,2] == zeros(p+1)
 @test coefsHppos[:,3] != zeros(p+1)
 @test coefsHpzero[:,3] == zeros(p+1)
+@test HurdleDMR.includelinX(hdmrcoefs) == false
 
 # hurdle dmr parallel remote cluster
 hdmrcoefs2 = fit(HDMRPaths,covars, zcounts; parallel=true, local_cluster=false, testargs...)
 coefsHppos2, coefsHpzero2 = coef(hdmrcoefs2)
 @test coefsHppos ≈ coefsHppos2
 @test coefsHpzero ≈ coefsHpzero2
+@test HurdleDMR.includelinX(hdmrcoefs2) == false
 
 # just checking the fit(HDMRPaths...) ignore local_cluster
 hdmrcoefs3 = fit(HDMRPaths,covars, zcounts; parallel=true, local_cluster=true, testargs...)
 coefsHppos3, coefsHpzero3 = coef(hdmrcoefs3)
 @test coefsHppos2 == coefsHppos3
 @test coefsHpzero2 == coefsHpzero3
+@test HurdleDMR.includelinX(hdmrcoefs3) == false
 
 # hurdle dmr parallel remote cluster
 hdmrcoefs4 = fit(HDMRPaths,covars, zcounts; parallel=false, testargs...)
 coefsHppos4, coefsHpzero4 = coef(hdmrcoefs4)
 @test coefsHppos ≈ coefsHppos4
 @test coefsHpzero ≈ coefsHpzero4
+@test HurdleDMR.includelinX(hdmrcoefs4) == false
 
 end

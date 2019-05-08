@@ -265,7 +265,7 @@ function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix,::Type{M}=Hu
       parallel=true,
       verbose=true, showwarnings=false,
       standardize=true,
-      m=nothing, di=nothing, D=nothing,
+      m=nothing, l=nothing, D=nothing,
       kwargs...) where {T<:AbstractFloat,M<:TwoPartModel}
   # get dimensions
   n, d = size(counts)
@@ -281,7 +281,7 @@ function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix,::Type{M}=Hu
   ncoefpos = ppos + (intercept ? 1 : 0)
   ncoefzero = pzero + (intercept ? 1 : 0)
 
-  covars, counts, μpos, μzero, n = shifters(M, covars, counts, showwarnings, m, di, D)
+  covars, counts, μpos, μzero, n = shifters(M, covars, counts, showwarnings, m, l, D)
 
   # standardize covars only once if needed
   covars, covarsnorm = Lasso.standardizeX(covars, standardize)
@@ -340,27 +340,27 @@ function incovars(covars,inpos,inzero)
 end
 
 function shifters(::Type{Hurdle}, covars::AbstractMatrix, counts::AbstractMatrix, showwarnings::Bool,
-  prespecm::Union{Nothing, AbstractVector}, prespecdi, prespecD)
+  prespecm::Union{Nothing, AbstractVector}, prespecl, prespecd)
 
-  showwarnings && @warn("Old Hurdle-DMR model does not use prespecified di")
+  showwarnings && @warn("Old Hurdle-DMR model does not use prespecified l")
   shifters(Hurdle, covars, counts, showwarnings, prespecm, nothing, nothing)
 end
 
 # same as DMR, and uses same shifters for both model parts
 function shifters(::Type{Hurdle}, covars::AbstractMatrix, counts::AbstractMatrix, showwarnings::Bool,
-  prespecm::Union{Nothing, AbstractVector}, prespecdi::Nothing, prespecD)
+  prespecm::Union{Nothing, AbstractVector}, prespecl::Nothing, prespecd)
 
   covars, counts, μ, n = shifters(DMR, covars, counts, showwarnings, prespecm)
   covars, counts, μ, μ, n
 end
 
-vocab(counts, prespecD::Nothing) = size(counts, 2)
-vocab(counts, prespecD::Int) = prespecD
+vocab(counts, prespecd::Nothing) = size(counts, 2)
+vocab(counts, prespecd::Int) = prespecd
 
 function shifters(::Type{InclusionRepetition}, covars::AbstractMatrix, counts::AbstractMatrix{C}, showwarnings::Bool,
   prespecm::Union{Nothing, AbstractVector},
-  prespecd::Union{Nothing, AbstractVector},
-  prespecD::Union{Nothing, Int}) where C
+  prespecl::Union{Nothing, AbstractVector},
+  prespecd::Union{Nothing, Int}) where C
 
   # standardize counts matrix to conform to GLM.FP
   counts = fpcounts(counts)
@@ -368,29 +368,29 @@ function shifters(::Type{InclusionRepetition}, covars::AbstractMatrix, counts::A
   # mi = total word count per observation
   m = totalcounts(counts, prespecm)
 
-  # di = vocabulary per observation
-  d = totalcounts(posindic(counts), prespecd)
+  # li = vocabulary per observation
+  l = totalcounts(posindic(counts), prespecl)
 
   if any(iszero,m)
       # omit observations with no counts
       ixposm = findall(x->x!=zero(C), m)
       showwarnings && @warn("omitting $(length(m)-length(ixposm)) observations with no counts")
       m = m[ixposm]
-      d = d[ixposm]
+      l = l[ixposm]
       counts = counts[ixposm,:]
       covars = covars[ixposm,:]
   end
 
   # get new dimensions
-  # NOTE: D here is total vocabulary as opposed to obs vocabulary d
-  D = vocab(counts, prespecD)
+  # NOTE: d here is total vocabulary as opposed to obs-specific lexicon l
+  d = vocab(counts, prespecd)
   n = length(m)
 
-  # μipos = log(mi-di)
-  μpos = broadcast((mi,di)->log(mi-di), m, d)
+  # μipos = log(mi-li)
+  μpos = broadcast((mi,li)->log(mi-li), m, l)
 
-  # μizero = log(di/(D-di))
-  μzero = broadcast(di->log(di/(D-di)), d)
+  # μizero = log(li/(D-li))
+  μzero = broadcast(li->log(li/(d-li)), l)
 
   covars, counts, μpos, μzero, n
 end
@@ -452,7 +452,7 @@ and outputs if run in parallel mode.
 function hdmr_local_cluster(::Type{M}, covars::AbstractMatrix{T},counts::AbstractMatrix{V},
           inpos,inzero,intercept,parallel,verbose,showwarnings;
           select=defsegselect,
-          m=nothing, di=nothing, D=nothing,
+          m=nothing, l=nothing, D=nothing,
           standardize=true, kwargs...) where {T<:AbstractFloat,V,M<:TwoPartModel}
   # get dimensions
   n, d = size(counts)
@@ -468,7 +468,7 @@ function hdmr_local_cluster(::Type{M}, covars::AbstractMatrix{T},counts::Abstrac
   ncoefpos = ppos + (intercept ? 1 : 0)
   ncoefzero = pzero + (intercept ? 1 : 0)
 
-  covars, counts, μpos, μzero, n = shifters(M, covars, counts, showwarnings, m, di, D)
+  covars, counts, μpos, μzero, n = shifters(M, covars, counts, showwarnings, m, l, D)
 
   # standardize covars only once if needed
   covars, covarsnorm = Lasso.standardizeX(covars, standardize)

@@ -128,18 +128,18 @@ z1pos = srproj(coefsHppos, counts, projdir)
 z1zero = srproj(coefsHpzero, posindic(counts), projdir)
 @test z1zero ≈ zHzero[:,[projdir,p+1]]
 
-Z1 = srproj(coefsHppos, coefsHpzero, counts, projdir, projdir; intercept=true)
-@test Z1 == [z1pos[:,1] z1zero[:,1] z1pos[:,2]]
+Z1 = srproj(coefsHppos, coefsHpzero, counts, projdir, projdir; includel=true, intercept=true)
+@test Z1 == [z1pos[:,1] z1zero[:,1] z1pos[:,2] z1zero[:,2]]
 Z1b = srproj(hdmrcoefs, counts, projdir, projdir; intercept=true)
 @test Z1 == Z1b
 
-Z0pos = srproj(coefsHppos, coefsHpzero, counts, 0, projdir; intercept=true)
-Z0zero = srproj(coefsHppos, coefsHpzero, counts, projdir, 0; intercept=true)
+Z0pos = srproj(coefsHppos, coefsHpzero, counts, 0, projdir; intercept=true, includel=true)
+Z0zero = srproj(coefsHppos, coefsHpzero, counts, projdir, 0; intercept=true, includel=true)
 @test Z0pos == z1zero
 @test Z0zero == z1pos
 @test_throws ErrorException srproj(coefsHppos, coefsHpzero, counts, 0, 0; intercept=true)
 
-X1, X1_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; includem=true)
+X1, X1_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; includem=true, includel=true)
 @test X1_nocounts == [ones(n) covars[:,1:4]]
 @test X1 == [X1_nocounts Z1]
 X1b, X1_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; includem=true)
@@ -147,19 +147,19 @@ X1b, X1_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; includem=true
 @test X1_nocountsb == X1_nocountsb
 @test inz == inzb
 
-X2, X2_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; includem=false)
+X2, X2_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; includem=false, includel=true)
 @test X2_nocounts == X1_nocounts
-@test X2 == X1[:,1:end-1]
+@test X2 == [X1[:,1:end-2] X1[:,end]]
 X2b, X2_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; includem=false)
 @test X2 == X2b
 @test X2_nocountsb == X2_nocountsb
 @test inzb == inzb
 
-X3, X3_nocounts, inz3 = @test_logs (:info, "rank(X) = 5 < 8 = size(X,2). dropping zpos.") srprojX(coefsHppos,coefsHpzero,zero(counts),covars,projdir; includem=true)
+X3, X3_nocounts, inz3 = @test_logs (:info, "rank(X) = 5 < 9 = size(X,2). dropping zpos.") srprojX(coefsHppos,coefsHpzero,zero(counts),covars,projdir; includem=true, includel=true)
 @test X3_nocounts == [ones(n) covars[:,setdiff(1:p,[projdir])]]
 @test inz3 == [2]
 
-X3, X3_nocounts, inz3b = @test_logs (:info, "includezpos == false. dropping zpos.") srprojX(coefsHppos,coefsHpzero,zero(counts),covars,projdir; includem=true, inz=inz3)
+X3, X3_nocounts, inz3b = @test_logs (:info, "includezpos == false. dropping zpos.") srprojX(coefsHppos,coefsHpzero,zero(counts),covars,projdir; includem=true, includel=true, inz=inz3)
 @test X3_nocounts == [ones(n) covars[:,setdiff(1:p,[projdir])]]
 @test inz3 == inz3b
 
@@ -293,12 +293,12 @@ z1pos = srproj(coefsHppos, counts, dirpos)
 z1zero = srproj(coefsHpzero, posindic(counts), dirzero)
 @test z1zero ≈ zHzero[:,[dirzero,p+1]]
 
-Z1 = srproj(coefsHppos, coefsHpzero, counts, dirpos, dirzero; intercept=true)
-@test Z1 == [z1pos[:,1] z1zero[:,1] z1pos[:,2]]
+Z1 = srproj(coefsHppos, coefsHpzero, counts, dirpos, dirzero; intercept=true, includel=true)
+@test Z1 == [z1pos[:,1] z1zero[:,1] z1pos[:,2] z1zero[:,2]]
 Z1b = srproj(hdmrcoefs, counts, dirpos, dirzero; intercept=true)
 @test Z1 == Z1b
 
-X1, X1_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inpos=inpos, includem=true)
+X1, X1_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inpos=inpos, includem=true, includel=true)
 @test X1_nocounts == [ones(n) covars[:,1:4]]
 @test X1 == [X1_nocounts Z1]
 X1b, X1_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; inpos=inpos, includem=true)
@@ -306,9 +306,9 @@ X1b, X1_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; inpos=inpos, 
 @test X1_nocountsb == X1_nocountsb
 @test inz == inzb
 
-X2, X2_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inpos=inpos, includem=false)
+X2, X2_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inpos=inpos, includem=false, includel=true)
 @test X2_nocounts == X1_nocounts
-@test X2 == X1[:,1:end-1]
+@test X2 == [X1[:,1:end-2] X1[:,end]]
 X2b, X2_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; inpos=inpos, includem=false)
 @test X2 == X2b
 @test X2_nocountsb == X2_nocountsb
@@ -423,12 +423,12 @@ zHzero = srproj(coefsHpzero, posindic(counts))
 z1pos = srproj(coefsHppos, counts, dirpos)
 @test z1pos ≈ zHpos[:,[dirpos,ppos+1]]
 
-Z1 = srproj(coefsHppos, coefsHpzero, counts, dirpos, dirzero; intercept=true)
+Z1 = srproj(coefsHppos, coefsHpzero, counts, dirpos, dirzero; intercept=true, includel=true)
 @test Z1 == z1pos
 Z1b = srproj(hdmrcoefs, counts, dirpos, dirzero; intercept=true)
 @test Z1 == Z1b
 
-X1, X1_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inzero=inzero, includem=true)
+X1, X1_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inzero=inzero, includem=true, includel=true)
 @test X1_nocounts == [ones(n) covars[:,1:4]]
 @test X1 == [X1_nocounts Z1]
 X1b, X1_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; inzero=inzero, includem=true)
@@ -436,7 +436,7 @@ X1b, X1_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; inzero=inzero
 @test X1_nocountsb == X1_nocountsb
 @test inz == inzb
 
-X2, X2_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inzero=inzero, includem=false)
+X2, X2_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inzero=inzero, includem=false, includel=true)
 @test X2_nocounts == X1_nocounts
 @test X2 == X1[:,1:end-1]
 X2b, X2_nocountsb, inzb = srprojX(hdmrcoefs,counts,covars,projdir; inzero=inzero, includem=false)
@@ -562,12 +562,12 @@ zHzero = srproj(coefsHpzero, posindic(counts))
 z1pos = srproj(coefsHppos, counts, dirpos)
 @test z1pos ≈ zHpos[:,[dirpos,ppos+1]]
 
-Z1 = srproj(coefsHppos, coefsHpzero, counts, dirpos, dirzero; intercept=true)
+Z1 = srproj(coefsHppos, coefsHpzero, counts, dirpos, dirzero; intercept=true, includel=true)
 @test Z1 == z1pos
 Z1b = srproj(hdmrcoefs, counts, dirpos, dirzero; intercept=true)
 @test Z1 == Z1b
 
-X1, X1_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inzero=inzero, inpos=inpos, includem=true)
+X1, X1_nocounts, inz = srprojX(coefsHppos,coefsHpzero,counts,covars,projdir; inzero=inzero, inpos=inpos, includem=true, includel=true)
 ix = filter!(x->x!=projdir,collect(1:p))
 @test X1_nocounts ≈ [ones(n) covars[:,ix]] rtol=1e-8
 @test X1 ≈ [X1_nocounts Z1] rtol=1e-8
@@ -629,6 +629,7 @@ coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test coefsHpzero[:,2] == zeros(p+1)
 @test coefsHppos[:,3] == zeros(p+1)
 @test coefsHpzero[:,3] == zeros(p+1)
+@test HurdleDMR.includelinX(hdmrcoefs) == true
 
 # hurdle dmr parallel remote cluster
 hdmrcoefs2 = fit(HDMRPaths{M},covars, zcounts; parallel=true, local_cluster=false, testargs...)
@@ -641,6 +642,8 @@ coefsHppos2, coefsHpzero2 = coef(hdmrcoefs)
 @test η[:,3] ≈ ones(size(newcovars,1))*0.32 rtol=0.05
 # rdist(η[:,3], ones(size(newcovars,1))*0.32)
 @test η[:,4] ≈ ones(size(newcovars,1))*0.64 rtol=0.06
+@test HurdleDMR.includelinX(hdmrcoefs2) == true
+
 # hurdle dmr serial paths
 rx = Regex("fit\\($M...\\) failed for countsj")
 hdmrcoefs3 = @test_logs (:warn, rx) fit(HDMRPaths{M},covars, zcounts; parallel=false, testargs...)
@@ -652,6 +655,7 @@ coefsHppos3, coefsHpzero3 = coef(hdmrcoefs3)
 @test η[:,2] == zeros(size(newcovars,1))
 @test η[:,3] ≈ ones(size(newcovars,1))*0.32 rtol=0.05
 @test η[:,4] ≈ ones(size(newcovars,1))*0.64 rtol=0.06
+@test HurdleDMR.includelinX(hdmrcoefs3) == true
 
 # hurdle dmr serial coefs
 hdmrcoefs4 = @test_logs (:warn, r"failed on count dimension 2") fit(HDMR{M},covars, zcounts; parallel=false, testargs...)
@@ -662,6 +666,7 @@ coefsHppos4, coefsHpzero4 = coef(hdmrcoefs4)
 @test coefsHpzero4[:,2] == zeros(p+1)
 @test coefsHppos4[:,3] == zeros(p+1)
 @test coefsHpzero4[:,3] == zeros(p+1)
+@test HurdleDMR.includelinX(hdmrcoefs4) == true
 
 end
 
@@ -679,9 +684,9 @@ end
 
 # make sure we are not adding all zero obseravtions
 m = sum(zcounts, dims=2)
-di = sum(posindic(zcounts), dims=2)
-@test sum((m .- di) .== 0) == 0
-@test sum((d .- di) .== 0) == n
+l = sum(posindic(zcounts), dims=2)
+@test sum((m .- l) .== 0) == 0
+@test sum((d .- l) .== 0) == n
 
 # hurdle dmr parallel local cluster
 hdmrcoefs = fit(HDMR{M}, covars, zcounts; parallel=true, testargs...)
@@ -692,18 +697,22 @@ coefsHppos, coefsHpzero = coef(hdmrcoefs)
 @test coefsHpzero[:,2] == zeros(p+1)
 @test coefsHppos[:,3] == zeros(p+1)
 @test coefsHpzero[:,3] == zeros(p+1)
+@test HurdleDMR.includelinX(hdmrcoefs) == true
 
 # hurdle dmr parallel remote cluster
 hdmrcoefs2 = fit(HDMRPaths{M}, covars, zcounts; parallel=true, local_cluster=false, testargs...)
 coefsHppos2, coefsHpzero2 = coef(hdmrcoefs2)
 @test coefsHppos ≈ coefsHppos2
 @test coefsHpzero ≈ coefsHpzero2
+# NOTE: next one is false, because when all are missing we don't know M<:InclusionRepetition
+@test HurdleDMR.includelinX(hdmrcoefs2) == false
 
 # just checking the fit(HDMRPaths...) ignore local_cluster
 hdmrcoefs3 = fit(HDMRPaths{M},covars, zcounts; parallel=true, local_cluster=true, testargs...)
 coefsHppos3, coefsHpzero3 = coef(hdmrcoefs3)
 @test coefsHppos2 == coefsHppos3
 @test coefsHpzero2 == coefsHpzero3
+@test HurdleDMR.includelinX(hdmrcoefs3) == false
 
 # hurdle dmr parallel remote cluster
 rx = Regex("fit\\($M...\\) failed for countsj")
@@ -712,5 +721,6 @@ hdmrcoefs4 = @test_logs(warnings..., fit(HDMRPaths{M},covars, zcounts; parallel=
 coefsHppos4, coefsHpzero4 = coef(hdmrcoefs4)
 @test coefsHppos ≈ coefsHppos4
 @test coefsHpzero ≈ coefsHpzero4
+@test HurdleDMR.includelinX(hdmrcoefs4) == false
 
 end

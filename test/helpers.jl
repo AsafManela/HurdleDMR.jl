@@ -106,7 +106,7 @@ tcovars, tcounts, tμpos, tμzero, tn = @test_logs (:warn, r"omitting 1 observat
 
 prem = vec(sum(counts, dims=2))
 pred = vec(sum(posindic(counts), dims=2))
-pcovars, pcounts, pμpos, pμzero, pn = @test_logs (:warn, r"Old Hurdle-DMR model does not use prespecified di") shifters(M, covars, counts[:,1:3], true, prem, pred, nothing)
+pcovars, pcounts, pμpos, pμzero, pn = @test_logs (:warn, r"Old Hurdle-DMR model does not use prespecified l") shifters(M, covars, counts[:,1:3], true, prem, pred, nothing)
 @test pμpos == eμ
 @test pμzero == eμ
 @test pcounts == counts[:,1:3]
