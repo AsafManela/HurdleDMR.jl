@@ -5,3 +5,4 @@ StatsModels
 DataFrames
 LambertW
 GLM
+LoggingExtras

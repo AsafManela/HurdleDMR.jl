@@ -1,3 +1,4 @@
+
 # code to generate R benchmark
 # using RCall
 # R"if(!require(pscl)){install.packages(\"pscl\");library(pscl)}"
@@ -400,6 +401,12 @@ Matrix( coefsJzero)
 @test size(coefsJpos,1) == 2
 @test coefsJpos == zero(coefsJpos)
 @test size(coefsJzero,1) == 2
+
+include(joinpath(testdir,"data","degenerate_hurdle_4.jl"))
+hurdle = @test_nowarn fit(Hurdle,GammaLassoPath,X,y; offset=offset)
+# TODO: figure out why next test behaves differently when running tests manually
+# as include("runtests.jl") or as ]test HurdleDMR
+# hurdle = @test_logs (:warn, r"lambertw") (:warn, r"lambertw") fit(Hurdle,GammaLassoPath,X,y; offset=offset, showwarnings=true)
 
 # this test case used to give numerical headaches to devresid(PositivePoisson(),...)
 include(joinpath(testdir,"data","degenerate_hurdle_5.jl"))

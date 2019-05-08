@@ -68,6 +68,14 @@ mildexception(e::DomainError) = true
 mildexception(e::ConvergenceException) = true
 mildexception(e::ErrorException) = (occursin("step-halving", e.msg) || occursin("failure to converge", e.msg) || occursin("failed to converge", e.msg))
 
+function getlogger(showwarnings::Bool)
+  if showwarnings
+    current_logger()
+  else
+    MinLevelLogger(current_logger(), Logging.Error)
+  end
+end
+
 "Fits the model for zeros Iy ~ X"
 function fitzero(::Type{M},
   X::AbstractMatrix{T}, Iy::V,
@@ -84,36 +92,39 @@ function fitzero(::Type{M},
 
   mzero = nothing
   fittedzero = false
-  if var(Iy) > zero(T)
-    try
-      mzero = fit(M, X, Iy, dzero, lzero; dofit=dofit, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
-      fittedzero = dofit
-    catch e
-      showwarnings && @warn("failed to fit zero counts model, possibly not enough variation in I(y). countmap(Iy)=$(countmap(Iy))")
-      if mildexception(e)
-        fittedzero = false
-      else
-        showwarnings && @warn("X'=$(X')")
-        showwarnings && @warn("Iy=$Iy)")
-        rethrow(e)
-      end
-    end
-  else
-    if verbose
-      if all(iszero,Iy)
-        showwarnings && @warn("I(y) is all zeros. There is nothing to explain.")
-      else
-        showwarnings && @warn("I(y) is all ones. Data may be fully described by a poisson model.")
-      end
-    end
-  end
 
-  if !fittedzero
-    # create blank zeros model without fitting
-    if M <: RegularizationPath
-      mzero = fit(M, X, Iy, dzero, lzero; dofit=false, λ=[0.0], wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
+  with_logger(getlogger(showwarnings)) do
+    if var(Iy) > zero(T)
+      try
+        mzero = fit(M, X, Iy, dzero, lzero; dofit=dofit, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
+        fittedzero = dofit
+      catch e
+        @warn("failed to fit zero counts model, possibly not enough variation in I(y). countmap(Iy)=$(countmap(Iy))")
+        if mildexception(e)
+          fittedzero = false
+        else
+          @warn("X'=$(X')")
+          @warn("Iy=$Iy)")
+          rethrow(e)
+        end
+      end
     else
-      mzero = fit(M, X, Iy, dzero, lzero; dofit=false, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
+      if verbose
+        if all(iszero,Iy)
+          @warn("I(y) is all zeros. There is nothing to explain.")
+        else
+          @warn("I(y) is all ones. Data may be fully described by a poisson model.")
+        end
+      end
+    end
+
+    if !fittedzero
+      # create blank zeros model without fitting
+      if M <: RegularizationPath
+        mzero = fit(M, X, Iy, dzero, lzero; dofit=false, λ=[0.0], wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
+      else
+        mzero = fit(M, X, Iy, dzero, lzero; dofit=false, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
+      end
     end
   end
 
@@ -138,34 +149,36 @@ function fitpos(::Type{TPM},::Type{M},
   mpos=nothing
   fittedpos = false
 
-  if any(x->x>minypos(TPM), ypos)
-    try
-      mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=dofit, wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
-      fittedpos = dofit
-    catch e
-      showwarnings && @warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos. countmap(ypos)=$(sort(countmap(ypos)))")
-      if mildexception(e)
-        fittedpos = false
+  with_logger(getlogger(showwarnings)) do
+    if any(x->x>minypos(TPM), ypos)
+      try
+        mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=dofit, wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
+        fittedpos = dofit
+      catch e
+        @warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos. countmap(ypos)=$(sort(countmap(ypos)))")
+        if mildexception(e)
+          fittedpos = false
+        else
+          @warn("Xpos'=$(Xpos')")
+          @warn("ypos=$ypos)")
+          rethrow(e)
+        end
+      end
+    else
+      if length(ypos) == 0
+        error("y is all zeros! There is nothing to explain.")
       else
-        showwarnings && @warn("Xpos'=$(Xpos')")
-        showwarnings && @warn("ypos=$ypos)")
-        rethrow(e)
+        @warn("ypos has no elements larger than $(minypos(TPM))! Data may be fully described by a probability model.")
       end
     end
-  else
-    if length(ypos) == 0
-      error("y is all zeros! There is nothing to explain.")
-    else
-      showwarnings && @warn("ypos has no elements larger than $(minypos(TPM))! Data may be fully described by a probability model.")
-    end
-  end
 
-  if !fittedpos
-    # create blank positives model without fitting
-    if M <: RegularizationPath
-      mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=false, λ=[0.0], wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
-    else
-      mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=false, wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
+    if !fittedpos
+      # create blank positives model without fitting
+      if M <: RegularizationPath
+        mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=false, λ=[0.0], wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
+      else
+        mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=false, wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
+      end
     end
   end
 

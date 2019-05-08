@@ -1,5 +1,5 @@
 using Test, Distributions, CSV, GLM, Lasso, DataFrames, MLBase
-using Random, Distributed, LinearAlgebra, SparseArrays, SharedArrays
+using Random, Distributed, LinearAlgebra, SparseArrays, SharedArrays, Logging
 
 include("testutils.jl")
 

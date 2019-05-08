@@ -165,3 +165,16 @@ eμzero = log.(pred ./ (preD .- pred))
 @test pcounts == counts[:,1:3]
 
 end
+
+@testset "logging" begin
+    @testset "getlogger(true) = $(HurdleDMR.getlogger(true))" begin
+        @test_logs (:warn, "warn!") with_logger(HurdleDMR.getlogger(true)) do
+            @warn "warn!"
+        end
+    end
+    @testset "getlogger(false) = $(HurdleDMR.getlogger(false))" begin
+        @test_nowarn with_logger(HurdleDMR.getlogger(false)) do
+            @warn "warn!"
+        end
+    end
+end
