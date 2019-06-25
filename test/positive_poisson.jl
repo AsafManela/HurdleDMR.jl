@@ -1,4 +1,6 @@
 @testset "PositivePoisson" begin
+using GLM: linkinv, linkfun, mueta, inverselink
+
 λ0=3.4
 pp = PositivePoisson(λ0)
 @test params(pp) == (λ0,)
