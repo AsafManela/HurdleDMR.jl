@@ -212,11 +212,11 @@ end
 includelinX(m::HDMRCoefs{<:Hurdle}) = false
 includelinX(m::HDMRPaths{<:Union{Missing, Hurdle}}) = false
 includelinX(m::HDMRPaths{<:Hurdle}) = false
-includelinX(m::HDMRPaths{Missing}) = false
 
 includelinX(m::HDMRCoefs{<:InclusionRepetition}) = true
 includelinX(m::HDMRPaths{<:InclusionRepetition}) = true
 includelinX(m::HDMRPaths{<:Union{Missing, InclusionRepetition}}) = true
+includelinX(m::HDMRPaths{Missing}) = true
 
 srprojX(m::HDMRCoefs,counts,covars,projdir; includel=includelinX(m), kwargs...) = srprojX(coef(m)...,counts,covars,projdir; inpos=m.inpos, inzero=m.inzero, includel=includel, kwargs...)
 srprojX(m::HDMRPaths,counts,covars,projdir; includel=includelinX(m), select=defsegselect, kwargs...) = srprojX(coef(m, select)...,counts,covars,projdir; inpos=m.inpos, inzero=m.inzero, includel=includel, kwargs...)

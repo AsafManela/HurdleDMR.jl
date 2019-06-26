@@ -1,6 +1,8 @@
 # common args for all hdmr tests
 testargs = Dict(:verbose=>false,:showwarnings=>true)
 
+@testset "HDMR" begin
+
 hdmrmodels = [
     @model(h ~ x + z + cat + y, c ~ x + z + cat + y)
     @model(h ~ x + z + cat + y, c ~ z + cat + y)
@@ -8,7 +10,7 @@ hdmrmodels = [
     @model(h ~ x + z + cat, c ~ z + cat + y)
     ]
 
-@testset "HDMR{$M}" for M in (Hurdle, InclusionRepetition)
+@testset "$M" for M in (InclusionRepetition,Hurdle)
 
 includel = (M == InclusionRepetition)
 
@@ -332,15 +334,14 @@ hdmrcoefs2 = fit(HDMRPaths{M}, covars, zcounts; parallel=true, local_cluster=fal
 coefsHppos2, coefsHpzero2 = coef(hdmrcoefs2)
 @test coefsHppos ≈ coefsHppos2
 @test coefsHpzero ≈ coefsHpzero2
-# NOTE: next 3 are false, because when all are missing we don't know M<:InclusionRepetition
-@test HurdleDMR.includelinX(hdmrcoefs2) == false
+@test HurdleDMR.includelinX(hdmrcoefs2) == includel
 
 # just checking the fit(HDMRPaths...) ignore local_cluster
 hdmrcoefs3 = fit(HDMRPaths{M},covars, zcounts; parallel=true, local_cluster=true, testargs...)
 coefsHppos3, coefsHpzero3 = coef(hdmrcoefs3)
 @test coefsHppos2 == coefsHppos3
 @test coefsHpzero2 == coefsHpzero3
-@test HurdleDMR.includelinX(hdmrcoefs3) == false
+@test HurdleDMR.includelinX(hdmrcoefs3) == includel
 
 # hurdle dmr parallel remote cluster
 if M == Hurdle
@@ -353,7 +354,9 @@ end
 coefsHppos4, coefsHpzero4 = coef(hdmrcoefs4)
 @test coefsHppos ≈ coefsHppos4
 @test coefsHpzero ≈ coefsHpzero4
-@test HurdleDMR.includelinX(hdmrcoefs4) == false
+@test HurdleDMR.includelinX(hdmrcoefs4) == includel
+
+end
 
 end
 

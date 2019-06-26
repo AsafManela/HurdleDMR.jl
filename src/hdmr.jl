@@ -2,6 +2,9 @@
 # Hurdle Distributed Multinomial Regression (HDMR)
 ##############################################################
 
+# default model used when not specified explicitly, as in fit(HDMR,...)
+const HDMR_DEFAULT_MODEL = InclusionRepetition
+
 "Abstract HDMR returned object"
 abstract type HDMR{M<:Union{Missing, <:TwoPartModel}} <: DCR end
 
@@ -45,7 +48,7 @@ end
     fit(HDMR,covars,counts; <keyword arguments>)
     hdmr(covars,counts; <keyword arguments>)
 
-Fit a Hurdle Distributed Multiple Regression (HDMR) of counts on covars.
+Fit a Hurdle Distributed Multinomial Regression (HDMR) of counts on covars.
 
 HDMR fits independent hurdle lasso regressions to each column of counts to
 approximate a multinomial, picks a segement of each path, and
@@ -84,7 +87,7 @@ end
     fit(HDMRPaths,covars,counts; <keyword arguments>)
     hdmrpaths(covars,counts; <keyword arguments>)
 
-Fit a Hurdle Distributed Multiple Regression (HDMR) of counts on covars, and returns
+Fit a Hurdle Distributed Multinomial Regression (HDMR) of counts on covars, and returns
 the entire regulatrization paths, which may be useful for plotting or picking
 coefficients other than the AICc optimal ones. Same arguments as
 [`fit(::HDMR)`](@ref).
@@ -96,13 +99,13 @@ function StatsBase.fit(::Type{HDMRPaths{M}}, covars::AbstractMatrix{T}, counts::
   hdmrpaths(covars, counts, M; kwargs...)
 end
 
-# default is to use Hurdle
+# default is to use HDMR_DEFAULT_MODEL
 StatsBase.fit(::Type{HDMR}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
-  kwargs...) where {T<:AbstractFloat} = fit(HDMRCoefs{Hurdle}, covars, counts; kwargs...)
+  kwargs...) where {T<:AbstractFloat} = fit(HDMRCoefs{HDMR_DEFAULT_MODEL}, covars, counts; kwargs...)
 StatsBase.fit(::Type{HDMRCoefs}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
-    kwargs...) where {T<:AbstractFloat} = fit(HDMRCoefs{Hurdle}, covars, counts; kwargs...)
+    kwargs...) where {T<:AbstractFloat} = fit(HDMRCoefs{HDMR_DEFAULT_MODEL}, covars, counts; kwargs...)
 StatsBase.fit(::Type{HDMRPaths}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
-  kwargs...) where {T<:AbstractFloat} = fit(HDMRPaths{Hurdle}, covars, counts; kwargs...)
+  kwargs...) where {T<:AbstractFloat} = fit(HDMRPaths{HDMR_DEFAULT_MODEL}, covars, counts; kwargs...)
 
 # fit wrapper that takes a model (two formulas) and dataframe instead of the covars matrix
 # e.g. @model(h ~ x1 + x2, c ~ x1)
@@ -259,7 +262,7 @@ function destandardize!(tpm::TwoPartModel, covarsnorm::AbstractVector{T},
 end
 
 "Shorthand for fit(HDMRPaths,covars,counts). See also [`fit(::HDMRPaths)`](@ref)"
-function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix,::Type{M}=Hurdle;
+function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix,::Type{M}=HDMR_DEFAULT_MODEL;
       inpos=1:size(covars,2), inzero=1:size(covars,2),
       intercept=true,
       parallel=true,
@@ -432,7 +435,7 @@ function tryfith!(::Type{M}, coefspos::AbstractMatrix{T}, coefszero::AbstractMat
 end
 
 "Shorthand for fit(HDMR,covars,counts). See also [`fit(::HDMR)`](@ref)"
-function hdmr(covars::AbstractMatrix{T},counts::AbstractMatrix{V},::Type{M}=Hurdle;
+function hdmr(covars::AbstractMatrix{T},counts::AbstractMatrix{V},::Type{M}=HDMR_DEFAULT_MODEL;
           inpos=1:size(covars,2), inzero=1:size(covars,2),
           intercept=true,
           parallel=true, local_cluster=true,
