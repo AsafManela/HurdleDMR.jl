@@ -16,7 +16,6 @@ include("testdata.jl")
 include("helpers.jl")
 include("dmr.jl")
 include("hdmr.jl")
-include("dsmr.jl")
 include("multicounts.jl")
 
 end

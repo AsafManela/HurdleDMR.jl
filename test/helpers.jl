@@ -164,6 +164,23 @@ eμzero = log.(pred ./ (preD .- pred))
 @test pμzero == eμzero
 @test pcounts == counts[:,1:3]
 
+# test posindic used by srproj
+m = rand(Poisson(0.1),30,500)
+ms = sparse(m)
+Im = posindic(m)
+Ims = posindic(ms)
+@test Im == Ims
+@test eltype(Im) == Int64
+@test eltype(Ims) == Int64
+
+m = float.(m)
+ms = sparse(m)
+Im = posindic(m)
+Ims = posindic(ms)
+@test Im == Ims
+@test eltype(Im) == Float64
+@test eltype(Ims) == Float64
+
 end
 
 @testset "logging" begin
