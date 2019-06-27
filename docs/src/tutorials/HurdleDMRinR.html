@@ -11775,15 +11775,13 @@ div#notebook {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="HurdleDMR-from-R">HurdleDMR from R<a class="anchor-link" href="#HurdleDMR-from-R">&#182;</a></h1><p>HurdleDMR.jl is a Julia implementation of the Hurdle Distributed Multiple Regression (HDMR), as described in:</p>
+<h1 id="HurdleDMR-from-R">HurdleDMR from R<a class="anchor-link" href="#HurdleDMR-from-R">&#182;</a></h1><p>HurdleDMR.jl is a Julia implementation of the Hurdle Distributed Multinomial Regression (HDMR), as described in:</p>
 <p>Kelly, Bryan, Asaf Manela, and Alan Moreira (2018). Text Selection. <a href="http://apps.olin.wustl.edu/faculty/manela/kmm/textselection/">Working paper</a>.</p>
 <p>It includes a Julia implementation of the Distributed Multinomial Regression (DMR) model of <a href="https://arxiv.org/abs/1311.6139">Taddy (2015)</a>.</p>
 <p>This tutorial explains how to use this package from R via the JuliaCall package that is available on CRAN.</p>
 <h2 id="Setup">Setup<a class="anchor-link" href="#Setup">&#182;</a></h2><h3 id="Install-Julia">Install Julia<a class="anchor-link" href="#Install-Julia">&#182;</a></h3><p>First, install Julia itself. The easiest way to do that is from the download site <a href="https://julialang.org/downloads/">https://julialang.org/downloads/</a>. An alternative is to install JuliaPro from <a href="https://juliacomputing.com">https://juliacomputing.com</a></p>
-<p>Once installed, open start julia in a terminal and add the following packages:</p>
-<div class="highlight"><pre><span></span><span class="n">Pkg</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&quot;RCall&quot;</span><span class="p">)</span>
-<span class="n">Pkg</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="s">&quot;https://github.com/AsafManela/Lasso.jl&quot;</span><span class="p">)</span>
-<span class="n">Pkg</span><span class="o">.</span><span class="n">clone</span><span class="p">(</span><span class="s">&quot;https://github.com/AsafManela/HurdleDMR.jl&quot;</span><span class="p">)</span>
+<p>Once installed, open julia in a terminal, press ] to activate package manager and add the following packages:</p>
+<div class="highlight"><pre><span></span><span class="n">pkg</span><span class="o">&gt;</span> <span class="n">add</span> <span class="n">RCall</span> <span class="n">HurdleDMR</span> <span class="n">GLM</span> <span class="n">Lasso</span>
 </pre></div>
 <h3 id="The-JuliaCall-package-for-R">The JuliaCall package for R<a class="anchor-link" href="#The-JuliaCall-package-for-R">&#182;</a></h3><p>Now, back to R</p>
 
@@ -11795,10 +11793,29 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[1]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="nf">install.packages</span><span class="p">(</span><span class="s">&quot;JuliaCall&quot;</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span>install.packages<span class="p">(</span><span class="s">&quot;JuliaCall&quot;</span><span class="p">)</span>
 </pre></div>
 
 </div>
+</div>
+</div>
+
+<div class="output_wrapper">
+<div class="output">
+
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>Installing package into ‘/home/root/R/x86_64-pc-linux-gnu-library/3.5’
+(as ‘lib’ is unspecified)
+</pre>
+</div>
+</div>
+
 </div>
 </div>
 
@@ -11817,8 +11834,8 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="nf">library</span><span class="p">(</span><span class="n">JuliaCall</span><span class="p">)</span>
-<span class="n">j</span> <span class="o">&lt;-</span> <span class="nf">julia_setup</span><span class="p">()</span>
+<div class=" highlight hl-r"><pre><span></span><span class="kn">library</span><span class="p">(</span>JuliaCall<span class="p">)</span>
+j <span class="o">&lt;-</span> julia_setup<span class="p">()</span>
 </pre></div>
 
 </div>
@@ -11835,7 +11852,7 @@ div#notebook {
 
 
 <div class="output_subarea output_stream output_stderr output_text">
-<pre>Julia version 1.0.3 at location C:\Users\user\AppData\Local\JULIA-~1.3\bin will be used.
+<pre>Julia version 1.1.1 at location /home/root/julialang/julia-1.1.1/bin will be used.
 Loading setup script for JuliaCall...
 Finish loading setup script for JuliaCall.
 </pre>
@@ -11860,7 +11877,7 @@ Finish loading setup script for JuliaCall.
 <div class="prompt input_prompt">In&nbsp;[3]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">j</span><span class="o">$</span><span class="nf">eval</span><span class="p">(</span><span class="s">&quot;1+2&quot;</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span>j<span class="o">$</span><span class="kp">eval</span><span class="p">(</span><span class="s">&quot;1+2&quot;</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -11902,12 +11919,12 @@ Finish loading setup script for JuliaCall.
 <div class="inner_cell">
     <div class="input_area">
 <div class=" highlight hl-r"><pre><span></span><span class="c1">#install.packages(&quot;textir&quot;) </span>
-<span class="nf">library</span><span class="p">(</span><span class="n">textir</span><span class="p">)</span>
+<span class="kn">library</span><span class="p">(</span>textir<span class="p">)</span>
 
-<span class="nf">data</span><span class="p">(</span><span class="n">we8there</span><span class="p">)</span>
+data<span class="p">(</span>we8there<span class="p">)</span>
 
-<span class="n">covars</span> <span class="o">&lt;-</span> <span class="n">we8thereRatings[</span><span class="p">,</span><span class="s">&#39;Overall&#39;</span><span class="p">,</span><span class="n">drop</span><span class="o">=</span><span class="kc">FALSE</span><span class="n">]</span>
-<span class="n">counts</span> <span class="o">&lt;-</span> <span class="n">we8thereCounts</span>
+covars <span class="o">&lt;-</span> we8thereRatings<span class="p">[,</span><span class="s">&#39;Overall&#39;</span><span class="p">,</span>drop<span class="o">=</span><span class="kc">FALSE</span><span class="p">]</span>
+counts <span class="o">&lt;-</span> we8thereCounts
 </pre></div>
 
 </div>
@@ -11951,8 +11968,8 @@ Loading required package: parallel
 <div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">nprocs</span> <span class="o">&lt;-</span> <span class="nf">as.integer</span><span class="p">(</span><span class="nf">detectCores</span><span class="p">()</span><span class="m">-2</span><span class="p">)</span>
-<span class="n">cl</span> <span class="o">&lt;-</span> <span class="nf">makeCluster</span><span class="p">(</span><span class="n">nprocs</span><span class="p">,</span><span class="n">type</span><span class="o">=</span><span class="nf">ifelse</span><span class="p">(</span><span class="n">.Platform</span><span class="o">$</span><span class="n">OS.type</span><span class="o">==</span><span class="s">&quot;unix&quot;</span><span class="p">,</span><span class="s">&quot;FORK&quot;</span><span class="p">,</span><span class="s">&quot;PSOCK&quot;</span><span class="p">))</span>
+<div class=" highlight hl-r"><pre><span></span>nprocs <span class="o">&lt;-</span> <span class="kp">as.integer</span><span class="p">(</span>detectCores<span class="p">()</span><span class="m">-2</span><span class="p">)</span>
+cl <span class="o">&lt;-</span> makeCluster<span class="p">(</span>nprocs<span class="p">,</span>type<span class="o">=</span><span class="kp">ifelse</span><span class="p">(</span><span class="m">.</span>Platform<span class="o">$</span>OS.type<span class="o">==</span><span class="s">&quot;unix&quot;</span><span class="p">,</span><span class="s">&quot;FORK&quot;</span><span class="p">,</span><span class="s">&quot;PSOCK&quot;</span><span class="p">))</span>
 </pre></div>
 
 </div>
@@ -11973,7 +11990,7 @@ Loading required package: parallel
 <div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="nf">system.time</span><span class="p">(</span><span class="n">fits</span> <span class="o">&lt;-</span> <span class="nf">dmr</span><span class="p">(</span><span class="n">cl</span><span class="p">,</span> <span class="n">covars</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">verb</span><span class="o">=</span><span class="m">1</span><span class="p">))</span>
+<div class=" highlight hl-r"><pre><span></span><span class="kp">system.time</span><span class="p">(</span>fits <span class="o">&lt;-</span> dmr<span class="p">(</span>cl<span class="p">,</span> covars<span class="p">,</span> counts<span class="p">,</span> verb<span class="o">=</span><span class="m">1</span><span class="p">))</span>
 </pre></div>
 
 </div>
@@ -11993,7 +12010,7 @@ Loading required package: parallel
 <pre>fitting 6166 observations on 2640 categories, 1 covariates.
 converting counts matrix to column list...
 distributed run.
-socket cluster with 10 nodes on host &#39;localhost&#39;
+socket cluster with 18 nodes on host ‘localhost’
 </pre>
 </div>
 </div>
@@ -12007,7 +12024,7 @@ socket cluster with 10 nodes on host &#39;localhost&#39;
 
 <div class="output_text output_subarea ">
 <pre>   user  system elapsed 
-   0.33    0.08   26.83 </pre>
+  0.303   0.048   4.306 </pre>
 </div>
 
 </div>
@@ -12030,7 +12047,7 @@ socket cluster with 10 nodes on host &#39;localhost&#39;
 <div class="prompt input_prompt">In&nbsp;[7]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="nf">stopCluster</span><span class="p">(</span><span class="n">cl</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span>stopCluster<span class="p">(</span>cl<span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12052,8 +12069,8 @@ socket cluster with 10 nodes on host &#39;localhost&#39;
 <div class="prompt input_prompt">In&nbsp;[8]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">BR</span> <span class="o">&lt;-</span> <span class="nf">coef</span><span class="p">(</span><span class="n">fits</span><span class="p">)</span>
-<span class="nf">dim</span><span class="p">(</span><span class="n">BR</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span>BR <span class="o">&lt;-</span> coef<span class="p">(</span>fits<span class="p">)</span>
+<span class="kp">dim</span><span class="p">(</span>BR<span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12063,6 +12080,18 @@ socket cluster with 10 nodes on host &#39;localhost&#39;
 <div class="output_wrapper">
 <div class="output">
 
+
+<div class="output_area">
+
+<div class="prompt"></div>
+
+
+<div class="output_subarea output_stream output_stderr output_text">
+<pre>Warning message:
+“&#39;rBind&#39; is deprecated.
+ Since R version 3.2.0, base&#39;s rbind() should work fine with S4 objects”</pre>
+</div>
+</div>
 
 <div class="output_area">
 
@@ -12098,8 +12127,8 @@ socket cluster with 10 nodes on host &#39;localhost&#39;
 <div class="prompt input_prompt">In&nbsp;[9]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">zR</span> <span class="o">&lt;-</span> <span class="nf">srproj</span><span class="p">(</span><span class="n">BR</span><span class="p">,</span><span class="n">counts</span><span class="p">)</span> 
-<span class="nf">dim</span><span class="p">(</span><span class="n">zR</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span>zR <span class="o">&lt;-</span> srproj<span class="p">(</span>BR<span class="p">,</span>counts<span class="p">)</span> 
+<span class="kp">dim</span><span class="p">(</span>zR<span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12144,10 +12173,10 @@ socket cluster with 10 nodes on host &#39;localhost&#39;
 <div class="prompt input_prompt">In&nbsp;[10]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">X</span> <span class="o">&lt;-</span> <span class="nf">cbind</span><span class="p">(</span><span class="n">covars</span><span class="p">,</span><span class="n">zR</span><span class="p">)</span>
-<span class="nf">colnames</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="o">&lt;-</span> <span class="nf">c</span><span class="p">(</span><span class="s">&quot;Overall&quot;</span><span class="p">,</span><span class="s">&quot;zOverall&quot;</span><span class="p">,</span><span class="s">&quot;m&quot;</span><span class="p">)</span>
-<span class="n">fmR</span> <span class="o">&lt;-</span> <span class="nf">lm</span><span class="p">(</span><span class="n">Overall</span> <span class="o">~</span> <span class="n">zOverall</span> <span class="o">+</span> <span class="n">m</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
-<span class="nf">summary</span><span class="p">(</span><span class="n">fmR</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span>X <span class="o">&lt;-</span> <span class="kp">cbind</span><span class="p">(</span>covars<span class="p">,</span>zR<span class="p">)</span>
+<span class="kp">colnames</span><span class="p">(</span>X<span class="p">)</span> <span class="o">&lt;-</span> <span class="kt">c</span><span class="p">(</span><span class="s">&quot;Overall&quot;</span><span class="p">,</span><span class="s">&quot;zOverall&quot;</span><span class="p">,</span><span class="s">&quot;m&quot;</span><span class="p">)</span>
+fmR <span class="o">&lt;-</span> lm<span class="p">(</span>Overall <span class="o">~</span> zOverall <span class="o">+</span> m<span class="p">,</span> X<span class="p">)</span>
+<span class="kp">summary</span><span class="p">(</span>fmR<span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12180,7 +12209,7 @@ Coefficients:
 zOverall    3.181332   0.041696  76.298  &lt; 2e-16 ***
 m           0.006737   0.001096   6.146 8.42e-10 ***
 ---
-Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
 Residual standard error: 0.9654 on 6163 degrees of freedom
 Multiple R-squared:  0.4896,	Adjusted R-squared:  0.4894 
@@ -12208,10 +12237,10 @@ F-statistic:  2956 on 2 and 6163 DF,  p-value: &lt; 2.2e-16
 <div class="prompt input_prompt">In&nbsp;[11]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">newX</span> <span class="o">=</span> <span class="nf">as.data.frame</span><span class="p">(</span><span class="nf">srproj</span><span class="p">(</span><span class="n">BR</span><span class="p">,</span><span class="n">counts[1</span><span class="o">:</span><span class="m">10</span><span class="p">,</span><span class="n">]</span><span class="p">))</span>
-<span class="nf">colnames</span><span class="p">(</span><span class="n">newX</span><span class="p">)</span> <span class="o">&lt;-</span><span class="nf">c</span><span class="p">(</span><span class="s">&quot;zOverall&quot;</span><span class="p">,</span><span class="s">&quot;m&quot;</span><span class="p">)</span>
-<span class="n">yhatdmrR</span> <span class="o">&lt;-</span> <span class="nf">predict</span><span class="p">(</span><span class="n">fmR</span><span class="p">,</span> <span class="n">newX</span><span class="p">)</span>
-<span class="nf">as.vector</span><span class="p">(</span><span class="n">yhatdmrR</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span>newX <span class="o">=</span> <span class="kp">as.data.frame</span><span class="p">(</span>srproj<span class="p">(</span>BR<span class="p">,</span>counts<span class="p">[</span><span class="m">1</span><span class="o">:</span><span class="m">10</span><span class="p">,]))</span>
+<span class="kp">colnames</span><span class="p">(</span>newX<span class="p">)</span> <span class="o">&lt;-</span><span class="kt">c</span><span class="p">(</span><span class="s">&quot;zOverall&quot;</span><span class="p">,</span><span class="s">&quot;m&quot;</span><span class="p">)</span>
+yhatdmrR <span class="o">&lt;-</span> predict<span class="p">(</span>fmR<span class="p">,</span> newX<span class="p">)</span>
+<span class="kp">as.vector</span><span class="p">(</span>yhatdmrR<span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12230,16 +12259,16 @@ F-statistic:  2956 on 2 and 6163 DF,  p-value: &lt; 2.2e-16
 
 <div class="output_html rendered_html output_subarea ">
 <ol class=list-inline>
-	<li>4.86419983554951</li>
-	<li>2.24484606535357</li>
-	<li>5.65307467025703</li>
-	<li>4.568446245483</li>
-	<li>4.66848593149624</li>
-	<li>5.06290073040162</li>
-	<li>3.66278776217998</li>
-	<li>4.47468035358368</li>
-	<li>4.00369363965046</li>
-	<li>7.35463703886027</li>
+	<li>4.86419983555133</li>
+	<li>2.24484606535295</li>
+	<li>5.65307467024925</li>
+	<li>4.56844624548369</li>
+	<li>4.6684859314965</li>
+	<li>5.06290073040297</li>
+	<li>3.66278776218007</li>
+	<li>4.4746803535849</li>
+	<li>4.00369363965086</li>
+	<li>7.35463703886243</li>
 </ol>
 
 </div>
@@ -12265,11 +12294,11 @@ F-statistic:  2956 on 2 and 6163 DF,  p-value: &lt; 2.2e-16
 <div class="prompt input_prompt">In&nbsp;[12]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">j</span><span class="o">$</span><span class="nf">command</span><span class="p">(</span><span class="s">&quot;import SparseArrays&quot;</span><span class="p">)</span>
-<span class="n">j</span><span class="o">$</span><span class="nf">assign</span><span class="p">(</span><span class="s">&quot;covars&quot;</span><span class="p">,</span><span class="n">covars</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span>j<span class="o">$</span>command<span class="p">(</span><span class="s">&quot;import SparseArrays&quot;</span><span class="p">)</span>
+j<span class="o">$</span><span class="kp">assign</span><span class="p">(</span><span class="s">&quot;covars&quot;</span><span class="p">,</span>covars<span class="p">)</span>
 <span class="c1">## there are probably more efficient ways to pass the sparse matrix, but JuliaCall doesn&#39;t do this automatically at the moment</span>
-<span class="n">j</span><span class="o">$</span><span class="nf">assign</span><span class="p">(</span><span class="s">&quot;counts&quot;</span><span class="p">,</span><span class="nf">as.matrix</span><span class="p">(</span><span class="n">counts</span><span class="p">))</span>
-<span class="n">j</span><span class="o">$</span><span class="nf">command</span><span class="p">(</span><span class="s">&quot;counts = SparseArrays.sparse(counts)&quot;</span><span class="p">)</span>
+j<span class="o">$</span><span class="kp">assign</span><span class="p">(</span><span class="s">&quot;counts&quot;</span><span class="p">,</span><span class="kp">as.matrix</span><span class="p">(</span>counts<span class="p">))</span>
+j<span class="o">$</span>command<span class="p">(</span><span class="s">&quot;counts = SparseArrays.sparse(counts)&quot;</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12329,8 +12358,8 @@ F-statistic:  2956 on 2 and 6163 DF,  p-value: &lt; 2.2e-16
 <div class="prompt input_prompt">In&nbsp;[13]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">j</span><span class="o">$</span><span class="nf">command</span><span class="p">(</span><span class="s">&quot;using Distributed&quot;</span><span class="p">)</span>
-<span class="n">j</span><span class="o">$</span><span class="nf">call</span><span class="p">(</span><span class="s">&quot;addprocs&quot;</span><span class="p">,</span> <span class="n">nprocs</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span>j<span class="o">$</span>command<span class="p">(</span><span class="s">&quot;using Distributed&quot;</span><span class="p">)</span>
+j<span class="o">$</span><span class="kp">call</span><span class="p">(</span><span class="s">&quot;addprocs&quot;</span><span class="p">,</span> nprocs<span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12359,6 +12388,14 @@ F-statistic:  2956 on 2 and 6163 DF,  p-value: &lt; 2.2e-16
 	<li>9</li>
 	<li>10</li>
 	<li>11</li>
+	<li>12</li>
+	<li>13</li>
+	<li>14</li>
+	<li>15</li>
+	<li>16</li>
+	<li>17</li>
+	<li>18</li>
+	<li>19</li>
 </ol>
 
 </div>
@@ -12383,7 +12420,7 @@ F-statistic:  2956 on 2 and 6163 DF,  p-value: &lt; 2.2e-16
 <div class="prompt input_prompt">In&nbsp;[14]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">j</span><span class="o">$</span><span class="nf">command</span><span class="p">(</span><span class="s">&quot;import HurdleDMR; @everywhere using HurdleDMR&quot;</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span>j<span class="o">$</span>command<span class="p">(</span><span class="s">&quot;import HurdleDMR; @everywhere using HurdleDMR&quot;</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12404,7 +12441,7 @@ F-statistic:  2956 on 2 and 6163 DF,  p-value: &lt; 2.2e-16
 <div class="prompt input_prompt">In&nbsp;[15]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="nf">system.time</span><span class="p">(</span><span class="n">j</span><span class="o">$</span><span class="nf">command</span><span class="p">(</span><span class="s">&quot;m = fit(DMR,@model(c ~ 1 + Overall),covars,counts);&quot;</span><span class="p">))</span>
+<div class=" highlight hl-r"><pre><span></span><span class="kp">system.time</span><span class="p">(</span>j<span class="o">$</span>command<span class="p">(</span><span class="s">&quot;m = fit(DMR,@model(c ~ 1 + Overall),covars,counts);&quot;</span><span class="p">))</span>
 </pre></div>
 
 </div>
@@ -12424,7 +12461,7 @@ F-statistic:  2956 on 2 and 6163 DF,  p-value: &lt; 2.2e-16
 
 <div class="output_text output_subarea ">
 <pre>   user  system elapsed 
-  16.54    0.14   59.09 </pre>
+ 22.542   0.236  44.993 </pre>
 </div>
 
 </div>
@@ -12448,7 +12485,7 @@ To get the entire regularization paths, try the following</p>
 <div class="prompt input_prompt">In&nbsp;[16]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="nf">system.time</span><span class="p">(</span><span class="n">j</span><span class="o">$</span><span class="nf">command</span><span class="p">(</span><span class="s">&quot;m = fit(DMRPaths,@model(c ~ 1 + Overall),covars,counts);&quot;</span><span class="p">))</span>
+<div class=" highlight hl-r"><pre><span></span><span class="kp">system.time</span><span class="p">(</span>j<span class="o">$</span>command<span class="p">(</span><span class="s">&quot;m = fit(DMRPaths,@model(c ~ 1 + Overall),covars,counts);&quot;</span><span class="p">))</span>
 </pre></div>
 
 </div>
@@ -12468,7 +12505,7 @@ To get the entire regularization paths, try the following</p>
 
 <div class="output_text output_subarea ">
 <pre>   user  system elapsed 
-   5.47    1.45   11.50 </pre>
+  5.433   1.344  10.554 </pre>
 </div>
 
 </div>
@@ -12491,7 +12528,7 @@ To get the entire regularization paths, try the following</p>
 <div class="prompt input_prompt">In&nbsp;[17]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="nf">system.time</span><span class="p">(</span><span class="n">j</span><span class="o">$</span><span class="nf">command</span><span class="p">(</span><span class="s">&quot;m = fit(DMR,@model(c ~ 1 + Overall),covars,counts);&quot;</span><span class="p">))</span>
+<div class=" highlight hl-r"><pre><span></span><span class="kp">system.time</span><span class="p">(</span>j<span class="o">$</span>command<span class="p">(</span><span class="s">&quot;m = fit(DMR,@model(c ~ 1 + Overall),covars,counts);&quot;</span><span class="p">))</span>
 </pre></div>
 
 </div>
@@ -12511,7 +12548,7 @@ To get the entire regularization paths, try the following</p>
 
 <div class="output_text output_subarea ">
 <pre>   user  system elapsed 
-   0.02    0.04    4.52 </pre>
+  0.032   0.017   2.611 </pre>
 </div>
 
 </div>
@@ -12544,8 +12581,8 @@ The speed improvment is mostly due to sharing of memory across parallel workers.
 <div class="prompt input_prompt">In&nbsp;[18]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">Bjulia</span> <span class="o">&lt;-</span> <span class="n">j</span><span class="o">$</span><span class="nf">eval</span><span class="p">(</span><span class="s">&quot;coef(m)&quot;</span><span class="p">)</span>
-<span class="nf">dim</span><span class="p">(</span><span class="n">Bjulia</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span>Bjulia <span class="o">&lt;-</span> j<span class="o">$</span><span class="kp">eval</span><span class="p">(</span><span class="s">&quot;coef(m)&quot;</span><span class="p">)</span>
+<span class="kp">dim</span><span class="p">(</span>Bjulia<span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12590,8 +12627,8 @@ The speed improvment is mostly due to sharing of memory across parallel workers.
 <div class="prompt input_prompt">In&nbsp;[19]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">zjulia</span> <span class="o">&lt;-</span> <span class="n">j</span><span class="o">$</span><span class="nf">eval</span><span class="p">(</span><span class="s">&quot;srproj(m,counts)&quot;</span><span class="p">)</span>
-<span class="nf">dim</span><span class="p">(</span><span class="n">zjulia</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span>zjulia <span class="o">&lt;-</span> j<span class="o">$</span><span class="kp">eval</span><span class="p">(</span><span class="s">&quot;srproj(m,counts)&quot;</span><span class="p">)</span>
+<span class="kp">dim</span><span class="p">(</span>zjulia<span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12636,7 +12673,7 @@ The speed improvment is mostly due to sharing of memory across parallel workers.
 <div class="prompt input_prompt">In&nbsp;[20]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="nf">all.equal</span><span class="p">(</span><span class="n">zR</span><span class="p">,</span> <span class="n">zjulia</span><span class="p">,</span> <span class="n">check.attributes</span> <span class="o">=</span> <span class="kc">FALSE</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span><span class="kp">all.equal</span><span class="p">(</span>zR<span class="p">,</span> zjulia<span class="p">,</span> check.attributes <span class="o">=</span> <span class="kc">FALSE</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12654,7 +12691,7 @@ The speed improvment is mostly due to sharing of memory across parallel workers.
 
 
 <div class="output_html rendered_html output_subarea ">
-'Mean relative difference: 0.0250051'
+'Mean relative difference: 0.08506275'
 </div>
 
 </div>
@@ -12686,8 +12723,8 @@ The speed improvment is mostly due to sharing of memory across parallel workers.
 <div class="prompt input_prompt">In&nbsp;[21]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">j</span><span class="o">$</span><span class="nf">command</span><span class="p">(</span><span class="s">&quot;using GLM&quot;</span><span class="p">)</span>
-<span class="nf">system.time</span><span class="p">(</span><span class="n">j</span><span class="o">$</span><span class="nf">command</span><span class="p">(</span><span class="s">&quot;mnir = fit(CIR{DMR,LinearModel},@model(c ~ 1 + Overall),covars,counts,:Overall);&quot;</span><span class="p">))</span>
+<div class=" highlight hl-r"><pre><span></span>j<span class="o">$</span>command<span class="p">(</span><span class="s">&quot;using GLM&quot;</span><span class="p">)</span>
+<span class="kp">system.time</span><span class="p">(</span>j<span class="o">$</span>command<span class="p">(</span><span class="s">&quot;mnir = fit(CIR{DMR,LinearModel},@model(c ~ 1 + Overall),covars,counts,:Overall);&quot;</span><span class="p">))</span>
 </pre></div>
 
 </div>
@@ -12707,7 +12744,7 @@ The speed improvment is mostly due to sharing of memory across parallel workers.
 
 <div class="output_text output_subarea ">
 <pre>   user  system elapsed 
-   1.45    0.05    5.86 </pre>
+  2.302   0.433   4.995 </pre>
 </div>
 
 </div>
@@ -12721,7 +12758,7 @@ The speed improvment is mostly due to sharing of memory across parallel workers.
 <div class="prompt input_prompt">In&nbsp;[22]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">j</span><span class="o">$</span><span class="nf">eval</span><span class="p">(</span><span class="s">&quot;mnir.model.fwdm&quot;</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span>j<span class="o">$</span><span class="kp">eval</span><span class="p">(</span><span class="s">&quot;mnir.model.fwdm&quot;</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12740,15 +12777,17 @@ The speed improvment is mostly due to sharing of memory across parallel workers.
 
 
 <div class="output_text output_subarea ">
-<pre>Julia Object of type LinearModel{LmResp{Array{Float64,1}},DensePredChol{Float64,Cholesky{Float64,Array{Float64,2}}}}.
-LinearModel{LmResp{Array{Float64,1}},DensePredChol{Float64,Cholesky{Float64,Array{Float64,2}}}}:
+<pre>Julia Object of type LinearModel{GLM.LmResp{Array{Float64,1}},GLM.DensePredChol{Float64,Cholesky{Float64,Array{Float64,2}}}}.
+LinearModel{GLM.LmResp{Array{Float64,1}},GLM.DensePredChol{Float64,Cholesky{Float64,Array{Float64,2}}}}:
 
 Coefficients:
-       Estimate  Std.Error t value Pr(&gt;|t|)
-x1      3.42207  0.0194634 175.821   &lt;1e-99
-x2      3.12546  0.0420257 74.3701   &lt;1e-99
-x3   0.00619096 0.00110878 5.58357    &lt;1e-7
-</pre>
+──────────────────────────────────────────────────────────────────────
+      Estimate  Std. Error    t value  Pr(&gt;|t|)   Lower 95%  Upper 95%
+──────────────────────────────────────────────────────────────────────
+x1  3.3504      0.0195938   170.993      &lt;1e-99  3.31199     3.38882  
+x2  3.15752     0.0413464    76.3675     &lt;1e-99  3.07647     3.23857  
+x3  0.00635687  0.00109462    5.80739    &lt;1e-8   0.00421104  0.0085027
+──────────────────────────────────────────────────────────────────────</pre>
 </div>
 
 </div>
@@ -12771,8 +12810,8 @@ x3   0.00619096 0.00110878 5.58357    &lt;1e-7
 <div class="prompt input_prompt">In&nbsp;[23]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">yhatdmrJ</span> <span class="o">&lt;-</span> <span class="n">j</span><span class="o">$</span><span class="nf">eval</span><span class="p">(</span><span class="s">&quot;predict(mnir,covars[1:10,:],counts[1:10,:])&quot;</span><span class="p">)</span>
-<span class="n">yhatdmrJ</span>
+<div class=" highlight hl-r"><pre><span></span>yhatdmrJ <span class="o">&lt;-</span> j<span class="o">$</span><span class="kp">eval</span><span class="p">(</span><span class="s">&quot;predict(mnir,covars[1:10,:],counts[1:10,:])&quot;</span><span class="p">)</span>
+yhatdmrJ
 </pre></div>
 
 </div>
@@ -12791,16 +12830,16 @@ x3   0.00619096 0.00110878 5.58357    &lt;1e-7
 
 <div class="output_html rendered_html output_subarea ">
 <ol class=list-inline>
-	<li>4.82560813985272</li>
-	<li>2.29188447231926</li>
-	<li>5.64079872447367</li>
-	<li>4.54721361660461</li>
-	<li>4.64900142586795</li>
-	<li>5.01050775607373</li>
-	<li>3.67264187569116</li>
-	<li>4.44109783266488</li>
-	<li>3.97904110850575</li>
-	<li>7.29252606765281</li>
+	<li>4.86914303803309</li>
+	<li>2.49144101700483</li>
+	<li>5.87751149547541</li>
+	<li>4.59964634165681</li>
+	<li>4.65527195837653</li>
+	<li>4.95595640484482</li>
+	<li>3.70372254336368</li>
+	<li>4.39420942575794</li>
+	<li>3.9647081730177</li>
+	<li>7.26066717356227</li>
 </ol>
 
 </div>
@@ -12825,7 +12864,7 @@ x3   0.00619096 0.00110878 5.58357    &lt;1e-7
 <div class="prompt input_prompt">In&nbsp;[24]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="nf">all.equal</span><span class="p">(</span><span class="n">yhatdmrR</span><span class="p">,</span> <span class="n">yhatdmrJ</span><span class="p">,</span> <span class="n">check.attributes</span> <span class="o">=</span> <span class="kc">FALSE</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span><span class="kp">all.equal</span><span class="p">(</span>yhatdmrR<span class="p">,</span> yhatdmrJ<span class="p">,</span> check.attributes <span class="o">=</span> <span class="kc">FALSE</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12843,7 +12882,7 @@ x3   0.00619096 0.00110878 5.58357    &lt;1e-7
 
 
 <div class="output_html rendered_html output_subarea ">
-'Mean relative difference: 0.006899308'
+'Mean relative difference: 0.01893765'
 </div>
 
 </div>
@@ -12856,7 +12895,7 @@ x3   0.00619096 0.00110878 5.58357    &lt;1e-7
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Hurdle-Distributed-Multiple-Regression-(HDMR)">Hurdle Distributed Multiple Regression (HDMR)<a class="anchor-link" href="#Hurdle-Distributed-Multiple-Regression-(HDMR)">&#182;</a></h2>
+<h2 id="Hurdle-Distributed-Multinomial-Regression-(HDMR)">Hurdle Distributed Multinomial Regression (HDMR)<a class="anchor-link" href="#Hurdle-Distributed-Multinomial-Regression-(HDMR)">&#182;</a></h2>
 </div>
 </div>
 </div>
@@ -12874,7 +12913,7 @@ x3   0.00619096 0.00110878 5.58357    &lt;1e-7
 <div class="prompt input_prompt">In&nbsp;[25]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="nf">system.time</span><span class="p">(</span><span class="n">j</span><span class="o">$</span><span class="nf">command</span><span class="p">(</span><span class="s">&quot;m = fit(HDMR,@model(c ~ 1 + Overall, h ~ 1 + Overall),covars,counts);&quot;</span><span class="p">))</span>
+<div class=" highlight hl-r"><pre><span></span><span class="kp">system.time</span><span class="p">(</span>j<span class="o">$</span>command<span class="p">(</span><span class="s">&quot;m = fit(HDMR,@model(c ~ 1 + Overall, h ~ 1 + Overall),covars,counts);&quot;</span><span class="p">))</span>
 </pre></div>
 
 </div>
@@ -12894,7 +12933,7 @@ x3   0.00619096 0.00110878 5.58357    &lt;1e-7
 
 <div class="output_text output_subarea ">
 <pre>   user  system elapsed 
-   2.34    0.10   21.34 </pre>
+  2.424   0.136  18.578 </pre>
 </div>
 
 </div>
@@ -12917,7 +12956,7 @@ x3   0.00619096 0.00110878 5.58357    &lt;1e-7
 <div class="prompt input_prompt">In&nbsp;[26]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">Cjulia</span> <span class="o">&lt;-</span> <span class="n">j</span><span class="o">$</span><span class="nf">eval</span><span class="p">(</span><span class="s">&quot;coef(m)&quot;</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span>Cjulia <span class="o">&lt;-</span> j<span class="o">$</span><span class="kp">eval</span><span class="p">(</span><span class="s">&quot;coef(m)&quot;</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12939,7 +12978,7 @@ x3   0.00619096 0.00110878 5.58357    &lt;1e-7
 <div class="prompt input_prompt">In&nbsp;[27]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">Zjulia</span> <span class="o">&lt;-</span> <span class="n">j</span><span class="o">$</span><span class="nf">eval</span><span class="p">(</span><span class="s">&quot;srproj(m,counts)&quot;</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span>Zjulia <span class="o">&lt;-</span> j<span class="o">$</span><span class="kp">eval</span><span class="p">(</span><span class="s">&quot;srproj(m,counts,1,1)&quot;</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -12961,7 +13000,7 @@ x3   0.00619096 0.00110878 5.58357    &lt;1e-7
 <div class="prompt input_prompt">In&nbsp;[28]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="nf">system.time</span><span class="p">(</span><span class="n">j</span><span class="o">$</span><span class="nf">command</span><span class="p">(</span><span class="s">&quot;cir = fit(CIR{HDMR,LinearModel},@model(c ~ 1 + Overall, h ~ 1 + Overall),covars,counts,:Overall);&quot;</span><span class="p">))</span>
+<div class=" highlight hl-r"><pre><span></span><span class="kp">system.time</span><span class="p">(</span>j<span class="o">$</span>command<span class="p">(</span><span class="s">&quot;cir = fit(CIR{HDMR,LinearModel},@model(c ~ 1 + Overall, h ~ 1 + Overall),covars,counts,:Overall);&quot;</span><span class="p">))</span>
 </pre></div>
 
 </div>
@@ -12981,7 +13020,7 @@ x3   0.00619096 0.00110878 5.58357    &lt;1e-7
 
 <div class="output_text output_subarea ">
 <pre>   user  system elapsed 
-   0.82    0.04   10.67 </pre>
+  0.555   0.077   6.170 </pre>
 </div>
 
 </div>
@@ -12995,7 +13034,7 @@ x3   0.00619096 0.00110878 5.58357    &lt;1e-7
 <div class="prompt input_prompt">In&nbsp;[29]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">j</span><span class="o">$</span><span class="nf">eval</span><span class="p">(</span><span class="s">&quot;cir.model.fwdm&quot;</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span>j<span class="o">$</span><span class="kp">eval</span><span class="p">(</span><span class="s">&quot;cir.model.fwdm&quot;</span><span class="p">)</span>
 </pre></div>
 
 </div>
@@ -13014,16 +13053,19 @@ x3   0.00619096 0.00110878 5.58357    &lt;1e-7
 
 
 <div class="output_text output_subarea ">
-<pre>Julia Object of type LinearModel{LmResp{Array{Float64,1}},DensePredChol{Float64,Cholesky{Float64,Array{Float64,2}}}}.
-LinearModel{LmResp{Array{Float64,1}},DensePredChol{Float64,Cholesky{Float64,Array{Float64,2}}}}:
+<pre>Julia Object of type LinearModel{GLM.LmResp{Array{Float64,1}},GLM.DensePredChol{Float64,Cholesky{Float64,Array{Float64,2}}}}.
+LinearModel{GLM.LmResp{Array{Float64,1}},GLM.DensePredChol{Float64,Cholesky{Float64,Array{Float64,2}}}}:
 
 Coefficients:
-       Estimate  Std.Error t value Pr(&gt;|t|)
-x1      3.45647   0.019695   175.5   &lt;1e-99
-x2     0.325451   0.116531 2.79282   0.0052
-x3      3.21951  0.0443889 72.5297   &lt;1e-99
-x4   0.00557669 0.00111955  4.9812    &lt;1e-6
-</pre>
+───────────────────────────────────────────────────────────────────────
+      Estimate  Std. Error    t value  Pr(&gt;|t|)    Lower 95%  Upper 95%
+───────────────────────────────────────────────────────────────────────
+x1   3.3231      0.0221108  150.293      &lt;1e-99   3.27976     3.36645  
+x2   0.0321774   0.0116384    2.76476    0.0057   0.00936205  0.0549928
+x3   3.19298     0.0433034   73.7351     &lt;1e-99   3.10809     3.27787  
+x4  -0.0196436   0.0115597   -1.69932    0.0893  -0.0423045   0.0030174
+x5   0.0291231   0.0128348    2.26907    0.0233   0.00396236  0.0542838
+───────────────────────────────────────────────────────────────────────</pre>
 </div>
 
 </div>
@@ -13046,8 +13088,8 @@ x4   0.00557669 0.00111955  4.9812    &lt;1e-6
 <div class="prompt input_prompt">In&nbsp;[30]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="n">yhathdmr</span> <span class="o">&lt;-</span> <span class="n">j</span><span class="o">$</span><span class="nf">eval</span><span class="p">(</span><span class="s">&quot;predict(cir,covars[1:10,:],counts[1:10,:])&quot;</span><span class="p">)</span>
-<span class="n">yhathdmr</span>
+<div class=" highlight hl-r"><pre><span></span>yhathdmr <span class="o">&lt;-</span> j<span class="o">$</span><span class="kp">eval</span><span class="p">(</span><span class="s">&quot;predict(cir,covars[1:10,:],counts[1:10,:])&quot;</span><span class="p">)</span>
+yhathdmr
 </pre></div>
 
 </div>
@@ -13066,16 +13108,16 @@ x4   0.00557669 0.00111955  4.9812    &lt;1e-6
 
 <div class="output_html rendered_html output_subarea ">
 <ol class=list-inline>
-	<li>4.89765647648426</li>
-	<li>2.1886062371493</li>
-	<li>5.74273601134927</li>
-	<li>4.59929418883643</li>
-	<li>4.70140333079505</li>
-	<li>4.87705036869567</li>
-	<li>3.6771148111424</li>
-	<li>4.35870860551018</li>
-	<li>4.03657422748465</li>
-	<li>7.44228280574888</li>
+	<li>4.85312513033966</li>
+	<li>2.43974447171217</li>
+	<li>5.84408646734461</li>
+	<li>4.60401744136983</li>
+	<li>4.68318127773803</li>
+	<li>5.00909794714138</li>
+	<li>3.68596767649654</li>
+	<li>4.47843929232848</li>
+	<li>3.93817820313412</li>
+	<li>7.22910662898874</li>
 </ol>
 
 </div>
@@ -13100,7 +13142,7 @@ x4   0.00557669 0.00111955  4.9812    &lt;1e-6
 <div class="prompt input_prompt">In&nbsp;[31]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-r"><pre><span></span><span class="nf">cbind</span><span class="p">(</span><span class="n">yhatdmrR</span><span class="p">,</span><span class="n">yhatdmrJ</span><span class="p">,</span><span class="n">yhathdmr</span><span class="p">)</span>
+<div class=" highlight hl-r"><pre><span></span><span class="kp">cbind</span><span class="p">(</span>yhatdmrR<span class="p">,</span>yhatdmrJ<span class="p">,</span>yhathdmr<span class="p">)</span>
 </pre></div>
 
 </div>
@@ -13121,16 +13163,16 @@ x4   0.00557669 0.00111955  4.9812    &lt;1e-6
 <table>
 <thead><tr><th></th><th scope=col>yhatdmrR</th><th scope=col>yhatdmrJ</th><th scope=col>yhathdmr</th></tr></thead>
 <tbody>
-	<tr><th scope=row>1</th><td>4.864200</td><td>4.825608</td><td>4.897656</td></tr>
-	<tr><th scope=row>2</th><td>2.244846</td><td>2.291884</td><td>2.188606</td></tr>
-	<tr><th scope=row>5</th><td>5.653075</td><td>5.640799</td><td>5.742736</td></tr>
-	<tr><th scope=row>11</th><td>4.568446</td><td>4.547214</td><td>4.599294</td></tr>
-	<tr><th scope=row>12</th><td>4.668486</td><td>4.649001</td><td>4.701403</td></tr>
-	<tr><th scope=row>13</th><td>5.062901</td><td>5.010508</td><td>4.877050</td></tr>
-	<tr><th scope=row>14</th><td>3.662788</td><td>3.672642</td><td>3.677115</td></tr>
-	<tr><th scope=row>15</th><td>4.474680</td><td>4.441098</td><td>4.358709</td></tr>
-	<tr><th scope=row>17</th><td>4.003694</td><td>3.979041</td><td>4.036574</td></tr>
-	<tr><th scope=row>18</th><td>7.354637</td><td>7.292526</td><td>7.442283</td></tr>
+	<tr><th scope=row>1</th><td>4.864200</td><td>4.869143</td><td>4.853125</td></tr>
+	<tr><th scope=row>2</th><td>2.244846</td><td>2.491441</td><td>2.439744</td></tr>
+	<tr><th scope=row>5</th><td>5.653075</td><td>5.877511</td><td>5.844086</td></tr>
+	<tr><th scope=row>11</th><td>4.568446</td><td>4.599646</td><td>4.604017</td></tr>
+	<tr><th scope=row>12</th><td>4.668486</td><td>4.655272</td><td>4.683181</td></tr>
+	<tr><th scope=row>13</th><td>5.062901</td><td>4.955956</td><td>5.009098</td></tr>
+	<tr><th scope=row>14</th><td>3.662788</td><td>3.703723</td><td>3.685968</td></tr>
+	<tr><th scope=row>15</th><td>4.474680</td><td>4.394209</td><td>4.478439</td></tr>
+	<tr><th scope=row>17</th><td>4.003694</td><td>3.964708</td><td>3.938178</td></tr>
+	<tr><th scope=row>18</th><td>7.354637</td><td>7.260667</td><td>7.229107</td></tr>
 </tbody>
 </table>
 
