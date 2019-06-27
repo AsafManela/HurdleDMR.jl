@@ -16,7 +16,7 @@ end
 
 # returns true iff v is a column of A
 function hascol(A::AbstractMatrix, v::AbstractVector)
-    for c = eachcol(A)
+    for c = (view(A, :, i) for i in axes(A, 2))
         if c == v
             return true
         end
