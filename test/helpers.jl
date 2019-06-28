@@ -47,7 +47,7 @@ tcovars, tcounts, tμ, tn = shifters(DMR, covars, Cf, true, nothing)
 @test tcounts === Cf
 @test tμ == eμ
 
-tcovars, tcounts, tμ, tn = shifters(DMR, covars, convert(SparseMatrixCSC{Int64},counts), true, nothing)
+tcovars, tcounts, tμ, tn = shifters(DMR, covars, convert(SparseMatrixCSC{Int},counts), true, nothing)
 @test tcounts == counts
 @test tcounts !== counts
 @test tμ == eμ
@@ -84,7 +84,7 @@ tcovars, tcounts, tμpos, tμzero, tn = shifters(M, covars, Cf, true, nothing, n
 @test tμpos == eμ
 @test tμzero == eμ
 
-tcovars, tcounts, tμpos, tμzero, tn = shifters(M, covars, convert(SparseMatrixCSC{Int64},counts), true, nothing, nothing, nothing)
+tcovars, tcounts, tμpos, tμzero, tn = shifters(M, covars, convert(SparseMatrixCSC{Int},counts), true, nothing, nothing, nothing)
 @test tcounts == counts
 @test tcounts !== counts
 @test tμpos == eμ
@@ -130,7 +130,7 @@ tcovars, tcounts, tμpos, tμzero, tn = shifters(M, covars, Cf, true, nothing, n
 @test tμpos == eμpos
 @test tμzero == eμzero
 
-tcovars, tcounts, tμpos, tμzero, tn = shifters(M, covars, convert(SparseMatrixCSC{Int64},counts), true, nothing, nothing, nothing)
+tcovars, tcounts, tμpos, tμzero, tn = shifters(M, covars, convert(SparseMatrixCSC{Int},counts), true, nothing, nothing, nothing)
 @test tcounts == counts
 @test tcounts !== counts
 @test tμpos == eμpos
@@ -170,8 +170,8 @@ ms = sparse(m)
 Im = posindic(m)
 Ims = posindic(ms)
 @test Im == Ims
-@test eltype(Im) == Int64
-@test eltype(Ims) == Int64
+@test eltype(Im) == Int
+@test eltype(Ims) == Int
 
 m = float.(m)
 ms = sparse(m)

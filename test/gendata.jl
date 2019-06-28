@@ -21,7 +21,7 @@ for i=1:n
 end
 
 counts = convert(SparseMatrixCSC{Float64,Int}, hcat(broadcast((qi,mi)->rand(Multinomial(mi, qi)),q,ctotal)...)')
-countsint = convert(Matrix{Int64},counts) # used for testing the int eltype case
+countsint = convert(Matrix{Int},counts) # used for testing the int eltype case
 
 CSV.write(joinpath(testdir,"data","countsint.csv.gz"),DataFrame(countsint))
 CSV.write(joinpath(testdir,"data","covarsdf.csv.gz"),covarsdf)
