@@ -514,12 +514,10 @@ function hdmr_local_cluster(::Type{M}, covars::AbstractMatrix{T},counts::Abstrac
   if parallel
     verbose && @info("multi-threaded $M run on local cluster with $(Threads.nthreads()) threads")
 
-    with_logger(getlogger(false)) do # cannot log when multithreading
-      Threads.@threads for j=1:d
-        tryfith!(M, coefspos, coefszero, j, covars, counts, inpos, inzero, μpos, μzero;
-          verbose=false, showwarnings=false, intercept=intercept,
-          standardize=false, select=select, kwargs...)
-      end
+    Threads.@threads for j=1:d
+      tryfith!(M, coefspos, coefszero, j, covars, counts, inpos, inzero, μpos, μzero;
+        verbose=false, showwarnings=false, intercept=intercept,
+        standardize=false, select=select, kwargs...)
     end
   else
     verbose && @info("serial $M run on a single node")
