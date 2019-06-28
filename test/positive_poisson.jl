@@ -1,4 +1,6 @@
 @testset "PositivePoisson" begin
+using GLM: linkinv, linkfun, mueta, inverselink
+
 λ0=3.4
 pp = PositivePoisson(λ0)
 @test params(pp) == (λ0,)
@@ -140,13 +142,13 @@ coefsGLP = vec(coef(glpfit))
 
 # GammaLassoPath doing Lasso
 lassofit = fit(GammaLassoPath,X,y,PositivePoisson(),LogProductLogLink(); γ=0.0)
-coefsLasso = vec(coef(lassofit;select=:AICc))
+coefsLasso = vec(coef(lassofit;select=MinAICc()))
 @test coefsLasso ≈ coefsGLM rtol=0.02
 @test coefsLasso ≈ coefs0 rtol=0.05
 
 # GammaLassoPath doing concave regularization
 glpfit = fit(GammaLassoPath,X,y,PositivePoisson(),LogProductLogLink(); γ=10.0)
-coefsGLP = vec(coef(glpfit;select=:AICc))
+coefsGLP = vec(coef(glpfit;select=MinAICc()))
 @test coefsGLP ≈ coefsLasso rtol=0.0002
 @test coefsGLP ≈ coefs0 rtol=0.05
 

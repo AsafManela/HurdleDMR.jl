@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8" />
-<title>HurdleDMR</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+
+<title>HurdleDMRinPython</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
 
 <style type="text/css">
     /*!
@@ -199,7 +204,6 @@ th {
   *:before,
   *:after {
     background: transparent !important;
-    color: #000 !important;
     box-shadow: none !important;
     text-shadow: none !important;
   }
@@ -6744,15 +6748,15 @@ button.close {
 *
 */
 /*!
- *  Font Awesome 4.2.0 by @davegandy - http://fontawesome.io - @fontawesome
+ *  Font Awesome 4.7.0 by @davegandy - http://fontawesome.io - @fontawesome
  *  License - http://fontawesome.io/license (Font: SIL OFL 1.1, CSS: MIT License)
  */
 /* FONT PATH
  * -------------------------- */
 @font-face {
   font-family: 'FontAwesome';
-  src: url('../components/font-awesome/fonts/fontawesome-webfont.eot?v=4.2.0');
-  src: url('../components/font-awesome/fonts/fontawesome-webfont.eot?#iefix&v=4.2.0') format('embedded-opentype'), url('../components/font-awesome/fonts/fontawesome-webfont.woff?v=4.2.0') format('woff'), url('../components/font-awesome/fonts/fontawesome-webfont.ttf?v=4.2.0') format('truetype'), url('../components/font-awesome/fonts/fontawesome-webfont.svg?v=4.2.0#fontawesomeregular') format('svg');
+  src: url('../components/font-awesome/fonts/fontawesome-webfont.eot?v=4.7.0');
+  src: url('../components/font-awesome/fonts/fontawesome-webfont.eot?#iefix&v=4.7.0') format('embedded-opentype'), url('../components/font-awesome/fonts/fontawesome-webfont.woff2?v=4.7.0') format('woff2'), url('../components/font-awesome/fonts/fontawesome-webfont.woff?v=4.7.0') format('woff'), url('../components/font-awesome/fonts/fontawesome-webfont.ttf?v=4.7.0') format('truetype'), url('../components/font-awesome/fonts/fontawesome-webfont.svg?v=4.7.0#fontawesomeregular') format('svg');
   font-weight: normal;
   font-style: normal;
 }
@@ -6809,6 +6813,19 @@ button.close {
   border: solid 0.08em #eee;
   border-radius: .1em;
 }
+.fa-pull-left {
+  float: left;
+}
+.fa-pull-right {
+  float: right;
+}
+.fa.fa-pull-left {
+  margin-right: .3em;
+}
+.fa.fa-pull-right {
+  margin-left: .3em;
+}
+/* Deprecated as of 4.4.0 */
 .pull-right {
   float: right;
 }
@@ -6824,6 +6841,10 @@ button.close {
 .fa-spin {
   -webkit-animation: fa-spin 2s infinite linear;
   animation: fa-spin 2s infinite linear;
+}
+.fa-pulse {
+  -webkit-animation: fa-spin 1s infinite steps(8);
+  animation: fa-spin 1s infinite steps(8);
 }
 @-webkit-keyframes fa-spin {
   0% {
@@ -6846,31 +6867,31 @@ button.close {
   }
 }
 .fa-rotate-90 {
-  filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
+  -ms-filter: "progid:DXImageTransform.Microsoft.BasicImage(rotation=1)";
   -webkit-transform: rotate(90deg);
   -ms-transform: rotate(90deg);
   transform: rotate(90deg);
 }
 .fa-rotate-180 {
-  filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2);
+  -ms-filter: "progid:DXImageTransform.Microsoft.BasicImage(rotation=2)";
   -webkit-transform: rotate(180deg);
   -ms-transform: rotate(180deg);
   transform: rotate(180deg);
 }
 .fa-rotate-270 {
-  filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+  -ms-filter: "progid:DXImageTransform.Microsoft.BasicImage(rotation=3)";
   -webkit-transform: rotate(270deg);
   -ms-transform: rotate(270deg);
   transform: rotate(270deg);
 }
 .fa-flip-horizontal {
-  filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=0, mirror=1);
+  -ms-filter: "progid:DXImageTransform.Microsoft.BasicImage(rotation=0, mirror=1)";
   -webkit-transform: scale(-1, 1);
   -ms-transform: scale(-1, 1);
   transform: scale(-1, 1);
 }
 .fa-flip-vertical {
-  filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=2, mirror=1);
+  -ms-filter: "progid:DXImageTransform.Microsoft.BasicImage(rotation=2, mirror=1)";
   -webkit-transform: scale(1, -1);
   -ms-transform: scale(1, -1);
   transform: scale(1, -1);
@@ -7355,6 +7376,7 @@ button.close {
 .fa-twitter:before {
   content: "\f099";
 }
+.fa-facebook-f:before,
 .fa-facebook:before {
   content: "\f09a";
 }
@@ -7367,6 +7389,7 @@ button.close {
 .fa-credit-card:before {
   content: "\f09d";
 }
+.fa-feed:before,
 .fa-rss:before {
   content: "\f09e";
 }
@@ -8004,7 +8027,8 @@ button.close {
 .fa-male:before {
   content: "\f183";
 }
-.fa-gittip:before {
+.fa-gittip:before,
+.fa-gratipay:before {
   content: "\f184";
 }
 .fa-sun-o:before {
@@ -8108,7 +8132,7 @@ button.close {
 .fa-digg:before {
   content: "\f1a6";
 }
-.fa-pied-piper:before {
+.fa-pied-piper-pp:before {
   content: "\f1a7";
 }
 .fa-pied-piper-alt:before {
@@ -8234,6 +8258,7 @@ button.close {
   content: "\f1ce";
 }
 .fa-ra:before,
+.fa-resistance:before,
 .fa-rebel:before {
   content: "\f1d0";
 }
@@ -8247,6 +8272,8 @@ button.close {
 .fa-git:before {
   content: "\f1d3";
 }
+.fa-y-combinator-square:before,
+.fa-yc-square:before,
 .fa-hacker-news:before {
   content: "\f1d4";
 }
@@ -8414,6 +8441,657 @@ button.close {
 }
 .fa-meanpath:before {
   content: "\f20c";
+}
+.fa-buysellads:before {
+  content: "\f20d";
+}
+.fa-connectdevelop:before {
+  content: "\f20e";
+}
+.fa-dashcube:before {
+  content: "\f210";
+}
+.fa-forumbee:before {
+  content: "\f211";
+}
+.fa-leanpub:before {
+  content: "\f212";
+}
+.fa-sellsy:before {
+  content: "\f213";
+}
+.fa-shirtsinbulk:before {
+  content: "\f214";
+}
+.fa-simplybuilt:before {
+  content: "\f215";
+}
+.fa-skyatlas:before {
+  content: "\f216";
+}
+.fa-cart-plus:before {
+  content: "\f217";
+}
+.fa-cart-arrow-down:before {
+  content: "\f218";
+}
+.fa-diamond:before {
+  content: "\f219";
+}
+.fa-ship:before {
+  content: "\f21a";
+}
+.fa-user-secret:before {
+  content: "\f21b";
+}
+.fa-motorcycle:before {
+  content: "\f21c";
+}
+.fa-street-view:before {
+  content: "\f21d";
+}
+.fa-heartbeat:before {
+  content: "\f21e";
+}
+.fa-venus:before {
+  content: "\f221";
+}
+.fa-mars:before {
+  content: "\f222";
+}
+.fa-mercury:before {
+  content: "\f223";
+}
+.fa-intersex:before,
+.fa-transgender:before {
+  content: "\f224";
+}
+.fa-transgender-alt:before {
+  content: "\f225";
+}
+.fa-venus-double:before {
+  content: "\f226";
+}
+.fa-mars-double:before {
+  content: "\f227";
+}
+.fa-venus-mars:before {
+  content: "\f228";
+}
+.fa-mars-stroke:before {
+  content: "\f229";
+}
+.fa-mars-stroke-v:before {
+  content: "\f22a";
+}
+.fa-mars-stroke-h:before {
+  content: "\f22b";
+}
+.fa-neuter:before {
+  content: "\f22c";
+}
+.fa-genderless:before {
+  content: "\f22d";
+}
+.fa-facebook-official:before {
+  content: "\f230";
+}
+.fa-pinterest-p:before {
+  content: "\f231";
+}
+.fa-whatsapp:before {
+  content: "\f232";
+}
+.fa-server:before {
+  content: "\f233";
+}
+.fa-user-plus:before {
+  content: "\f234";
+}
+.fa-user-times:before {
+  content: "\f235";
+}
+.fa-hotel:before,
+.fa-bed:before {
+  content: "\f236";
+}
+.fa-viacoin:before {
+  content: "\f237";
+}
+.fa-train:before {
+  content: "\f238";
+}
+.fa-subway:before {
+  content: "\f239";
+}
+.fa-medium:before {
+  content: "\f23a";
+}
+.fa-yc:before,
+.fa-y-combinator:before {
+  content: "\f23b";
+}
+.fa-optin-monster:before {
+  content: "\f23c";
+}
+.fa-opencart:before {
+  content: "\f23d";
+}
+.fa-expeditedssl:before {
+  content: "\f23e";
+}
+.fa-battery-4:before,
+.fa-battery:before,
+.fa-battery-full:before {
+  content: "\f240";
+}
+.fa-battery-3:before,
+.fa-battery-three-quarters:before {
+  content: "\f241";
+}
+.fa-battery-2:before,
+.fa-battery-half:before {
+  content: "\f242";
+}
+.fa-battery-1:before,
+.fa-battery-quarter:before {
+  content: "\f243";
+}
+.fa-battery-0:before,
+.fa-battery-empty:before {
+  content: "\f244";
+}
+.fa-mouse-pointer:before {
+  content: "\f245";
+}
+.fa-i-cursor:before {
+  content: "\f246";
+}
+.fa-object-group:before {
+  content: "\f247";
+}
+.fa-object-ungroup:before {
+  content: "\f248";
+}
+.fa-sticky-note:before {
+  content: "\f249";
+}
+.fa-sticky-note-o:before {
+  content: "\f24a";
+}
+.fa-cc-jcb:before {
+  content: "\f24b";
+}
+.fa-cc-diners-club:before {
+  content: "\f24c";
+}
+.fa-clone:before {
+  content: "\f24d";
+}
+.fa-balance-scale:before {
+  content: "\f24e";
+}
+.fa-hourglass-o:before {
+  content: "\f250";
+}
+.fa-hourglass-1:before,
+.fa-hourglass-start:before {
+  content: "\f251";
+}
+.fa-hourglass-2:before,
+.fa-hourglass-half:before {
+  content: "\f252";
+}
+.fa-hourglass-3:before,
+.fa-hourglass-end:before {
+  content: "\f253";
+}
+.fa-hourglass:before {
+  content: "\f254";
+}
+.fa-hand-grab-o:before,
+.fa-hand-rock-o:before {
+  content: "\f255";
+}
+.fa-hand-stop-o:before,
+.fa-hand-paper-o:before {
+  content: "\f256";
+}
+.fa-hand-scissors-o:before {
+  content: "\f257";
+}
+.fa-hand-lizard-o:before {
+  content: "\f258";
+}
+.fa-hand-spock-o:before {
+  content: "\f259";
+}
+.fa-hand-pointer-o:before {
+  content: "\f25a";
+}
+.fa-hand-peace-o:before {
+  content: "\f25b";
+}
+.fa-trademark:before {
+  content: "\f25c";
+}
+.fa-registered:before {
+  content: "\f25d";
+}
+.fa-creative-commons:before {
+  content: "\f25e";
+}
+.fa-gg:before {
+  content: "\f260";
+}
+.fa-gg-circle:before {
+  content: "\f261";
+}
+.fa-tripadvisor:before {
+  content: "\f262";
+}
+.fa-odnoklassniki:before {
+  content: "\f263";
+}
+.fa-odnoklassniki-square:before {
+  content: "\f264";
+}
+.fa-get-pocket:before {
+  content: "\f265";
+}
+.fa-wikipedia-w:before {
+  content: "\f266";
+}
+.fa-safari:before {
+  content: "\f267";
+}
+.fa-chrome:before {
+  content: "\f268";
+}
+.fa-firefox:before {
+  content: "\f269";
+}
+.fa-opera:before {
+  content: "\f26a";
+}
+.fa-internet-explorer:before {
+  content: "\f26b";
+}
+.fa-tv:before,
+.fa-television:before {
+  content: "\f26c";
+}
+.fa-contao:before {
+  content: "\f26d";
+}
+.fa-500px:before {
+  content: "\f26e";
+}
+.fa-amazon:before {
+  content: "\f270";
+}
+.fa-calendar-plus-o:before {
+  content: "\f271";
+}
+.fa-calendar-minus-o:before {
+  content: "\f272";
+}
+.fa-calendar-times-o:before {
+  content: "\f273";
+}
+.fa-calendar-check-o:before {
+  content: "\f274";
+}
+.fa-industry:before {
+  content: "\f275";
+}
+.fa-map-pin:before {
+  content: "\f276";
+}
+.fa-map-signs:before {
+  content: "\f277";
+}
+.fa-map-o:before {
+  content: "\f278";
+}
+.fa-map:before {
+  content: "\f279";
+}
+.fa-commenting:before {
+  content: "\f27a";
+}
+.fa-commenting-o:before {
+  content: "\f27b";
+}
+.fa-houzz:before {
+  content: "\f27c";
+}
+.fa-vimeo:before {
+  content: "\f27d";
+}
+.fa-black-tie:before {
+  content: "\f27e";
+}
+.fa-fonticons:before {
+  content: "\f280";
+}
+.fa-reddit-alien:before {
+  content: "\f281";
+}
+.fa-edge:before {
+  content: "\f282";
+}
+.fa-credit-card-alt:before {
+  content: "\f283";
+}
+.fa-codiepie:before {
+  content: "\f284";
+}
+.fa-modx:before {
+  content: "\f285";
+}
+.fa-fort-awesome:before {
+  content: "\f286";
+}
+.fa-usb:before {
+  content: "\f287";
+}
+.fa-product-hunt:before {
+  content: "\f288";
+}
+.fa-mixcloud:before {
+  content: "\f289";
+}
+.fa-scribd:before {
+  content: "\f28a";
+}
+.fa-pause-circle:before {
+  content: "\f28b";
+}
+.fa-pause-circle-o:before {
+  content: "\f28c";
+}
+.fa-stop-circle:before {
+  content: "\f28d";
+}
+.fa-stop-circle-o:before {
+  content: "\f28e";
+}
+.fa-shopping-bag:before {
+  content: "\f290";
+}
+.fa-shopping-basket:before {
+  content: "\f291";
+}
+.fa-hashtag:before {
+  content: "\f292";
+}
+.fa-bluetooth:before {
+  content: "\f293";
+}
+.fa-bluetooth-b:before {
+  content: "\f294";
+}
+.fa-percent:before {
+  content: "\f295";
+}
+.fa-gitlab:before {
+  content: "\f296";
+}
+.fa-wpbeginner:before {
+  content: "\f297";
+}
+.fa-wpforms:before {
+  content: "\f298";
+}
+.fa-envira:before {
+  content: "\f299";
+}
+.fa-universal-access:before {
+  content: "\f29a";
+}
+.fa-wheelchair-alt:before {
+  content: "\f29b";
+}
+.fa-question-circle-o:before {
+  content: "\f29c";
+}
+.fa-blind:before {
+  content: "\f29d";
+}
+.fa-audio-description:before {
+  content: "\f29e";
+}
+.fa-volume-control-phone:before {
+  content: "\f2a0";
+}
+.fa-braille:before {
+  content: "\f2a1";
+}
+.fa-assistive-listening-systems:before {
+  content: "\f2a2";
+}
+.fa-asl-interpreting:before,
+.fa-american-sign-language-interpreting:before {
+  content: "\f2a3";
+}
+.fa-deafness:before,
+.fa-hard-of-hearing:before,
+.fa-deaf:before {
+  content: "\f2a4";
+}
+.fa-glide:before {
+  content: "\f2a5";
+}
+.fa-glide-g:before {
+  content: "\f2a6";
+}
+.fa-signing:before,
+.fa-sign-language:before {
+  content: "\f2a7";
+}
+.fa-low-vision:before {
+  content: "\f2a8";
+}
+.fa-viadeo:before {
+  content: "\f2a9";
+}
+.fa-viadeo-square:before {
+  content: "\f2aa";
+}
+.fa-snapchat:before {
+  content: "\f2ab";
+}
+.fa-snapchat-ghost:before {
+  content: "\f2ac";
+}
+.fa-snapchat-square:before {
+  content: "\f2ad";
+}
+.fa-pied-piper:before {
+  content: "\f2ae";
+}
+.fa-first-order:before {
+  content: "\f2b0";
+}
+.fa-yoast:before {
+  content: "\f2b1";
+}
+.fa-themeisle:before {
+  content: "\f2b2";
+}
+.fa-google-plus-circle:before,
+.fa-google-plus-official:before {
+  content: "\f2b3";
+}
+.fa-fa:before,
+.fa-font-awesome:before {
+  content: "\f2b4";
+}
+.fa-handshake-o:before {
+  content: "\f2b5";
+}
+.fa-envelope-open:before {
+  content: "\f2b6";
+}
+.fa-envelope-open-o:before {
+  content: "\f2b7";
+}
+.fa-linode:before {
+  content: "\f2b8";
+}
+.fa-address-book:before {
+  content: "\f2b9";
+}
+.fa-address-book-o:before {
+  content: "\f2ba";
+}
+.fa-vcard:before,
+.fa-address-card:before {
+  content: "\f2bb";
+}
+.fa-vcard-o:before,
+.fa-address-card-o:before {
+  content: "\f2bc";
+}
+.fa-user-circle:before {
+  content: "\f2bd";
+}
+.fa-user-circle-o:before {
+  content: "\f2be";
+}
+.fa-user-o:before {
+  content: "\f2c0";
+}
+.fa-id-badge:before {
+  content: "\f2c1";
+}
+.fa-drivers-license:before,
+.fa-id-card:before {
+  content: "\f2c2";
+}
+.fa-drivers-license-o:before,
+.fa-id-card-o:before {
+  content: "\f2c3";
+}
+.fa-quora:before {
+  content: "\f2c4";
+}
+.fa-free-code-camp:before {
+  content: "\f2c5";
+}
+.fa-telegram:before {
+  content: "\f2c6";
+}
+.fa-thermometer-4:before,
+.fa-thermometer:before,
+.fa-thermometer-full:before {
+  content: "\f2c7";
+}
+.fa-thermometer-3:before,
+.fa-thermometer-three-quarters:before {
+  content: "\f2c8";
+}
+.fa-thermometer-2:before,
+.fa-thermometer-half:before {
+  content: "\f2c9";
+}
+.fa-thermometer-1:before,
+.fa-thermometer-quarter:before {
+  content: "\f2ca";
+}
+.fa-thermometer-0:before,
+.fa-thermometer-empty:before {
+  content: "\f2cb";
+}
+.fa-shower:before {
+  content: "\f2cc";
+}
+.fa-bathtub:before,
+.fa-s15:before,
+.fa-bath:before {
+  content: "\f2cd";
+}
+.fa-podcast:before {
+  content: "\f2ce";
+}
+.fa-window-maximize:before {
+  content: "\f2d0";
+}
+.fa-window-minimize:before {
+  content: "\f2d1";
+}
+.fa-window-restore:before {
+  content: "\f2d2";
+}
+.fa-times-rectangle:before,
+.fa-window-close:before {
+  content: "\f2d3";
+}
+.fa-times-rectangle-o:before,
+.fa-window-close-o:before {
+  content: "\f2d4";
+}
+.fa-bandcamp:before {
+  content: "\f2d5";
+}
+.fa-grav:before {
+  content: "\f2d6";
+}
+.fa-etsy:before {
+  content: "\f2d7";
+}
+.fa-imdb:before {
+  content: "\f2d8";
+}
+.fa-ravelry:before {
+  content: "\f2d9";
+}
+.fa-eercast:before {
+  content: "\f2da";
+}
+.fa-microchip:before {
+  content: "\f2db";
+}
+.fa-snowflake-o:before {
+  content: "\f2dc";
+}
+.fa-superpowers:before {
+  content: "\f2dd";
+}
+.fa-wpexplorer:before {
+  content: "\f2de";
+}
+.fa-meetup:before {
+  content: "\f2e0";
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+.sr-only-focusable:active,
+.sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+}
+.sr-only-focusable:active,
+.sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
 }
 /*!
 *
@@ -8694,6 +9372,10 @@ div.traceback-wrapper {
   max-width: 800px;
   margin: auto;
 }
+div.traceback-wrapper pre.traceback {
+  max-height: 600px;
+  overflow: auto;
+}
 /**
  * Primary styles
  *
@@ -8719,6 +9401,10 @@ body > #header {
   z-index: 100;
 }
 body > #header #header-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 5px;
   padding-bottom: 5px;
   padding-top: 5px;
   box-sizing: border-box;
@@ -8750,13 +9436,16 @@ body > #header .header-bar {
   padding-top: 1px;
   padding-bottom: 1px;
 }
-@media (max-width: 991px) {
-  #ipython_notebook {
-    margin-left: 10px;
-  }
-}
 [dir="rtl"] #ipython_notebook {
+  margin-right: 10px;
+  margin-left: 0;
+}
+[dir="rtl"] #ipython_notebook.pull-left {
   float: right !important;
+  float: right;
+}
+.flex-spacer {
+  flex: 1;
 }
 #noscript {
   width: auto;
@@ -8791,8 +9480,14 @@ body > #header .header-bar {
 input.ui-button {
   padding: 0.3em 0.9em;
 }
+span#kernel_logo_widget {
+  margin: 0 10px;
+}
 span#login_widget {
   float: right;
+}
+[dir="rtl"] span#login_widget {
+  float: left;
 }
 span#login_widget > .button,
 #logout {
@@ -8908,6 +9603,9 @@ span#login_widget > .button .badge,
   overflow: auto;
   flex: 1;
 }
+.modal-header {
+  cursor: move;
+}
 @media (min-width: 768px) {
   .modal .modal-dialog {
     width: 700px;
@@ -8928,6 +9626,19 @@ span#login_widget > .button .badge,
   display: inline-block;
   margin-bottom: -4px;
 }
+[dir="rtl"] .center-nav form.pull-left {
+  float: right !important;
+  float: right;
+}
+[dir="rtl"] .center-nav .navbar-text {
+  float: right;
+}
+[dir="rtl"] .navbar-inner {
+  text-align: right;
+}
+[dir="rtl"] div.text-left {
+  text-align: right;
+}
 /*!
 *
 * IPython tree view
@@ -8944,34 +9655,42 @@ span#login_widget > .button .badge,
   margin: 0;
 }
 .alternate_upload input.fileinput {
-  text-align: center;
-  vertical-align: middle;
-  display: inline;
+  position: absolute;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: pointer;
   opacity: 0;
   z-index: 2;
-  width: 12ex;
-  margin-right: -12ex;
+}
+.alternate_upload .btn-xs > input.fileinput {
+  margin: -1px -5px;
 }
 .alternate_upload .btn-upload {
+  position: relative;
   height: 22px;
+}
+::-webkit-file-upload-button {
+  cursor: pointer;
 }
 /**
  * Primary styles
  *
  * Author: Jupyter Development Team
  */
-[dir="rtl"] #tabs li {
-  float: right;
-}
 ul#tabs {
   margin-bottom: 4px;
-}
-[dir="rtl"] ul#tabs {
-  margin-right: 0px;
 }
 ul#tabs a {
   padding-top: 6px;
   padding-bottom: 4px;
+}
+[dir="rtl"] ul#tabs.nav-tabs > li {
+  float: right;
+}
+[dir="rtl"] ul#tabs.nav.nav-tabs {
+  padding-right: 0;
 }
 ul.breadcrumb a:focus,
 ul.breadcrumb a:hover {
@@ -8991,15 +9710,13 @@ ul.breadcrumb span {
 .list_toolbar .tree-buttons {
   padding-top: 1px;
 }
-[dir="rtl"] .list_toolbar .tree-buttons {
+[dir="rtl"] .list_toolbar .tree-buttons .pull-right {
   float: left !important;
+  float: left;
 }
-[dir="rtl"] .list_toolbar .pull-right {
-  padding-top: 1px;
-  float: left !important;
-}
-[dir="rtl"] .list_toolbar .pull-left {
-  float: right !important;
+[dir="rtl"] .list_toolbar .col-sm-4,
+[dir="rtl"] .list_toolbar .col-sm-8 {
+  float: right;
 }
 .dynamic-buttons {
   padding-top: 3px;
@@ -9055,7 +9772,7 @@ ul.breadcrumb span {
 .list_item > div input {
   margin-right: 7px;
   margin-left: 14px;
-  vertical-align: baseline;
+  vertical-align: text-bottom;
   line-height: 22px;
   position: relative;
   top: -1px;
@@ -9065,6 +9782,9 @@ ul.breadcrumb span {
   margin-left: -1px;
   vertical-align: baseline;
   line-height: 22px;
+}
+[dir="rtl"] .list_item > div input {
+  margin-right: 0;
 }
 .new-file input[type=checkbox] {
   visibility: hidden;
@@ -9080,6 +9800,14 @@ ul.breadcrumb span {
   margin-left: 7px;
   line-height: 22px;
   vertical-align: baseline;
+}
+.item_modified {
+  margin-right: 7px;
+  margin-left: 7px;
+}
+[dir="rtl"] .item_modified.pull-right {
+  float: left !important;
+  float: left;
 }
 .item_buttons {
   line-height: 1em;
@@ -9108,6 +9836,14 @@ ul.breadcrumb span {
   margin-right: 7px;
   float: left;
 }
+[dir="rtl"] .item_buttons.pull-right {
+  float: left !important;
+  float: left;
+}
+[dir="rtl"] .item_buttons .kernel-name {
+  margin-left: 7px;
+  float: right;
+}
 .toolbar_info {
   height: 24px;
   line-height: 24px;
@@ -9133,18 +9869,32 @@ ul.breadcrumb span {
   background-color: transparent;
   font-weight: bold;
 }
+.sort_button {
+  display: inline-block;
+  padding-left: 7px;
+}
+[dir="rtl"] .sort_button.pull-right {
+  float: left !important;
+  float: left;
+}
 #tree-selector {
   padding-right: 0px;
-}
-[dir="rtl"] #tree-selector a {
-  float: right;
 }
 #button-select-all {
   min-width: 50px;
 }
+[dir="rtl"] #button-select-all.btn {
+  float: right ;
+}
 #select-all {
   margin-left: 7px;
   margin-right: 2px;
+  margin-top: 2px;
+  height: 16px;
+}
+[dir="rtl"] #select-all.pull-left {
+  float: right !important;
+  float: right;
 }
 .menu_icon {
   margin-right: 2px;
@@ -9162,6 +9912,12 @@ ul.breadcrumb span {
   -moz-osx-font-smoothing: grayscale;
   content: "\f114";
 }
+.folder_icon:before.fa-pull-left {
+  margin-right: .3em;
+}
+.folder_icon:before.fa-pull-right {
+  margin-left: .3em;
+}
 .folder_icon:before.pull-left {
   margin-right: .3em;
 }
@@ -9178,6 +9934,12 @@ ul.breadcrumb span {
   content: "\f02d";
   position: relative;
   top: -1px;
+}
+.notebook_icon:before.fa-pull-left {
+  margin-right: .3em;
+}
+.notebook_icon:before.fa-pull-right {
+  margin-left: .3em;
 }
 .notebook_icon:before.pull-left {
   margin-right: .3em;
@@ -9197,6 +9959,12 @@ ul.breadcrumb span {
   top: -1px;
   color: #5cb85c;
 }
+.running_notebook_icon:before.fa-pull-left {
+  margin-right: .3em;
+}
+.running_notebook_icon:before.fa-pull-right {
+  margin-left: .3em;
+}
 .running_notebook_icon:before.pull-left {
   margin-right: .3em;
 }
@@ -9214,6 +9982,12 @@ ul.breadcrumb span {
   position: relative;
   top: -2px;
 }
+.file_icon:before.fa-pull-left {
+  margin-right: .3em;
+}
+.file_icon:before.fa-pull-right {
+  margin-left: .3em;
+}
 .file_icon:before.pull-left {
   margin-right: .3em;
 }
@@ -9228,8 +10002,11 @@ ul#new-menu {
   left: auto;
   right: 0;
 }
-[dir="rtl"] #new-menu {
-  text-align: right;
+#new-menu .dropdown-header {
+  font-size: 10px;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 0 0 3px;
+  margin: -3px 20px 0;
 }
 .kernel-menu-icon {
   padding-right: 12px;
@@ -9276,9 +10053,6 @@ ul#new-menu {
 #running .panel-group .panel .panel-body .list_container .list_item:last-child {
   border-bottom: 0px;
 }
-[dir="rtl"] #running .col-sm-8 {
-  float: right !important;
-}
 .delete-button {
   display: none;
 }
@@ -9286,6 +10060,12 @@ ul#new-menu {
   display: none;
 }
 .rename-button {
+  display: none;
+}
+.move-button {
+  display: none;
+}
+.download-button {
   display: none;
 }
 .shutdown-button {
@@ -9328,6 +10108,12 @@ ul#new-menu {
   -moz-osx-font-smoothing: grayscale;
   width: 20px;
 }
+.dirty-indicator.fa-pull-left {
+  margin-right: .3em;
+}
+.dirty-indicator.fa-pull-right {
+  margin-left: .3em;
+}
 .dirty-indicator.pull-left {
   margin-right: .3em;
 }
@@ -9342,6 +10128,12 @@ ul#new-menu {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   width: 20px;
+}
+.dirty-indicator-dirty.fa-pull-left {
+  margin-right: .3em;
+}
+.dirty-indicator-dirty.fa-pull-right {
+  margin-left: .3em;
 }
 .dirty-indicator-dirty.pull-left {
   margin-right: .3em;
@@ -9358,6 +10150,12 @@ ul#new-menu {
   -moz-osx-font-smoothing: grayscale;
   width: 20px;
 }
+.dirty-indicator-clean.fa-pull-left {
+  margin-right: .3em;
+}
+.dirty-indicator-clean.fa-pull-right {
+  margin-left: .3em;
+}
 .dirty-indicator-clean.pull-left {
   margin-right: .3em;
 }
@@ -9372,6 +10170,12 @@ ul#new-menu {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   content: "\f00c";
+}
+.dirty-indicator-clean:before.fa-pull-left {
+  margin-right: .3em;
+}
+.dirty-indicator-clean:before.fa-pull-right {
+  margin-left: .3em;
 }
 .dirty-indicator-clean:before.pull-left {
   margin-right: .3em;
@@ -9417,14 +10221,132 @@ ul#new-menu {
     box-shadow: 0px 0px 12px 1px rgba(87, 87, 87, 0.2);
   }
 }
+.CodeMirror-dialog {
+  background-color: #fff;
+}
 /*!
 *
 * IPython notebook
 *
 */
-/* CSS font colors for translated ANSI colors. */
+/* CSS font colors for translated ANSI escape sequences */
+/* The color values are a mix of
+   http://www.xcolors.net/dl/baskerville-ivorylight and
+   http://www.xcolors.net/dl/euphrasia */
+.ansi-black-fg {
+  color: #3E424D;
+}
+.ansi-black-bg {
+  background-color: #3E424D;
+}
+.ansi-black-intense-fg {
+  color: #282C36;
+}
+.ansi-black-intense-bg {
+  background-color: #282C36;
+}
+.ansi-red-fg {
+  color: #E75C58;
+}
+.ansi-red-bg {
+  background-color: #E75C58;
+}
+.ansi-red-intense-fg {
+  color: #B22B31;
+}
+.ansi-red-intense-bg {
+  background-color: #B22B31;
+}
+.ansi-green-fg {
+  color: #00A250;
+}
+.ansi-green-bg {
+  background-color: #00A250;
+}
+.ansi-green-intense-fg {
+  color: #007427;
+}
+.ansi-green-intense-bg {
+  background-color: #007427;
+}
+.ansi-yellow-fg {
+  color: #DDB62B;
+}
+.ansi-yellow-bg {
+  background-color: #DDB62B;
+}
+.ansi-yellow-intense-fg {
+  color: #B27D12;
+}
+.ansi-yellow-intense-bg {
+  background-color: #B27D12;
+}
+.ansi-blue-fg {
+  color: #208FFB;
+}
+.ansi-blue-bg {
+  background-color: #208FFB;
+}
+.ansi-blue-intense-fg {
+  color: #0065CA;
+}
+.ansi-blue-intense-bg {
+  background-color: #0065CA;
+}
+.ansi-magenta-fg {
+  color: #D160C4;
+}
+.ansi-magenta-bg {
+  background-color: #D160C4;
+}
+.ansi-magenta-intense-fg {
+  color: #A03196;
+}
+.ansi-magenta-intense-bg {
+  background-color: #A03196;
+}
+.ansi-cyan-fg {
+  color: #60C6C8;
+}
+.ansi-cyan-bg {
+  background-color: #60C6C8;
+}
+.ansi-cyan-intense-fg {
+  color: #258F8F;
+}
+.ansi-cyan-intense-bg {
+  background-color: #258F8F;
+}
+.ansi-white-fg {
+  color: #C5C1B4;
+}
+.ansi-white-bg {
+  background-color: #C5C1B4;
+}
+.ansi-white-intense-fg {
+  color: #A1A6B2;
+}
+.ansi-white-intense-bg {
+  background-color: #A1A6B2;
+}
+.ansi-default-inverse-fg {
+  color: #FFFFFF;
+}
+.ansi-default-inverse-bg {
+  background-color: #000000;
+}
+.ansi-bold {
+  font-weight: bold;
+}
+.ansi-underline {
+  text-decoration: underline;
+}
+/* The following styles are deprecated an will be removed in a future version */
 .ansibold {
   font-weight: bold;
+}
+.ansi-inverse {
+  outline: 0.5px dotted;
 }
 /* use dark versions for foreground, to improve visibility */
 .ansiblack {
@@ -9503,12 +10425,20 @@ div.cell {
   /* This acts as a spacer between cells, that is outside the border */
   margin: 0px;
   outline: none;
-  border-left-width: 1px;
-  padding-left: 5px;
-  background: linear-gradient(to right, transparent -40px, transparent 1px, transparent 1px, transparent 100%);
+  position: relative;
+  overflow: visible;
+}
+div.cell:before {
+  position: absolute;
+  display: block;
+  top: -1px;
+  left: -1px;
+  width: 5px;
+  height: calc(100% +  2px);
+  content: '';
+  background: transparent;
 }
 div.cell.jupyter-soft-selected {
-  border-left-color: #90CAF9;
   border-left-color: #E3F2FD;
   border-left-width: 1px;
   padding-left: 5px;
@@ -9521,27 +10451,39 @@ div.cell.jupyter-soft-selected {
     border-color: transparent;
   }
 }
-div.cell.selected {
+div.cell.selected,
+div.cell.selected.jupyter-soft-selected {
   border-color: #ababab;
-  border-left-width: 0px;
-  padding-left: 6px;
-  background: linear-gradient(to right, #42A5F5 -40px, #42A5F5 5px, transparent 5px, transparent 100%);
+}
+div.cell.selected:before,
+div.cell.selected.jupyter-soft-selected:before {
+  position: absolute;
+  display: block;
+  top: -1px;
+  left: -1px;
+  width: 5px;
+  height: calc(100% +  2px);
+  content: '';
+  background: #42A5F5;
 }
 @media print {
-  div.cell.selected {
+  div.cell.selected,
+  div.cell.selected.jupyter-soft-selected {
     border-color: transparent;
   }
 }
-div.cell.selected.jupyter-soft-selected {
-  border-left-width: 0;
-  padding-left: 6px;
-  background: linear-gradient(to right, #42A5F5 -40px, #42A5F5 7px, #E3F2FD 7px, #E3F2FD 100%);
-}
 .edit_mode div.cell.selected {
   border-color: #66BB6A;
-  border-left-width: 0px;
-  padding-left: 6px;
-  background: linear-gradient(to right, #66BB6A -40px, #66BB6A 5px, transparent 5px, transparent 100%);
+}
+.edit_mode div.cell.selected:before {
+  position: absolute;
+  display: block;
+  top: -1px;
+  left: -1px;
+  width: 5px;
+  height: calc(100% +  2px);
+  content: '';
+  background: #66BB6A;
 }
 @media print {
   .edit_mode div.cell.selected {
@@ -9737,7 +10679,9 @@ div.input_area > div.highlight > pre {
 .CodeMirror-lines {
   /* In CM2, this used to be 0.4em, but in CM3 it went to 4px. We need the em value because */
   /* we have set a different line-height and want this to scale with that. */
-  padding: 0.4em;
+  /* Note that this should set vertical padding only, since CodeMirror assumes
+       that horizontal padding will be set on CodeMirror pre */
+  padding: 0.4em 0;
 }
 .CodeMirror-linenumber {
   padding: 0 8px 0 4px;
@@ -9747,11 +10691,24 @@ div.input_area > div.highlight > pre {
   border-top-left-radius: 2px;
 }
 .CodeMirror pre {
-  /* In CM3 this went to 4px from 0 in CM2. We need the 0 value because of how we size */
-  /* .CodeMirror-lines */
-  padding: 0;
+  /* In CM3 this went to 4px from 0 in CM2. This sets horizontal padding only,
+    use .CodeMirror-lines for vertical */
+  padding: 0 0.4em;
   border: 0;
   border-radius: 0;
+}
+.CodeMirror-cursor {
+  border-left: 1.4px solid black;
+}
+@media screen and (min-width: 2138px) and (max-width: 4319px) {
+  .CodeMirror-cursor {
+    border-left: 2px solid black;
+  }
+}
+@media screen and (min-width: 4320px) {
+  .CodeMirror-cursor {
+    border-left: 4px solid black;
+  }
 }
 /*
 
@@ -10005,6 +10962,9 @@ div.output_area img.unconfined,
 div.output_area svg.unconfined {
   max-width: none;
 }
+div.output_area .mglyph > img {
+  max-width: none;
+}
 /* This is needed to protect the pre formating from global settings such
    as that of bootstrap */
 .output {
@@ -10043,7 +11003,7 @@ div.output_area svg.unconfined {
 }
 div.output_area pre {
   margin: 0;
-  padding: 0;
+  padding: 1px 0 1px 0;
   border: 0;
   vertical-align: baseline;
   color: black;
@@ -10203,39 +11163,35 @@ div.output_unrecognized a:hover {
 .rendered_html h6:first-child {
   margin-top: 1em;
 }
+.rendered_html ul:not(.list-inline),
+.rendered_html ol:not(.list-inline) {
+  padding-left: 2em;
+}
 .rendered_html ul {
   list-style: disc;
-  margin: 0em 2em;
-  padding-left: 0px;
 }
 .rendered_html ul ul {
   list-style: square;
-  margin: 0em 2em;
+  margin-top: 0;
 }
 .rendered_html ul ul ul {
   list-style: circle;
-  margin: 0em 2em;
 }
 .rendered_html ol {
   list-style: decimal;
-  margin: 0em 2em;
-  padding-left: 0px;
 }
 .rendered_html ol ol {
   list-style: upper-alpha;
-  margin: 0em 2em;
+  margin-top: 0;
 }
 .rendered_html ol ol ol {
   list-style: lower-alpha;
-  margin: 0em 2em;
 }
 .rendered_html ol ol ol ol {
   list-style: lower-roman;
-  margin: 0em 2em;
 }
 .rendered_html ol ol ol ol ol {
   list-style: decimal;
-  margin: 0em 2em;
 }
 .rendered_html * + ul {
   margin-top: 1em;
@@ -10249,14 +11205,23 @@ div.output_unrecognized a:hover {
 }
 .rendered_html pre {
   margin: 1em 2em;
+  padding: 0px;
+  background-color: #fff;
+}
+.rendered_html code {
+  background-color: #eff0f1;
+}
+.rendered_html p code {
+  padding: 1px 5px;
+}
+.rendered_html pre code {
+  background-color: #fff;
 }
 .rendered_html pre,
 .rendered_html code {
   border: 0;
-  background-color: #fff;
   color: #000;
   font-size: 100%;
-  padding: 0px;
 }
 .rendered_html blockquote {
   margin: 1em 2em;
@@ -10264,24 +11229,36 @@ div.output_unrecognized a:hover {
 .rendered_html table {
   margin-left: auto;
   margin-right: auto;
-  border: 1px solid black;
+  border: none;
   border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
 }
 .rendered_html tr,
 .rendered_html th,
 .rendered_html td {
-  border: 1px solid black;
-  border-collapse: collapse;
-  margin: 1em 2em;
-}
-.rendered_html td,
-.rendered_html th {
-  text-align: left;
+  text-align: right;
   vertical-align: middle;
-  padding: 4px;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
 }
 .rendered_html th {
   font-weight: bold;
+}
+.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
 }
 .rendered_html * + table {
   margin-top: 1em;
@@ -10308,6 +11285,15 @@ div.output_unrecognized a:hover {
 .rendered_html img.unconfined,
 .rendered_html svg.unconfined {
   max-width: none;
+}
+.rendered_html .alert {
+  margin-bottom: initial;
+}
+.rendered_html * + .alert {
+  margin-top: 1em;
+}
+[dir="rtl"] .rendered_html p {
+  text-align: right;
 }
 div.text_cell {
   /* Old browsers */
@@ -10362,8 +11348,17 @@ h6:hover .anchor-link {
   overflow-x: auto;
   overflow-y: hidden;
 }
+.text_cell.rendered .rendered_html tr,
+.text_cell.rendered .rendered_html th,
+.text_cell.rendered .rendered_html td {
+  max-width: none;
+}
 .text_cell.unrendered .text_cell_render {
   display: none;
+}
+.text_cell .dropzone .input_area {
+  border: 2px dashed #bababa;
+  margin: -1px;
 }
 .cm-header-1,
 .cm-header-2,
@@ -10500,6 +11495,28 @@ kbd {
   padding-top: 1px;
   padding-bottom: 1px;
 }
+.jupyter-keybindings {
+  padding: 1px;
+  line-height: 24px;
+  border-bottom: 1px solid gray;
+}
+.jupyter-keybindings input {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+.jupyter-keybindings i {
+  padding: 6px;
+}
+.well code {
+  background-color: #ffffff;
+  border-color: #ababab;
+  border-width: 1px;
+  border-style: solid;
+  padding: 2px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+}
 /* CSS for the cell toolbar */
 .celltoolbar {
   border: thin solid #CFCFCF;
@@ -10632,6 +11649,152 @@ select[multiple].celltoolbar select {
   margin-left: 5px;
   margin-right: 5px;
 }
+.tags_button_container {
+  width: 100%;
+  display: flex;
+}
+.tag-container {
+  display: flex;
+  flex-direction: row;
+  flex-grow: 1;
+  overflow: hidden;
+  position: relative;
+}
+.tag-container > * {
+  margin: 0 4px;
+}
+.remove-tag-btn {
+  margin-left: 4px;
+}
+.tags-input {
+  display: flex;
+}
+.cell-tag:last-child:after {
+  content: "";
+  position: absolute;
+  right: 0;
+  width: 40px;
+  height: 100%;
+  /* Fade to background color of cell toolbar */
+  background: linear-gradient(to right, rgba(0, 0, 0, 0), #EEE);
+}
+.tags-input > * {
+  margin-left: 4px;
+}
+.cell-tag,
+.tags-input input,
+.tags-input button {
+  display: block;
+  width: 100%;
+  height: 32px;
+  padding: 6px 12px;
+  font-size: 13px;
+  line-height: 1.42857143;
+  color: #555555;
+  background-color: #fff;
+  background-image: none;
+  border: 1px solid #ccc;
+  border-radius: 2px;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+  -webkit-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+  -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+  transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+  height: 30px;
+  padding: 5px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: 1px;
+  box-shadow: none;
+  width: inherit;
+  font-size: inherit;
+  height: 22px;
+  line-height: 22px;
+  padding: 0px 4px;
+  display: inline-block;
+}
+.cell-tag:focus,
+.tags-input input:focus,
+.tags-input button:focus {
+  border-color: #66afe9;
+  outline: 0;
+  -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, 0.6);
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, 0.6);
+}
+.cell-tag::-moz-placeholder,
+.tags-input input::-moz-placeholder,
+.tags-input button::-moz-placeholder {
+  color: #999;
+  opacity: 1;
+}
+.cell-tag:-ms-input-placeholder,
+.tags-input input:-ms-input-placeholder,
+.tags-input button:-ms-input-placeholder {
+  color: #999;
+}
+.cell-tag::-webkit-input-placeholder,
+.tags-input input::-webkit-input-placeholder,
+.tags-input button::-webkit-input-placeholder {
+  color: #999;
+}
+.cell-tag::-ms-expand,
+.tags-input input::-ms-expand,
+.tags-input button::-ms-expand {
+  border: 0;
+  background-color: transparent;
+}
+.cell-tag[disabled],
+.tags-input input[disabled],
+.tags-input button[disabled],
+.cell-tag[readonly],
+.tags-input input[readonly],
+.tags-input button[readonly],
+fieldset[disabled] .cell-tag,
+fieldset[disabled] .tags-input input,
+fieldset[disabled] .tags-input button {
+  background-color: #eeeeee;
+  opacity: 1;
+}
+.cell-tag[disabled],
+.tags-input input[disabled],
+.tags-input button[disabled],
+fieldset[disabled] .cell-tag,
+fieldset[disabled] .tags-input input,
+fieldset[disabled] .tags-input button {
+  cursor: not-allowed;
+}
+textarea.cell-tag,
+textarea.tags-input input,
+textarea.tags-input button {
+  height: auto;
+}
+select.cell-tag,
+select.tags-input input,
+select.tags-input button {
+  height: 30px;
+  line-height: 30px;
+}
+textarea.cell-tag,
+textarea.tags-input input,
+textarea.tags-input button,
+select[multiple].cell-tag,
+select[multiple].tags-input input,
+select[multiple].tags-input button {
+  height: auto;
+}
+.cell-tag,
+.tags-input button {
+  padding: 0px 4px;
+}
+.cell-tag {
+  background-color: #fff;
+  white-space: nowrap;
+}
+.tags-input input[type=text]:focus {
+  outline: none;
+  box-shadow: none;
+  border-color: #ccc;
+}
 .completions {
   position: absolute;
   z-index: 110;
@@ -10657,16 +11820,28 @@ select[multiple].celltoolbar select {
 .completions select option.context {
   color: #286090;
 }
-#kernel_logo_widget {
-  float: right !important;
-  float: right;
-}
 #kernel_logo_widget .current_kernel_logo {
   display: none;
   margin-top: -1px;
   margin-bottom: -1px;
   width: 32px;
   height: 32px;
+}
+[dir="rtl"] #kernel_logo_widget {
+  float: left !important;
+  float: left;
+}
+.modal .modal-body .move-path {
+  display: flex;
+  flex-direction: row;
+  justify-content: space;
+  align-items: center;
+}
+.modal .modal-body .move-path .server-root {
+  padding-right: 20px;
+}
+.modal .modal-body .move-path .path-input {
+  flex: 1;
 }
 #menubar {
   box-sizing: border-box;
@@ -10688,11 +11863,41 @@ select[multiple].celltoolbar select {
 #menubar .navbar-collapse {
   clear: left;
 }
+[dir="rtl"] #menubar .navbar-toggle {
+  float: right;
+}
+[dir="rtl"] #menubar .navbar-collapse {
+  clear: right;
+}
+[dir="rtl"] #menubar .navbar-nav {
+  float: right;
+}
+[dir="rtl"] #menubar .nav {
+  padding-right: 0px;
+}
+[dir="rtl"] #menubar .navbar-nav > li {
+  float: right;
+}
+[dir="rtl"] #menubar .navbar-right {
+  float: left !important;
+}
+[dir="rtl"] ul.dropdown-menu {
+  text-align: right;
+  left: auto;
+}
+[dir="rtl"] ul#new-menu.dropdown-menu {
+  right: auto;
+  left: 0;
+}
 .nav-wrapper {
   border-bottom: 1px solid #e7e7e7;
 }
 i.menu-icon {
   padding-top: 4px;
+}
+[dir="rtl"] i.menu-icon.pull-right {
+  float: left !important;
+  float: left;
 }
 ul#help_menu li a {
   overflow: hidden;
@@ -10700,6 +11905,17 @@ ul#help_menu li a {
 }
 ul#help_menu li a i {
   margin-right: -1.2em;
+}
+[dir="rtl"] ul#help_menu li a {
+  padding-left: 2.2em;
+}
+[dir="rtl"] ul#help_menu li a i {
+  margin-right: 0;
+  margin-left: -1.2em;
+}
+[dir="rtl"] ul#help_menu li a i.pull-right {
+  float: left !important;
+  float: left;
 }
 .dropdown-submenu {
   position: relative;
@@ -10709,6 +11925,10 @@ ul#help_menu li a i {
   left: 100%;
   margin-top: -6px;
   margin-left: -1px;
+}
+[dir="rtl"] .dropdown-submenu > .dropdown-menu {
+  right: 100%;
+  margin-right: -1px;
 }
 .dropdown-submenu:hover > .dropdown-menu {
   display: block;
@@ -10727,11 +11947,23 @@ ul#help_menu li a i {
   margin-top: 2px;
   margin-right: -10px;
 }
+.dropdown-submenu > a:after.fa-pull-left {
+  margin-right: .3em;
+}
+.dropdown-submenu > a:after.fa-pull-right {
+  margin-left: .3em;
+}
 .dropdown-submenu > a:after.pull-left {
   margin-right: .3em;
 }
 .dropdown-submenu > a:after.pull-right {
   margin-left: .3em;
+}
+[dir="rtl"] .dropdown-submenu > a:after {
+  float: left;
+  content: "\f0d9";
+  margin-right: 0;
+  margin-left: -10px;
 }
 .dropdown-submenu:hover > a:after {
   color: #262626;
@@ -10748,6 +11980,10 @@ ul#help_menu li a i {
   float: right;
   z-index: 10;
 }
+[dir="rtl"] #notification_area {
+  float: left !important;
+  float: left;
+}
 .indicator_area {
   float: right !important;
   float: right;
@@ -10758,6 +11994,10 @@ ul#help_menu li a i {
   z-index: 10;
   text-align: center;
   width: auto;
+}
+[dir="rtl"] .indicator_area {
+  float: left !important;
+  float: left;
 }
 #kernel_indicator {
   float: right !important;
@@ -10775,6 +12015,12 @@ ul#help_menu li a i {
   padding-left: 5px;
   padding-right: 5px;
 }
+[dir="rtl"] #kernel_indicator {
+  float: left !important;
+  float: left;
+  border-left: 0;
+  border-right: 1px solid;
+}
 #modal_indicator {
   float: right !important;
   float: right;
@@ -10785,6 +12031,10 @@ ul#help_menu li a i {
   z-index: 10;
   text-align: center;
   width: auto;
+}
+[dir="rtl"] #modal_indicator {
+  float: left !important;
+  float: left;
 }
 #readonly-indicator {
   float: right !important;
@@ -10815,6 +12065,12 @@ ul#help_menu li a i {
   -moz-osx-font-smoothing: grayscale;
   content: "\f040";
 }
+.edit_mode .modal_indicator:before.fa-pull-left {
+  margin-right: .3em;
+}
+.edit_mode .modal_indicator:before.fa-pull-right {
+  margin-left: .3em;
+}
 .edit_mode .modal_indicator:before.pull-left {
   margin-right: .3em;
 }
@@ -10829,6 +12085,12 @@ ul#help_menu li a i {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   content: ' ';
+}
+.command_mode .modal_indicator:before.fa-pull-left {
+  margin-right: .3em;
+}
+.command_mode .modal_indicator:before.fa-pull-right {
+  margin-left: .3em;
 }
 .command_mode .modal_indicator:before.pull-left {
   margin-right: .3em;
@@ -10845,6 +12107,12 @@ ul#help_menu li a i {
   -moz-osx-font-smoothing: grayscale;
   content: "\f10c";
 }
+.kernel_idle_icon:before.fa-pull-left {
+  margin-right: .3em;
+}
+.kernel_idle_icon:before.fa-pull-right {
+  margin-left: .3em;
+}
 .kernel_idle_icon:before.pull-left {
   margin-right: .3em;
 }
@@ -10859,6 +12127,12 @@ ul#help_menu li a i {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   content: "\f111";
+}
+.kernel_busy_icon:before.fa-pull-left {
+  margin-right: .3em;
+}
+.kernel_busy_icon:before.fa-pull-right {
+  margin-left: .3em;
 }
 .kernel_busy_icon:before.pull-left {
   margin-right: .3em;
@@ -10875,6 +12149,12 @@ ul#help_menu li a i {
   -moz-osx-font-smoothing: grayscale;
   content: "\f1e2";
 }
+.kernel_dead_icon:before.fa-pull-left {
+  margin-right: .3em;
+}
+.kernel_dead_icon:before.fa-pull-right {
+  margin-left: .3em;
+}
 .kernel_dead_icon:before.pull-left {
   margin-right: .3em;
 }
@@ -10889,6 +12169,12 @@ ul#help_menu li a i {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   content: "\f127";
+}
+.kernel_disconnected_icon:before.fa-pull-left {
+  margin-right: .3em;
+}
+.kernel_disconnected_icon:before.fa-pull-right {
+  margin-left: .3em;
 }
 .kernel_disconnected_icon:before.pull-left {
   margin-right: .3em;
@@ -11279,27 +12565,46 @@ div#pager .ui-resizable-handle::after {
   flex: 1;
 }
 span.save_widget {
-  margin-top: 6px;
+  height: 30px;
+  margin-top: 4px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: baseline;
+  width: 50%;
+  flex: 1;
 }
 span.save_widget span.filename {
-  height: 1em;
+  height: 100%;
   line-height: 1em;
-  padding: 3px;
   margin-left: 16px;
   border: none;
   font-size: 146.5%;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
   border-radius: 2px;
 }
 span.save_widget span.filename:hover {
   background-color: #e6e6e6;
 }
+[dir="rtl"] span.save_widget.pull-left {
+  float: right !important;
+  float: right;
+}
+[dir="rtl"] span.save_widget span.filename {
+  margin-left: 0;
+  margin-right: 16px;
+}
 span.checkpoint_status,
 span.autosave_status {
   font-size: small;
+  white-space: nowrap;
+  padding: 0 5px;
 }
 @media (max-width: 767px) {
   span.save_widget {
     font-size: small;
+    padding: 0 0 0 5px;
   }
   span.checkpoint_status,
   span.autosave_status {
@@ -11343,6 +12648,9 @@ span.autosave_status {
   margin-top: 0px;
   margin-left: 5px;
 }
+.toolbar-btn-label {
+  margin-left: 6px;
+}
 #maintoolbar {
   margin-bottom: -3px;
   margin-top: -8px;
@@ -11362,6 +12670,10 @@ span.autosave_status {
 }
 .select-xs {
   height: 24px;
+}
+[dir="rtl"] .btn-group > .btn,
+.btn-group-vertical > .btn {
+  float: right;
 }
 .pulse,
 .dropdown-menu > li > a.pulse,
@@ -11512,6 +12824,10 @@ ul.typeahead-list i {
   margin-left: -10px;
   width: 18px;
 }
+[dir="rtl"] ul.typeahead-list i {
+  margin-left: 0;
+  margin-right: -10px;
+}
 ul.typeahead-list {
   max-height: 80vh;
   overflow: auto;
@@ -11520,6 +12836,13 @@ ul.typeahead-list > li > a {
   /** Firefox bug **/
   /* see https://github.com/jupyter/notebook/issues/559 */
   white-space: normal;
+}
+ul.typeahead-list  > li > a.pull-right {
+  float: left !important;
+  float: left;
+}
+[dir="rtl"] .typeahead-list {
+  text-align: right;
 }
 .cmd-palette .modal-body {
   padding: 7px;
@@ -11531,10 +12854,19 @@ ul.typeahead-list > li > a {
   outline: none;
 }
 .no-shortcut {
-  display: none;
+  min-width: 20px;
+  color: transparent;
+}
+[dir="rtl"] .no-shortcut.pull-right {
+  float: left !important;
+  float: left;
+}
+[dir="rtl"] .command-shortcut.pull-right {
+  float: left !important;
+  float: left;
 }
 .command-shortcut:before {
-  content: "(command)";
+  content: "(command mode)";
   padding-right: 3px;
   color: #777777;
 }
@@ -11543,6 +12875,10 @@ ul.typeahead-list > li > a {
   padding-right: 3px;
   color: #777777;
 }
+[dir="rtl"] .edit-shortcut.pull-right {
+  float: left !important;
+  float: left;
+}
 #find-and-replace #replace-preview .match,
 #find-and-replace #replace-preview .insert {
   background-color: #BBDEFB;
@@ -11550,6 +12886,12 @@ ul.typeahead-list > li > a {
   border-style: solid;
   border-width: 1px;
   border-radius: 0px;
+}
+[dir="ltr"] #find-and-replace .input-group-btn + .form-control {
+  border-left: none;
+}
+[dir="rtl"] #find-and-replace .input-group-btn + .form-control {
+  border-right: none;
 }
 #find-and-replace #replace-preview .replace .match {
   background-color: #FFCDD2;
@@ -11747,7 +13089,7 @@ div#notebook {
 
 <!-- Loading mathjax macro -->
 <!-- Load mathjax -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS_HTML"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS_HTML"></script>
     <!-- MathJax configuration -->
     <script type="text/x-mathjax-config">
     MathJax.Hub.Config({
@@ -11772,26 +13114,18 @@ div#notebook {
     <div class="container" id="notebook-container">
 
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
+</div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="HurdleDMR">HurdleDMR<a class="anchor-link" href="#HurdleDMR">&#182;</a></h1><p>HurdleDMR.jl is a Julia implementation of the Hurdle Distributed Multinomial Regression (HDMR), as described in:</p>
+<h1 id="HurdleDMR-from-Python">HurdleDMR from Python<a class="anchor-link" href="#HurdleDMR-from-Python">&#182;</a></h1><p>HurdleDMR.jl is a Julia implementation of the Hurdle Distributed Multinomial Regression (HDMR), as described in:</p>
 <p>Kelly, Bryan, Asaf Manela, and Alan Moreira (2018). Text Selection. <a href="http://apps.olin.wustl.edu/faculty/manela/kmm/textselection/">Working paper</a>.</p>
 <p>It includes a Julia implementation of the Distributed Multinomial Regression (DMR) model of <a href="https://arxiv.org/abs/1311.6139">Taddy (2015)</a>.</p>
-<p>This tutorial explains how to use this package.</p>
+<p>This tutorial explains how to use this package from Python via the <a href="https://github.com/JuliaPy/pyjulia">PyJulia</a> package.</p>
 <h2 id="Setup">Setup<a class="anchor-link" href="#Setup">&#182;</a></h2><h3 id="Install-Julia">Install Julia<a class="anchor-link" href="#Install-Julia">&#182;</a></h3><p>First, install Julia itself. The easiest way to do that is from the download site <a href="https://julialang.org/downloads/">https://julialang.org/downloads/</a>. An alternative is to install JuliaPro from <a href="https://juliacomputing.com">https://juliacomputing.com</a></p>
 <p>Once installed, open julia in a terminal (or in Juno), press <code>]</code> to activate package manager and add the following packages:</p>
 
-<pre><code>pkg&gt; add HurdleDMR</code></pre>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>Add parallel workers and make package available to workers</p>
+<pre><code>pkg&gt; add HurdleDMR GLM Lasso</code></pre>
+<h3 id="Install-PyJulia">Install PyJulia<a class="anchor-link" href="#Install-PyJulia">&#182;</a></h3><p>See the documentation <a href="https://pyjulia.readthedocs.io/en/stable/">here</a> for installation instructions.</p>
+<p>Because I use miniconda, I also had to run the following, but you might not:</p>
 
 </div>
 </div>
@@ -11801,33 +13135,19 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[1]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="k">using</span> <span class="n">Distributed</span>
-<span class="n">addprocs</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
-<span class="k">import</span> <span class="n">HurdleDMR</span><span class="p">;</span> <span class="nd">@everywhere</span> <span class="k">using</span> <span class="n">HurdleDMR</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">from</span> <span class="nn">julia.api</span> <span class="k">import</span> <span class="n">Julia</span>
+<span class="n">jl</span> <span class="o">=</span> <span class="n">Julia</span><span class="p">(</span><span class="n">compiled_modules</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 
-</div>
+    </div>
 </div>
 </div>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
+</div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h3 id="Example-Data">Example Data<a class="anchor-link" href="#Example-Data">&#182;</a></h3><p>Setup your data into an n-by-p covars matrix, and a (sparse) n-by-d counts matrix. Here we generate some random data.</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>if not installed, install following package with</p>
-
-<pre><code>pkg&gt; add CSV GLM DataFrames Distributions</code></pre>
-
+<h3 id="Add-parallel-workers-and-make-HurdleDMR-package-available-to-workers">Add parallel workers and make HurdleDMR package available to workers<a class="anchor-link" href="#Add-parallel-workers-and-make-HurdleDMR-package-available-to-workers">&#182;</a></h3>
 </div>
 </div>
 </div>
@@ -11836,22 +13156,53 @@ div#notebook {
 <div class="prompt input_prompt">In&nbsp;[2]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="k">using</span> <span class="n">CSV</span><span class="p">,</span> <span class="n">GLM</span><span class="p">,</span> <span class="n">Lasso</span><span class="p">,</span> <span class="n">DataFrames</span><span class="p">,</span> <span class="n">Distributions</span><span class="p">,</span> <span class="n">Random</span><span class="p">,</span> <span class="n">LinearAlgebra</span><span class="p">,</span> <span class="n">SparseArrays</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">jl</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s2">&quot;using Distributed&quot;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">julia.Distributed</span> <span class="k">import</span> <span class="n">addprocs</span>
+<span class="n">addprocs</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">julia</span> <span class="k">import</span> <span class="n">HurdleDMR</span> <span class="k">as</span> <span class="n">hd</span>
+<span class="n">jl</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s2">&quot;@everywhere using HurdleDMR&quot;</span><span class="p">)</span>
+</pre></div>
+
+    </div>
+</div>
+</div>
+
+</div>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div><div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Example-Data">Example Data<a class="anchor-link" href="#Example-Data">&#182;</a></h3><p>Setup your data into an n-by-p covars matrix, and a (sparse) n-by-d counts matrix. Here we generate some random data.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing code_cell rendered">
+<div class="input">
+<div class="prompt input_prompt">In&nbsp;[3]:</div>
+<div class="inner_cell">
+    <div class="input_area">
+<div class=" highlight hl-ipython3"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">sparse</span>
+
 <span class="n">n</span> <span class="o">=</span> <span class="mi">100</span>
 <span class="n">p</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="n">d</span> <span class="o">=</span> <span class="mi">4</span>
 
-<span class="n">Random</span><span class="o">.</span><span class="n">seed!</span><span class="p">(</span><span class="mi">13</span><span class="p">)</span>
-<span class="n">m</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">.+</span> <span class="n">rand</span><span class="p">(</span><span class="n">Poisson</span><span class="p">(</span><span class="mi">5</span><span class="p">),</span><span class="n">n</span><span class="p">)</span>
-<span class="n">covars</span> <span class="o">=</span> <span class="n">rand</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">p</span><span class="p">)</span>
-<span class="n">ηfn</span><span class="p">(</span><span class="n">vi</span><span class="p">)</span> <span class="o">=</span> <span class="n">exp</span><span class="o">.</span><span class="p">([</span><span class="mi">0</span> <span class="o">+</span> <span class="n">i</span><span class="o">*</span><span class="n">sum</span><span class="p">(</span><span class="n">vi</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="o">:</span><span class="n">d</span><span class="p">])</span>
-<span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="n">ηfn</span><span class="p">(</span><span class="n">covars</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="o">:</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="o">:</span><span class="n">n</span><span class="p">]</span>
-<span class="n">rmul!</span><span class="o">.</span><span class="p">(</span><span class="n">q</span><span class="p">,</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">./</span><span class="n">sum</span><span class="o">.</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
-<span class="n">counts</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="kt">SparseMatrixCSC</span><span class="p">{</span><span class="kt">Float64</span><span class="p">,</span><span class="kt">Int</span><span class="p">},</span><span class="n">hcat</span><span class="p">(</span><span class="n">broadcast</span><span class="p">((</span><span class="n">qi</span><span class="p">,</span><span class="n">mi</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">rand</span><span class="p">(</span><span class="n">Multinomial</span><span class="p">(</span><span class="n">mi</span><span class="p">,</span> <span class="n">qi</span><span class="p">)),</span><span class="n">q</span><span class="p">,</span><span class="n">m</span><span class="p">)</span><span class="o">...</span><span class="p">)</span><span class="o">&#39;</span><span class="p">)</span>
-<span class="n">covarsdf</span> <span class="o">=</span> <span class="n">DataFrame</span><span class="p">(</span><span class="n">covars</span><span class="p">,[</span><span class="o">:</span><span class="n">vy</span><span class="p">,</span> <span class="o">:</span><span class="n">v1</span><span class="p">,</span> <span class="o">:</span><span class="n">v2</span><span class="p">])</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">123</span><span class="p">)</span>
+<span class="n">m</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">poisson</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span><span class="n">n</span><span class="p">)</span>
+<span class="n">covars</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,(</span><span class="n">n</span><span class="p">,</span><span class="n">p</span><span class="p">))</span>
+
+<span class="n">q</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">0</span> <span class="o">+</span> <span class="n">j</span><span class="o">*</span><span class="nb">sum</span><span class="p">(</span><span class="n">covars</span><span class="p">[</span><span class="n">i</span><span class="p">,:])</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">d</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+<span class="c1">#rowsums = [sum(q[i]) for i in range(n)]</span>
+<span class="n">q</span> <span class="o">=</span> <span class="p">[</span><span class="n">q</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">/</span><span class="nb">sum</span><span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+
+<span class="c1">#counts = sparse.csr_matrix(np.concatenate([[np.random.multinomial(m[i],q[i]) for i in range(n)]]))</span>
+<span class="n">counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">multinomial</span><span class="p">(</span><span class="n">m</span><span class="p">[</span><span class="n">i</span><span class="p">],</span><span class="n">q</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]])</span>
+<span class="n">counts</span>
 </pre></div>
 
-</div>
+    </div>
 </div>
 </div>
 
@@ -11861,12 +13212,112 @@ div#notebook {
 
 <div class="output_area">
 
-<div class="prompt output_prompt">Out[2]:</div>
+    <div class="prompt output_prompt">Out[3]:</div>
 
 
 
-<div class="output_html rendered_html output_subarea output_execute_result">
-<table class="data-frame"><thead><tr><th></th><th>vy</th><th>v1</th><th>v2</th></tr><tr><th></th><th>Float64</th><th>Float64</th><th>Float64</th></tr></thead><tbody><p>100 rows × 3 columns</p><tr><th>1</th><td>0.693073</td><td>0.877116</td><td>0.401554</td></tr><tr><th>2</th><td>0.938163</td><td>0.737491</td><td>0.997271</td></tr><tr><th>3</th><td>0.755878</td><td>0.743268</td><td>0.595892</td></tr><tr><th>4</th><td>0.191058</td><td>0.296443</td><td>0.30533</td></tr><tr><th>5</th><td>0.00753542</td><td>0.360474</td><td>0.335553</td></tr><tr><th>6</th><td>0.410974</td><td>0.773871</td><td>0.657641</td></tr><tr><th>7</th><td>0.279942</td><td>0.154284</td><td>0.321258</td></tr><tr><th>8</th><td>0.208454</td><td>0.849653</td><td>0.22147</td></tr><tr><th>9</th><td>0.639872</td><td>0.926706</td><td>0.444675</td></tr><tr><th>10</th><td>0.269132</td><td>0.83785</td><td>0.0137366</td></tr><tr><th>11</th><td>0.704959</td><td>0.120137</td><td>0.401541</td></tr><tr><th>12</th><td>0.820248</td><td>0.379542</td><td>0.704862</td></tr><tr><th>13</th><td>0.752849</td><td>0.745383</td><td>0.907775</td></tr><tr><th>14</th><td>0.634401</td><td>0.383528</td><td>0.276991</td></tr><tr><th>15</th><td>0.370604</td><td>0.595542</td><td>0.0999965</td></tr><tr><th>16</th><td>0.400454</td><td>0.596132</td><td>0.00424357</td></tr><tr><th>17</th><td>0.331037</td><td>0.777271</td><td>0.963936</td></tr><tr><th>18</th><td>0.109256</td><td>0.45404</td><td>0.873842</td></tr><tr><th>19</th><td>0.0384627</td><td>0.358023</td><td>0.369017</td></tr><tr><th>20</th><td>0.655115</td><td>0.984853</td><td>0.284056</td></tr><tr><th>21</th><td>0.961148</td><td>0.425115</td><td>0.836061</td></tr><tr><th>22</th><td>0.313693</td><td>0.631212</td><td>0.33691</td></tr><tr><th>23</th><td>0.468663</td><td>0.203475</td><td>0.0895971</td></tr><tr><th>24</th><td>0.130995</td><td>0.416474</td><td>0.25323</td></tr><tr><th>25</th><td>0.510355</td><td>0.418123</td><td>0.542134</td></tr><tr><th>26</th><td>0.763879</td><td>0.501635</td><td>0.257008</td></tr><tr><th>27</th><td>0.139297</td><td>0.337539</td><td>0.143543</td></tr><tr><th>28</th><td>0.315356</td><td>0.838806</td><td>0.0502037</td></tr><tr><th>29</th><td>0.359166</td><td>0.992776</td><td>0.882517</td></tr><tr><th>30</th><td>0.511267</td><td>0.983282</td><td>0.976795</td></tr><tr><th>&vellip;</th><td>&vellip;</td><td>&vellip;</td><td>&vellip;</td></tr></tbody></table>
+
+<div class="output_text output_subarea output_execute_result">
+<pre>array([[0, 2, 3, 3],
+       [0, 2, 2, 2],
+       [0, 1, 2, 2],
+       [0, 1, 1, 7],
+       [0, 1, 1, 3],
+       [0, 1, 1, 7],
+       [0, 1, 2, 5],
+       [0, 1, 0, 5],
+       [0, 1, 5, 4],
+       [0, 0, 1, 4],
+       [0, 1, 2, 1],
+       [0, 0, 3, 2],
+       [0, 2, 3, 3],
+       [0, 0, 2, 7],
+       [0, 1, 5, 0],
+       [0, 0, 2, 5],
+       [0, 1, 0, 4],
+       [0, 0, 1, 3],
+       [0, 1, 3, 4],
+       [0, 1, 3, 5],
+       [0, 1, 1, 3],
+       [0, 1, 0, 6],
+       [0, 0, 2, 5],
+       [0, 1, 3, 4],
+       [0, 1, 3, 3],
+       [0, 0, 2, 4],
+       [0, 0, 1, 2],
+       [0, 1, 0, 3],
+       [0, 0, 2, 2],
+       [0, 0, 2, 6],
+       [0, 1, 1, 3],
+       [0, 1, 0, 6],
+       [0, 1, 2, 3],
+       [0, 1, 2, 4],
+       [0, 2, 0, 5],
+       [0, 1, 1, 2],
+       [0, 0, 2, 3],
+       [0, 1, 1, 3],
+       [0, 2, 2, 3],
+       [0, 1, 6, 0],
+       [0, 0, 0, 5],
+       [0, 0, 2, 3],
+       [0, 0, 3, 0],
+       [0, 0, 2, 3],
+       [0, 0, 2, 3],
+       [0, 2, 2, 0],
+       [0, 0, 2, 1],
+       [0, 3, 3, 6],
+       [0, 0, 1, 3],
+       [0, 0, 1, 1],
+       [0, 2, 1, 1],
+       [0, 0, 2, 5],
+       [0, 1, 3, 3],
+       [0, 0, 0, 4],
+       [0, 2, 0, 2],
+       [0, 2, 2, 6],
+       [0, 2, 1, 4],
+       [0, 2, 1, 5],
+       [0, 0, 1, 2],
+       [0, 1, 2, 2],
+       [0, 1, 1, 4],
+       [0, 0, 1, 7],
+       [0, 0, 4, 6],
+       [0, 0, 2, 2],
+       [0, 1, 1, 3],
+       [0, 0, 0, 5],
+       [0, 2, 2, 2],
+       [0, 0, 1, 3],
+       [0, 2, 2, 1],
+       [0, 0, 2, 3],
+       [0, 1, 1, 8],
+       [0, 1, 1, 1],
+       [0, 0, 2, 3],
+       [0, 0, 2, 5],
+       [0, 1, 2, 3],
+       [0, 2, 2, 2],
+       [0, 2, 2, 1],
+       [0, 4, 1, 2],
+       [0, 3, 0, 4],
+       [0, 0, 3, 1],
+       [0, 0, 0, 5],
+       [0, 0, 4, 1],
+       [0, 2, 1, 2],
+       [0, 2, 4, 3],
+       [0, 2, 3, 5],
+       [0, 0, 0, 8],
+       [0, 1, 0, 4],
+       [0, 1, 0, 3],
+       [0, 1, 3, 2],
+       [0, 1, 1, 6],
+       [0, 0, 1, 5],
+       [0, 0, 1, 4],
+       [0, 0, 3, 2],
+       [0, 1, 3, 2],
+       [0, 3, 0, 3],
+       [0, 2, 7, 5],
+       [0, 0, 4, 3],
+       [0, 3, 1, 1],
+       [0, 0, 3, 3],
+       [0, 2, 3, 0]])</pre>
 </div>
 
 </div>
@@ -11876,8 +13327,7 @@ div#notebook {
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
+</div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="Distributed-Multinomial-Regression-(DMR)">Distributed Multinomial Regression (DMR)<a class="anchor-link" href="#Distributed-Multinomial-Regression-(DMR)">&#182;</a></h2><p>The Distributed Multinomial Regression (DMR) model of Taddy (2015) is a highly scalable
 approximation to the Multinomial using distributed (independent, parallel)
@@ -11890,113 +13340,21 @@ on the <code>covars</code>.</p>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[3]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">dmr</span><span class="p">(</span><span class="n">covars</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>┌ Info: fitting 100 observations on 4 categories, 3 covariates 
-└ @ HurdleDMR /home/root/.julia/dev/HurdleDMR/src/dmr.jl:302
-┌ Info: distributed poisson run on local cluster with 4 nodes
-└ @ HurdleDMR /home/root/.julia/dev/HurdleDMR/src/dmr.jl:314
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[3]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>DMRCoefs{Array{Float64,2},MinAICc}([-1.84481 -0.478703 -0.631308 -0.760733; -1.88824 -2.50035 -0.898109 0.368329; -0.91088 -2.47381 -0.318847 0.201772; -2.24309 -1.38126 -1.22846 0.37388], true, 100, 4, 3, MinAICc(2))</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>or with a dataframe and formula</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
 <div class="prompt input_prompt">In&nbsp;[4]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">mf</span> <span class="o">=</span> <span class="nd">@model</span><span class="p">(</span><span class="n">c</span> <span class="o">~</span> <span class="n">vy</span> <span class="o">+</span> <span class="n">v1</span> <span class="o">+</span> <span class="n">v2</span><span class="p">)</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">fit</span><span class="p">(</span><span class="n">DMR</span><span class="p">,</span> <span class="n">mf</span><span class="p">,</span> <span class="n">covarsdf</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">hd</span><span class="o">.</span><span class="n">dmr</span><span class="p">(</span><span class="n">covars</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
 </pre></div>
 
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>┌ Info: fitting 100 observations on 4 categories, 3 covariates 
-└ @ HurdleDMR /home/root/.julia/dev/HurdleDMR/src/dmr.jl:302
-┌ Info: distributed poisson run on local cluster with 4 nodes
-└ @ HurdleDMR /home/root/.julia/dev/HurdleDMR/src/dmr.jl:314
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[4]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>DMRCoefs{Array{Float64,2},MinAICc}([-1.84481 -0.478703 -0.631308 -0.760733; -1.88824 -2.50035 -0.898109 0.368329; -0.91088 -2.47381 -0.318847 0.201772; -2.24309 -1.38126 -1.22846 0.37388], true, 100, 4, 3, MinAICc(2))</pre>
-</div>
-
-</div>
-
+    </div>
 </div>
 </div>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
+</div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>in either case we can get the coefficients matrix for each variable + intercept as usual with</p>
+<p>We can get the coefficients matrix for each variable + intercept as usual with</p>
 
 </div>
 </div>
@@ -12006,10 +13364,10 @@ on the <code>covars</code>.</p>
 <div class="prompt input_prompt">In&nbsp;[5]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">coef</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">hd</span><span class="o">.</span><span class="n">coef</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
 </pre></div>
 
-</div>
+    </div>
 </div>
 </div>
 
@@ -12019,17 +13377,16 @@ on the <code>covars</code>.</p>
 
 <div class="output_area">
 
-<div class="prompt output_prompt">Out[5]:</div>
+    <div class="prompt output_prompt">Out[5]:</div>
 
 
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>4×4 Array{Float64,2}:
- -1.84481  -0.478703  -0.631308  -0.760733
- -1.88824  -2.50035   -0.898109   0.368329
- -0.91088  -2.47381   -0.318847   0.201772
- -2.24309  -1.38126   -1.22846    0.37388 </pre>
+<pre>array([[ 0.        , -1.94507425, -1.28828706, -0.59041306],
+       [ 0.        ,  0.1056461 ,  0.        ,  0.        ],
+       [ 0.        ,  0.        ,  0.        ,  0.        ],
+       [ 0.        ,  0.        ,  0.1268672 ,  0.        ]])</pre>
 </div>
 
 </div>
@@ -12039,8 +13396,7 @@ on the <code>covars</code>.</p>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
+</div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>By default we only return the AICc maximizing coefficients.
 To also get back the entire regulatrization paths, run</p>
@@ -12053,273 +13409,18 @@ To also get back the entire regulatrization paths, run</p>
 <div class="prompt input_prompt">In&nbsp;[6]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">paths</span> <span class="o">=</span> <span class="n">fit</span><span class="p">(</span><span class="n">DMRPaths</span><span class="p">,</span> <span class="n">mf</span><span class="p">,</span> <span class="n">covarsdf</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">paths</span> <span class="o">=</span> <span class="n">hd</span><span class="o">.</span><span class="n">dmrpaths</span><span class="p">(</span><span class="n">covars</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
 </pre></div>
 
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>┌ Info: fitting 100 observations on 4 categories, 3 covariates 
-└ @ HurdleDMR /home/root/.julia/dev/HurdleDMR/src/dmr.jl:362
-┌ Info: distributed poisson run on remote cluster with 4 nodes
-└ @ HurdleDMR /home/root/.julia/dev/HurdleDMR/src/dmr.jl:384
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[6]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>DMRPaths(Union{Missing, GammaLassoPath}[Poisson GammaLassoPath (50) solutions for 4 predictors in 257 iterations):
-──────────────────────────────────────
-                λ      pct_dev  ncoefs
-──────────────────────────────────────
- [1]  0.0761628    4.77396e-15       0
- [2]  0.0693967    0.0160918         1
- [3]  0.0632317    0.0296043         1
- [4]  0.0576143    0.0452719         2
- [5]  0.052496     0.0614706         2
- [6]  0.0478324    0.0751983         2
- [7]  0.0435831    0.0868424         2
- [8]  0.0397113    0.0967254         2
- [9]  0.0361835    0.105115          2
-[10]  0.032969     0.11224           2
-[11]  0.0300402    0.118282          2
-[12]  0.0273715    0.124314          3
-[13]  0.0249399    0.130633          3
-[14]  0.0227243    0.135993          3
-[15]  0.0207055    0.140525          3
-[16]  0.0188661    0.144358          3
-[17]  0.0171901    0.147597          3
-[18]  0.015663     0.150333          3
-[19]  0.0142715    0.152641          3
-[20]  0.0130037    0.154586          3
-[21]  0.0118485    0.156225          3
-[22]  0.0107959    0.157604          3
-[23]  0.0098368    0.158764          3
-[24]  0.00896292   0.159738          3
-[25]  0.00816668   0.160556          3
-[26]  0.00744118   0.161242          3
-[27]  0.00678012   0.161818          3
-[28]  0.0061778    0.162299          3
-[29]  0.00562898   0.162703          3
-[30]  0.00512891   0.16304           3
-[31]  0.00467328   0.163322          3
-[32]  0.00425812   0.163558          3
-[33]  0.00387984   0.163755          3
-[34]  0.00353516   0.163919          3
-[35]  0.00322111   0.164056          3
-[36]  0.00293495   0.164171          3
-[37]  0.00267422   0.164266          3
-[38]  0.00243665   0.164346          3
-[39]  0.00222018   0.164412          3
-[40]  0.00202295   0.164467          3
-[41]  0.00184324   0.164513          3
-[42]  0.00167949   0.164551          3
-[43]  0.00153029   0.164583          3
-[44]  0.00139434   0.16461           3
-[45]  0.00127047   0.164632          3
-[46]  0.00115761   0.16465           3
-[47]  0.00105477   0.164665          3
-[48]  0.000961065  0.164678          3
-[49]  0.000875687  0.164689          3
-[50]  0.000797893  0.164698          3
-──────────────────────────────────────, Poisson GammaLassoPath (51) solutions for 4 predictors in 282 iterations):
-─────────────────────────────────────
-               λ      pct_dev  ncoefs
-─────────────────────────────────────
- [1]  0.169502    1.77636e-14       0
- [2]  0.154444    0.0291542         2
- [3]  0.140723    0.0623827         2
- [4]  0.128222    0.090534          2
- [5]  0.116831    0.116502          3
- [6]  0.106452    0.141835          3
- [7]  0.0969951   0.163402          3
- [8]  0.0883783   0.181775          3
- [9]  0.080527    0.197429          3
-[10]  0.0733732   0.210765          3
-[11]  0.066855    0.222122          3
-[12]  0.0609158   0.23179           3
-[13]  0.0555042   0.240012          3
-[14]  0.0505733   0.247             3
-[15]  0.0460805   0.252934          3
-[16]  0.0419869   0.257966          3
-[17]  0.0382569   0.262231          3
-[18]  0.0348582   0.265841          3
-[19]  0.0317615   0.268893          3
-[20]  0.0289399   0.271471          3
-[21]  0.026369    0.273647          3
-[22]  0.0240264   0.27548           3
-[23]  0.021892    0.277024          3
-[24]  0.0199472   0.278323          3
-[25]  0.0181751   0.279415          3
-[26]  0.0165605   0.280332          3
-[27]  0.0150893   0.281101          3
-[28]  0.0137488   0.281746          3
-[29]  0.0125274   0.282286          3
-[30]  0.0114145   0.282739          3
-[31]  0.0104005   0.283117          3
-[32]  0.00947652  0.283434          3
-[33]  0.00863465  0.283698          3
-[34]  0.00786757  0.283919          3
-[35]  0.00716864  0.284104          3
-[36]  0.0065318   0.284258          3
-[37]  0.00595153  0.284386          3
-[38]  0.00542281  0.284493          3
-[39]  0.00494107  0.284582          3
-[40]  0.00450211  0.284657          3
-[41]  0.00410216  0.284719          3
-[42]  0.00373773  0.28477           3
-[43]  0.00340568  0.284813          3
-[44]  0.00310313  0.284849          3
-[45]  0.00282746  0.284879          3
-[46]  0.00257628  0.284903          3
-[47]  0.00234741  0.284924          3
-[48]  0.00213887  0.284941          3
-[49]  0.00194886  0.284955          3
-[50]  0.00177573  0.284967          3
-[51]  0.00161798  0.284977          3
-─────────────────────────────────────, Poisson GammaLassoPath (51) solutions for 4 predictors in 248 iterations):
-───────────────────────────────────
-               λ    pct_dev  ncoefs
-───────────────────────────────────
- [1]  0.420148    0.0             0
- [2]  0.382823    0.0275775       1
- [3]  0.348814    0.050612        1
- [4]  0.317827    0.0698654       1
- [5]  0.289592    0.0859654       1
- [6]  0.263865    0.108082        2
- [7]  0.240424    0.127106        2
- [8]  0.219066    0.143043        2
- [9]  0.199604    0.156396        2
-[10]  0.181872    0.167582        2
-[11]  0.165715    0.17695         2
-[12]  0.150993    0.184793        2
-[13]  0.13758     0.191356        2
-[14]  0.125357    0.196847        2
-[15]  0.114221    0.201437        2
-[16]  0.104074    0.205275        2
-[17]  0.0948282   0.209376        3
-[18]  0.086404    0.213349        3
-[19]  0.0787281   0.216666        3
-[20]  0.0717341   0.219435        3
-[21]  0.0653614   0.221744        3
-[22]  0.0595549   0.223671        3
-[23]  0.0542642   0.225277        3
-[24]  0.0494435   0.226615        3
-[25]  0.0450511   0.22773         3
-[26]  0.0410489   0.22866         3
-[27]  0.0374022   0.229433        3
-[28]  0.0340795   0.230077        3
-[29]  0.031052    0.230614        3
-[30]  0.0282934   0.23106         3
-[31]  0.0257799   0.231431        3
-[32]  0.0234897   0.23174         3
-[33]  0.0214029   0.231997        3
-[34]  0.0195015   0.232211        3
-[35]  0.0177691   0.232388        3
-[36]  0.0161905   0.232536        3
-[37]  0.0147522   0.232659        3
-[38]  0.0134417   0.232761        3
-[39]  0.0122475   0.232846        3
-[40]  0.0111595   0.232916        3
-[41]  0.0101681   0.232975        3
-[42]  0.00926481  0.233024        3
-[43]  0.00844175  0.233064        3
-[44]  0.00769181  0.233098        3
-[45]  0.00700849  0.233126        3
-[46]  0.00638588  0.233149        3
-[47]  0.00581857  0.233168        3
-[48]  0.00530167  0.233184        3
-[49]  0.00483068  0.233197        3
-[50]  0.00440154  0.233208        3
-[51]  0.00401052  0.233218        3
-───────────────────────────────────, Poisson GammaLassoPath (52) solutions for 4 predictors in 246 iterations):
-─────────────────────────────────────
-               λ      pct_dev  ncoefs
-─────────────────────────────────────
- [1]  0.630683    3.49498e-13       1
- [2]  0.574655    0.0368374         1
- [3]  0.523604    0.068304          2
- [4]  0.477088    0.111223          2
- [5]  0.434705    0.146782          2
- [6]  0.396087    0.176252          2
- [7]  0.3609      0.200683          2
- [8]  0.328839    0.220941          2
- [9]  0.299625    0.237741          2
-[10]  0.273008    0.255802          3
-[11]  0.248754    0.273247          3
-[12]  0.226656    0.287713          3
-[13]  0.20652     0.29971           3
-[14]  0.188174    0.309662          3
-[15]  0.171457    0.317918          3
-[16]  0.156225    0.324767          3
-[17]  0.142346    0.33045           3
-[18]  0.129701    0.335166          3
-[19]  0.118178    0.339079          3
-[20]  0.10768     0.342326          3
-[21]  0.0981138   0.345021          3
-[22]  0.0893977   0.347258          3
-[23]  0.0814558   0.349114          3
-[24]  0.0742195   0.350655          3
-[25]  0.0676261   0.351934          3
-[26]  0.0616183   0.352995          3
-[27]  0.0561443   0.353876          3
-[28]  0.0511566   0.354608          3
-[29]  0.046612    0.355215          3
-[30]  0.0424711   0.355719          3
-[31]  0.0386981   0.356137          3
-[32]  0.0352603   0.356485          3
-[33]  0.0321279   0.356773          3
-[34]  0.0292737   0.357012          3
-[35]  0.0266731   0.357211          3
-[36]  0.0243035   0.357376          3
-[37]  0.0221445   0.357513          3
-[38]  0.0201772   0.357626          3
-[39]  0.0183847   0.357721          3
-[40]  0.0167515   0.357799          3
-[41]  0.0152633   0.357864          3
-[42]  0.0139074   0.357918          3
-[43]  0.0126719   0.357963          3
-[44]  0.0115462   0.358             3
-[45]  0.0105204   0.358031          3
-[46]  0.00958582  0.358057          3
-[47]  0.00873424  0.358078          3
-[48]  0.00795832  0.358096          3
-[49]  0.00725132  0.35811           3
-[50]  0.00660713  0.358123          3
-[51]  0.00602017  0.358133          3
-[52]  0.00548536  0.358141          3
-─────────────────────────────────────], true, 100, 4, 3)</pre>
-</div>
-
-</div>
-
+    </div>
 </div>
 </div>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
+</div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>we can now select, for example the coefficients that minimize 10-fold CV mse (takes a while)</p>
+<p>We can now select, for example the coefficients that minimize 10-fold CV mse (takes a while)</p>
 
 </div>
 </div>
@@ -12329,10 +13430,13 @@ To also get back the entire regulatrization paths, run</p>
 <div class="prompt input_prompt">In&nbsp;[7]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">coef</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">MinCVKfold</span><span class="p">{</span><span class="n">MinCVmse</span><span class="p">}(</span><span class="mi">10</span><span class="p">))</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">jl</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s2">&quot;using Lasso: MinCVmse&quot;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">julia</span> <span class="k">import</span> <span class="n">Lasso</span>
+<span class="n">gen</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s2">&quot;MinCVKfold</span><span class="si">{MinCVmse}</span><span class="s2">(10)&quot;</span><span class="p">)</span>
+<span class="n">hd</span><span class="o">.</span><span class="n">coef</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">gen</span><span class="p">)</span>
 </pre></div>
 
-</div>
+    </div>
 </div>
 </div>
 
@@ -12342,17 +13446,20 @@ To also get back the entire regulatrization paths, run</p>
 
 <div class="output_area">
 
-<div class="prompt output_prompt">Out[7]:</div>
+    <div class="prompt output_prompt">Out[7]:</div>
 
 
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>4×4 Array{Float64,2}:
- -2.15703  -0.670327  -0.631308  -0.756541
- -1.60526  -2.31103   -0.898109   0.365359
- -0.64499  -2.25979   -0.318847   0.198874
- -1.94172  -1.22852   -1.22846    0.371721</pre>
+<pre>array([[ 0.00000000e+00, -1.89167038e+00, -1.22050226e+00,
+        -5.90413062e-01],
+       [ 0.00000000e+00,  3.18787704e-11,  0.00000000e+00,
+         0.00000000e+00],
+       [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+         0.00000000e+00],
+       [ 0.00000000e+00,  0.00000000e+00,  2.97862348e-07,
+         0.00000000e+00]])</pre>
 </div>
 
 </div>
@@ -12362,8 +13469,7 @@ To also get back the entire regulatrization paths, run</p>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
+</div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="Hurdle-Distributed-Multinomial-Regression-(HDMR)">Hurdle Distributed Multinomial Regression (HDMR)<a class="anchor-link" href="#Hurdle-Distributed-Multinomial-Regression-(HDMR)">&#182;</a></h2><p>For highly sparse counts, as is often the case with text that is selected for
 various reasons, the Hurdle Distributed Multinomial Regression (HDMR) model of
@@ -12385,54 +13491,18 @@ path.</p>
 <div class="prompt input_prompt">In&nbsp;[8]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">hdmr</span><span class="p">(</span><span class="n">covars</span><span class="p">,</span> <span class="n">counts</span><span class="p">;</span> <span class="n">inpos</span><span class="o">=</span><span class="mi">1</span><span class="o">:</span><span class="mi">2</span><span class="p">,</span> <span class="n">inzero</span><span class="o">=</span><span class="mi">1</span><span class="o">:</span><span class="mi">3</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">m</span> <span class="o">=</span> <span class="n">hd</span><span class="o">.</span><span class="n">hdmr</span><span class="p">(</span><span class="n">covars</span><span class="p">,</span> <span class="n">counts</span><span class="p">,</span> <span class="n">inpos</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">inzero</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])</span>
 </pre></div>
 
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>┌ Info: fitting 100 observations on 4 categories 
-│ 2 covariates for positive and 3 for zero counts
-└ @ HurdleDMR /home/root/.julia/dev/HurdleDMR/src/hdmr.jl:468
-┌ Info: distributed InclusionRepetition run on local cluster with 4 nodes
-└ @ HurdleDMR /home/root/.julia/dev/HurdleDMR/src/hdmr.jl:481
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[8]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>HDMRCoefs{InclusionRepetition,Array{Float64,2},MinAICc,UnitRange{Int64}}([0.0 -2.48491 -0.505547 -0.23561; 0.0 0.0 -2.65019 0.203207; 0.0 0.0 -0.491465 0.0], [-2.59356 1.23117 1.73801 -13.9022; 0.0 -2.17746 0.0 38.1537; 0.0 -2.89271 0.0 423.955; 0.0 -1.23601 -1.85064 -19.9601], true, 100, 4, 1:2, 1:3, MinAICc(2))</pre>
-</div>
-
-</div>
-
+    </div>
 </div>
 </div>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
+</div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>or with a dataframe and formula</p>
+<p>We can get the coefficients matrix for each variable + intercept as usual with</p>
 
 </div>
 </div>
@@ -12442,11 +13512,12 @@ path.</p>
 <div class="prompt input_prompt">In&nbsp;[9]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">mf</span> <span class="o">=</span> <span class="nd">@model</span><span class="p">(</span><span class="n">h</span> <span class="o">~</span> <span class="n">vy</span> <span class="o">+</span> <span class="n">v1</span> <span class="o">+</span> <span class="n">v2</span><span class="p">,</span> <span class="n">c</span> <span class="o">~</span> <span class="n">vy</span> <span class="o">+</span> <span class="n">v1</span><span class="p">)</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">fit</span><span class="p">(</span><span class="n">HDMR</span><span class="p">,</span> <span class="n">mf</span><span class="p">,</span> <span class="n">covarsdf</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">coefspos</span><span class="p">,</span> <span class="n">coefszero</span> <span class="o">=</span> <span class="n">hd</span><span class="o">.</span><span class="n">coef</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;coefspos:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">coefspos</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;coefszero:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">coefszero</span><span class="p">)</span>
 </pre></div>
 
-</div>
+    </div>
 </div>
 </div>
 
@@ -12456,82 +13527,29 @@ path.</p>
 
 <div class="output_area">
 
-<div class="prompt"></div>
+    <div class="prompt"></div>
 
 
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>┌ Info: fitting 100 observations on 4 categories 
-│ 2 covariates for positive and 3 for zero counts
-└ @ HurdleDMR /home/root/.julia/dev/HurdleDMR/src/hdmr.jl:468
-┌ Info: distributed InclusionRepetition run on local cluster with 4 nodes
-└ @ HurdleDMR /home/root/.julia/dev/HurdleDMR/src/hdmr.jl:481
+<div class="output_subarea output_stream output_stdout output_text">
+<pre>coefspos:
+ [[ 0.         -2.18288411 -1.18060442 -0.41828599]
+ [ 0.          0.33062404  0.          0.        ]
+ [ 0.          0.          0.02997958  0.08338104]]
+coefszero:
+ [[ 0.          0.04616614  1.36309252  3.07912436]
+ [ 0.          0.          0.         -0.67010761]
+ [ 0.          0.          0.          0.        ]
+ [ 0.          0.          0.          0.        ]]
 </pre>
 </div>
 </div>
 
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[9]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>HDMRCoefs{InclusionRepetition,Array{Float64,2},MinAICc,Array{Int64,1}}([0.0 -2.48491 -0.505547 -0.23561; 0.0 0.0 -2.65019 0.203207; 0.0 0.0 -0.491465 0.0], [-2.59356 1.23117 1.73801 -13.9022; 0.0 -2.17746 0.0 38.1537; 0.0 -2.89271 0.0 423.955; 0.0 -1.23601 -1.85064 -19.9601], true, 100, 4, [1, 2], [1, 2, 3], MinAICc(2))</pre>
-</div>
-
-</div>
-
 </div>
 </div>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
-<div class="text_cell_render border-box-sizing rendered_html">
-<p>where the h ~ equation is the model for zeros (hurdle crossing) and c ~ is the model for positive counts</p>
-<p>in either case we can get the coefficients matrix for each variable + intercept as usual with</p>
-
-</div>
-</div>
-</div>
-<div class="cell border-box-sizing code_cell rendered">
-<div class="input">
-<div class="prompt input_prompt">In&nbsp;[10]:</div>
-<div class="inner_cell">
-    <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">coefspos</span><span class="p">,</span> <span class="n">coefszero</span> <span class="o">=</span> <span class="n">coef</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
-</pre></div>
-
-</div>
-</div>
-</div>
-
-<div class="output_wrapper">
-<div class="output">
-
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[10]:</div>
-
-
-
-
-<div class="output_text output_subarea output_execute_result">
-<pre>([0.0 -2.48491 -0.505547 -0.23561; 0.0 0.0 -2.65019 0.203207; 0.0 0.0 -0.491465 0.0], [-2.59356 1.23117 1.73801 -13.9022; 0.0 -2.17746 0.0 38.1537; 0.0 -2.89271 0.0 423.955; 0.0 -1.23601 -1.85064 -19.9601])</pre>
-</div>
-
-</div>
-
-</div>
-</div>
-
-</div>
-<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
+</div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>By default we only return the AICc maximizing coefficients.
 To also get back the entire regulatrization paths, run</p>
@@ -12541,15 +13559,15 @@ To also get back the entire regulatrization paths, run</p>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[11]:</div>
+<div class="prompt input_prompt">In&nbsp;[10]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">paths</span> <span class="o">=</span> <span class="n">fit</span><span class="p">(</span><span class="n">HDMRPaths</span><span class="p">,</span> <span class="n">mf</span><span class="p">,</span> <span class="n">covarsdf</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">paths</span> <span class="o">=</span> <span class="n">hd</span><span class="o">.</span><span class="n">hdmrpaths</span><span class="p">(</span><span class="n">covars</span><span class="p">,</span> <span class="n">counts</span><span class="p">)</span>
 
-<span class="n">coef</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">AllSeg</span><span class="p">())</span>
+<span class="n">hd</span><span class="o">.</span><span class="n">coef</span><span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">Lasso</span><span class="o">.</span><span class="n">AllSeg</span><span class="p">())</span>
 </pre></div>
 
-</div>
+    </div>
 </div>
 </div>
 
@@ -12559,40 +13577,802 @@ To also get back the entire regulatrization paths, run</p>
 
 <div class="output_area">
 
-<div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>┌ Info: fitting 100 observations on 4 categories 
-│ 2 covariates for positive and 3 for zero counts
-└ @ HurdleDMR /home/root/.julia/dev/HurdleDMR/src/hdmr.jl:281
-┌ Info: distributed InclusionRepetition run on remote cluster with 4 nodes
-└ @ HurdleDMR /home/root/.julia/dev/HurdleDMR/src/hdmr.jl:312
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[11]:</div>
+    <div class="prompt output_prompt">Out[10]:</div>
 
 
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>([0.0 0.0 0.0; 0.0 0.0 0.0; … ; 0.0 0.0 0.0; 0.0 0.0 0.0]
-
-[-2.48491 0.0 0.0; -2.41917 -0.199534 0.0; … ; 0.0 0.0 0.0; 0.0 0.0 0.0]
-
-[-1.78805 0.0 0.0; -1.69583 -0.197051 0.0; … ; 0.0 0.0 0.0; 0.0 0.0 0.0]
-
-[-0.133883 3.92431e-7 0.0; -0.149695 0.0319783 0.0; … ; 0.0 0.0 0.0; 0.0 0.0 0.0], [-2.59356 0.0 0.0 0.0; -2.54089 0.0 0.0 -0.121014; … ; 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0]
-
-[-1.5251 0.0 0.0 0.0; -1.43208 0.0 -0.192178 0.0; … ; 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0]
-
-[0.670484 0.0 0.0 -4.29912e-8; 0.762441 0.0 0.0 -0.163359; … ; 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0]
-
-[4.94744 0.0 0.0 0.0; 4.64738 0.0 0.592183 0.0; … ; -13.6801 37.63 417.646 -19.6945; -13.9022 38.1537 423.955 -19.9601])</pre>
+<pre>(array([[[ 0.00000000e+00, -2.02133392e+00, -1.16575159e+00,
+          -3.76235470e-01],
+         [ 0.00000000e+00,  2.90768861e-08,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  1.88213201e-12,
+           1.36664985e-10],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.05931209e+00, -1.17116227e+00,
+          -3.80396163e-01],
+         [ 0.00000000e+00,  7.93643648e-02,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  1.09392297e-02,
+           8.30076060e-03],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.09423553e+00, -1.17609960e+00,
+          -3.84191708e-01],
+         [ 0.00000000e+00,  1.51431219e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  2.09033261e-02,
+           1.58632356e-02],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.12633252e+00, -1.18060442e+00,
+          -3.87653804e-01],
+         [ 0.00000000e+00,  2.16918343e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  2.99795817e-02,
+           2.27532006e-02],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.15581588e+00, -1.18671462e+00,
+          -3.90811453e-01],
+         [ 0.00000000e+00,  2.76460942e-01,  4.61259056e-03,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  3.76960464e-02,
+           2.90305459e-02],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.18288411e+00, -1.19351483e+00,
+          -3.93691184e-01],
+         [ 0.00000000e+00,  3.30624044e-01,  1.16365381e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  4.43915698e-02,
+           3.47498089e-02],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.18509703e+00, -1.19971939e+00,
+          -3.96317254e-01],
+         [ 0.00000000e+00,  3.87485773e-01,  1.80355614e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.11025873e-02,  5.04946902e-02,
+           3.99606571e-02],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.18608377e+00, -1.20537987e+00,
+          -3.98711836e-01],
+         [ 0.00000000e+00,  4.39887722e-01,  2.38654722e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.00972759e-01,  5.60576447e-02,
+           4.47083262e-02],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.18722497e+00, -1.21054341e+00,
+          -4.00895193e-01],
+         [ 0.00000000e+00,  4.87737174e-01,  2.91769653e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.46676441e-01,  6.11281004e-02,
+           4.90340183e-02],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.18846599e+00, -1.21525323e+00,
+          -4.02885839e-01],
+         [ 0.00000000e+00,  5.31416284e-01,  3.40163139e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.88537708e-01,  6.57495256e-02,
+           5.29752634e-02],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.18976444e+00, -1.21954865e+00,
+          -4.04700683e-01],
+         [ 0.00000000e+00,  5.71279194e-01,  3.84251907e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -2.26859921e-01,  6.99616237e-02,
+           5.65662484e-02],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.19108719e+00, -1.22346595e+00,
+          -4.06355168e-01],
+         [ 0.00000000e+00,  6.07651872e-01,  4.24422459e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -2.61926040e-01,  7.38005241e-02,
+           5.98381161e-02],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.19240871e+00, -1.22703811e+00,
+          -4.07863396e-01],
+         [ 0.00000000e+00,  6.40833982e-01,  4.61022281e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -2.93999344e-01,  7.72992307e-02,
+           6.28192369e-02],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.19238025e+00, -1.23029533e+00,
+          -4.09238237e-01],
+         [ 0.00000000e+00,  6.70631777e-01,  4.94369808e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -3.23271113e-01,  8.04878185e-02,
+           6.55354565e-02],
+         [ 0.00000000e+00, -2.16424573e-03,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.18350673e+00, -1.23326513e+00,
+          -4.10491440e-01],
+         [ 0.00000000e+00,  6.94673188e-01,  5.24752660e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -3.49641464e-01,  8.33937415e-02,
+           6.80103213e-02],
+         [ 0.00000000e+00, -1.87391863e-02,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.17555276e+00, -1.23597274e+00,
+          -4.11633728e-01],
+         [ 0.00000000e+00,  7.16571980e-01,  5.52435290e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -3.73689671e-01,  8.60420042e-02,
+           7.02652830e-02],
+         [ 0.00000000e+00, -3.37752323e-02,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.16841470e+00, -1.23844115e+00,
+          -4.12674883e-01],
+         [ 0.00000000e+00,  7.36519747e-01,  5.77657182e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -3.95617699e-01,  8.84554223e-02,
+           7.23198857e-02],
+         [ 0.00000000e+00, -4.74203130e-02,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.16200061e+00, -1.23950189e+00,
+          -4.13623832e-01],
+         [ 0.00000000e+00,  7.54688730e-01,  5.97651354e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -4.15610148e-01,  9.07380663e-02,
+           7.41919352e-02],
+         [ 0.00000000e+00, -5.98077251e-02, -2.01295591e-03,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.15623264e+00, -1.24027038e+00,
+          -4.14488717e-01],
+         [ 0.00000000e+00,  7.71240849e-01,  6.15374039e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -4.33836708e-01,  9.28323970e-02,
+           7.58976545e-02],
+         [ 0.00000000e+00, -7.10563849e-02, -4.18515353e-03,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.15103859e+00, -1.24097200e+00,
+          -4.15276967e-01],
+         [ 0.00000000e+00,  7.86316683e-01,  6.31524154e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -4.50451628e-01,  9.47411754e-02,
+           7.74518242e-02],
+         [ 0.00000000e+00, -8.12746149e-02, -6.16430919e-03,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.14635745e+00, -1.24161255e+00,
+          -4.15995356e-01],
+         [ 0.00000000e+00,  8.00048953e-01,  6.46243290e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -4.65596577e-01,  9.64807535e-02,
+           7.88679109e-02],
+         [ 0.00000000e+00, -9.05591315e-02, -7.96755219e-03,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.14213433e+00, -1.24219749e+00,
+          -4.16500855e-01],
+         [ 0.00000000e+00,  8.12556610e-01,  6.59662780e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -4.79400722e-01,  9.80660122e-02,
+           8.01228005e-02],
+         [ 0.00000000e+00, -9.89975077e-02, -9.61045464e-03,
+          -2.53526513e-04]],
+ 
+        [[ 0.00000000e+00, -2.13832223e+00, -1.24273090e+00,
+          -4.16524455e-01],
+         [ 0.00000000e+00,  8.23950636e-01,  6.71883457e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -4.91982430e-01,  9.95108644e-02,
+           8.11625791e-02],
+         [ 0.00000000e+00, -1.06668271e-01, -1.11074815e-02,
+          -1.22738202e-03]],
+ 
+        [[ 0.00000000e+00, -2.13487848e+00, -1.24321785e+00,
+          -4.16546101e-01],
+         [ 0.00000000e+00,  8.34330240e-01,  6.83025049e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.03449495e-01,  1.00827492e-01,
+           8.21099308e-02],
+         [ 0.00000000e+00, -1.13642695e-01, -1.24714014e-02,
+          -2.11472118e-03]],
+ 
+        [[ 0.00000000e+00, -2.13176475e+00, -1.24366215e+00,
+          -4.16566026e-01],
+         [ 0.00000000e+00,  8.43784853e-01,  6.93178643e-02,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.13900160e-01,  1.02027331e-01,
+           8.29732207e-02],
+         [ 0.00000000e+00, -1.19985376e-01, -1.37141128e-02,
+          -2.92321139e-03]],
+ 
+        [[ 0.00000000e+00, -2.12894736e+00,  0.00000000e+00,
+          -4.16584271e-01],
+         [ 0.00000000e+00,  8.52396617e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.23424173e-01,  0.00000000e+00,
+           8.37597669e-02],
+         [ 0.00000000e+00, -1.25754604e-01,  0.00000000e+00,
+          -3.65987824e-03]],
+ 
+        [[ 0.00000000e+00, -2.12639732e+00,  0.00000000e+00,
+          -4.16601040e-01],
+         [ 0.00000000e+00,  8.60242101e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.32103692e-01,  0.00000000e+00,
+           8.44765171e-02],
+         [ 0.00000000e+00, -1.31002791e-01,  0.00000000e+00,
+          -4.33108646e-03]],
+ 
+        [[ 0.00000000e+00, -2.12408719e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  8.67388179e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.40013206e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.35777947e-01,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.12199430e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  8.73898999e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.47221165e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.40122941e-01,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.12009624e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  8.79829144e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.53789376e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.44077371e-01,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.11837504e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  8.85232119e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.59774802e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.47676414e-01,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.11681330e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  8.90154267e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.65228992e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.50952442e-01,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.11539572e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  8.94638435e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.70199047e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.53934713e-01,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.11410858e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  8.98723642e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.74727898e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.56649788e-01,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.11293952e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  9.02445426e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.78854679e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.59121790e-01,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.11187742e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  9.05836154e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.82615060e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.61372631e-01,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.11091236e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  9.08925514e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.86041586e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.63422184e-01,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.11003505e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  9.11739915e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.89163815e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.65288631e-01,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.10923735e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  9.14303869e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.92008759e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.66988416e-01,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.10851208e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  9.16640013e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.94601088e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.68536426e-01,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.10785258e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  9.18768670e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.96963235e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.69946260e-01,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.10725249e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  9.20707718e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -5.99115538e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00, -1.71230413e-01,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00]]]),
+ array([[[ 0.00000000e+00,  4.61661434e-02,  1.36309252e+00,
+           2.70806114e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -2.06142611e-05],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00,  2.85616460e-02,  1.31383731e+00,
+           2.79335381e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -1.59061397e-01],
+         [ 0.00000000e+00,  3.38630981e-02,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  9.36637611e-02,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00,  1.25399866e-02,  1.26935403e+00,
+           2.87277112e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -3.04323034e-01],
+         [ 0.00000000e+00,  6.47156833e-02,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  1.79023813e-01,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.04337784e-03,  1.22912935e+00,
+           2.94665932e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -4.37162628e-01],
+         [ 0.00000000e+00,  9.28269244e-02,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  2.56859150e-01,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -1.53193133e-02,  1.19271630e+00,
+           3.01534195e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -5.58750354e-01],
+         [ 0.00000000e+00,  1.18441468e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  3.27862418e-01,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -2.74064001e-02,  1.15972356e+00,
+           3.07912436e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -6.70107611e-01],
+         [ 0.00000000e+00,  1.41781788e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  3.92652538e-01,
+           0.00000000e+00]],
+ 
+        [[ 0.00000000e+00, -3.84121692e-02,  1.12980669e+00,
+           3.16724819e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -7.80647397e-01],
+         [ 0.00000000e+00,  1.63050287e-01,  0.00000000e+00,
+           0.00000000e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  4.51785276e-01,
+          -4.66554241e-02]],
+ 
+        [[ 0.00000000e+00, -4.20435289e-02,  1.10266103e+00,
+           3.32311386e+00],
+         [ 0.00000000e+00, -1.24407718e-02,  0.00000000e+00,
+          -8.94467551e-01],
+         [ 0.00000000e+00,  1.82447093e-01,  0.00000000e+00,
+          -7.28615975e-02],
+         [ 0.00000000e+00,  0.00000000e+00,  5.05761709e-01,
+          -1.43806892e-01]],
+ 
+        [[ 0.00000000e+00, -4.22947674e-02,  1.08817310e+00,
+           3.48370582e+00],
+         [ 0.00000000e+00, -2.97187640e-02,  0.00000000e+00,
+          -1.00091662e+00],
+         [ 0.00000000e+00,  2.00137850e-01, -1.89963162e-02,
+          -1.66064974e-01],
+         [ 0.00000000e+00,  0.00000000e+00,  5.54656529e-01,
+          -2.34399985e-01]],
+ 
+        [[ 0.00000000e+00, -4.25159707e-02,  1.09214696e+00,
+           3.63334616e+00],
+         [ 0.00000000e+00, -4.54694266e-02,  0.00000000e+00,
+          -1.09944000e+00],
+         [ 0.00000000e+00,  2.16267024e-01, -6.81794362e-02,
+          -2.52240140e-01],
+         [ 0.00000000e+00,  0.00000000e+00,  5.98688726e-01,
+          -3.17458672e-01]],
+ 
+        [[ 0.00000000e+00, -4.27110815e-02,  1.09598990e+00,
+           3.77260703e+00],
+         [ 0.00000000e+00, -5.98277741e-02,  0.00000000e+00,
+          -1.19056324e+00],
+         [ 0.00000000e+00,  2.30972233e-01, -1.13162886e-01,
+          -3.31887477e-01],
+         [ 0.00000000e+00,  0.00000000e+00,  6.38926994e-01,
+          -3.93632966e-01]],
+ 
+        [[ 0.00000000e+00, -4.28834834e-02,  1.09967816e+00,
+           3.90204279e+00],
+         [ 0.00000000e+00, -7.29167919e-02,  0.00000000e+00,
+          -1.27477720e+00],
+         [ 0.00000000e+00,  2.44378916e-01, -1.54302018e-01,
+          -4.05464127e-01],
+         [ 0.00000000e+00,  0.00000000e+00,  6.75698055e-01,
+          -4.63502203e-01]],
+ 
+        [[ 0.00000000e+00, -4.30360850e-02,  1.10319550e+00,
+           4.02219279e+00],
+         [ 0.00000000e+00, -8.48485452e-02,  0.00000000e+00,
+          -1.35254253e+00],
+         [ 0.00000000e+00,  2.56601440e-01, -1.91920779e-01,
+          -4.73391855e-01],
+         [ 0.00000000e+00,  0.00000000e+00,  7.09299114e-01,
+          -5.27587358e-01]],
+ 
+        [[ 0.00000000e+00, -3.82712274e-02,  1.10653190e+00,
+           4.13358329e+00],
+         [ 0.00000000e+00, -9.68005407e-02,  0.00000000e+00,
+          -1.42429398e+00],
+         [ 0.00000000e+00,  2.67852884e-01, -2.26315411e-01,
+          -5.36062913e-01],
+         [ 0.00000000e+00, -8.20534596e-03,  7.40001074e-01,
+          -5.86360459e-01]],
+ 
+        [[ 0.00000000e+00, -3.15994970e-02,  1.10968221e+00,
+           4.23672728e+00],
+         [ 0.00000000e+00, -1.08205050e-01,  0.00000000e+00,
+          -1.49044244e+00],
+         [ 0.00000000e+00,  2.78161708e-01, -2.57757175e-01,
+          -5.93843955e-01],
+         [ 0.00000000e+00, -1.95769068e-02,  7.68051260e-01,
+          -6.40251593e-01]],
+ 
+        [[ 0.00000000e+00, -2.55146946e-02,  1.11264511e+00,
+           4.33212374e+00],
+         [ 0.00000000e+00, -1.18599123e-01,  0.00000000e+00,
+          -1.55137660e+00],
+         [ 0.00000000e+00,  2.87559334e-01, -2.86494678e-01,
+          -6.47078855e-01],
+         [ 0.00000000e+00, -2.99430237e-02,  7.93675740e-01,
+          -6.89654330e-01]],
+ 
+        [[ 0.00000000e+00, -1.99650707e-02,  1.11542225e+00,
+           4.42021706e+00],
+         [ 0.00000000e+00, -1.28073136e-01,  0.00000000e+00,
+          -1.60741931e+00],
+         [ 0.00000000e+00,  2.96126217e-01, -3.12755904e-01,
+          -6.96078474e-01],
+         [ 0.00000000e+00, -3.93925449e-02,  8.17081326e-01,
+          -7.34922008e-01]],
+ 
+        [[ 0.00000000e+00, -1.49038722e-02,  1.11801753e+00,
+           4.50155802e+00],
+         [ 0.00000000e+00, -1.36708468e-01,  0.00000000e+00,
+          -1.65901256e+00],
+         [ 0.00000000e+00,  3.03935620e-01, -3.36749999e-01,
+          -7.41172412e-01],
+         [ 0.00000000e+00, -4.80063459e-02,  8.38457334e-01,
+          -7.76403840e-01]],
+ 
+        [[ 0.00000000e+00, -1.02887156e-02,  1.12043652e+00,
+           4.57655239e+00],
+         [ 0.00000000e+00, -1.44578676e-01,  0.00000000e+00,
+          -1.70643374e+00],
+         [ 0.00000000e+00,  3.11054287e-01, -3.58668855e-01,
+          -7.82632585e-01],
+         [ 0.00000000e+00, -5.58580898e-02,  8.57977122e-01,
+          -8.14397247e-01]],
+ 
+        [[ 0.00000000e+00, -6.08037107e-03,  1.12268601e+00,
+           4.64563080e+00],
+         [ 0.00000000e+00, -1.51751775e-01,  0.00000000e+00,
+          -1.74999079e+00],
+         [ 0.00000000e+00,  3.17543186e-01, -3.78688542e-01,
+          -8.20727078e-01],
+         [ 0.00000000e+00, -6.30150741e-02,  8.75799475e-01,
+          -8.49184614e-01]],
+ 
+        [[ 0.00000000e+00, -2.24332009e-03,  1.12477360e+00,
+           4.70920463e+00],
+         [ 0.00000000e+00, -1.58289182e-01,  0.00000000e+00,
+          -1.78997342e+00],
+         [ 0.00000000e+00,  3.23457859e-01, -3.96970594e-01,
+          -8.55707535e-01],
+         [ 0.00000000e+00, -6.95385938e-02,  8.92069840e-01,
+          -8.81026555e-01]],
+ 
+        [[ 0.00000000e+00,  1.25539588e-03,  1.12670744e+00,
+           4.76766418e+00],
+         [ 0.00000000e+00, -1.64247867e-01,  0.00000000e+00,
+          -1.82665222e+00],
+         [ 0.00000000e+00,  3.28849064e-01, -4.13663185e-01,
+          -8.87809443e-01],
+         [ 0.00000000e+00, -7.54846745e-02,  9.06921443e-01,
+          -9.10163355e-01]],
+ 
+        [[ 0.00000000e+00,  4.44509906e-03,  1.12849596e+00,
+           4.82138310e+00],
+         [ 0.00000000e+00, -1.69678320e-01,  0.00000000e+00,
+          -1.86028452e+00],
+         [ 0.00000000e+00,  3.33762945e-01, -4.28902200e-01,
+          -9.17254349e-01],
+         [ 0.00000000e+00, -8.09042219e-02,  9.20476306e-01,
+          -9.36817475e-01]],
+ 
+        [[ 0.00000000e+00,  7.35305627e-03,  1.13014770e+00,
+           4.87071040e+00],
+         [ 0.00000000e+00, -1.74627500e-01,  0.00000000e+00,
+          -1.89110658e+00],
+         [ 0.00000000e+00,  3.38241680e-01, -4.42812220e-01,
+          -9.44247692e-01],
+         [ 0.00000000e+00, -8.58437803e-02,  9.32846172e-01,
+          -9.61193345e-01]],
+ 
+        [[ 0.00000000e+00,  1.00040425e-02,  1.12883320e+00,
+           4.91597576e+00],
+         [ 0.00000000e+00, -1.79138000e-01,  4.66945358e-03,
+          -1.91933946e+00],
+         [ 0.00000000e+00,  3.42323714e-01, -4.55409688e-01,
+          -9.68981782e-01],
+         [ 0.00000000e+00, -9.03457673e-02,  9.44779814e-01,
+          -9.83479628e-01]],
+ 
+        [[ 0.00000000e+00,  1.24206671e-02,  1.12242638e+00,
+           4.95748940e+00],
+         [ 0.00000000e+00, -1.83248644e-01,  1.75247911e-02,
+          -1.94518989e+00],
+         [ 0.00000000e+00,  3.46044105e-01, -4.66723824e-01,
+          -9.91635464e-01],
+         [ 0.00000000e+00, -9.44488630e-02,  9.56861949e-01,
+          -1.00385033e+00]],
+ 
+        [[ 0.00000000e+00,  1.46234871e-02,  1.11659996e+00,
+           4.99554147e+00],
+         [ 0.00000000e+00, -1.86994679e-01,  2.92466160e-02,
+          -1.96884932e+00],
+         [ 0.00000000e+00,  3.49434810e-01, -4.77045390e-01,
+          -1.01237514e+00],
+         [ 0.00000000e+00, -9.81883203e-02,  9.67888982e-01,
+          -1.02246561e+00]],
+ 
+        [[ 0.00000000e+00,  1.66315708e-02,  1.11130021e+00,
+           5.03040178e+00],
+         [ 0.00000000e+00, -1.90408819e-01,  3.99346509e-02,
+          -1.99049400e+00],
+         [ 0.00000000e+00,  3.52525030e-01, -4.86460681e-01,
+          -1.03135473e+00],
+         [ 0.00000000e+00, -1.01596360e-01,  9.77951866e-01,
+          -1.03947263e+00]],
+ 
+        [[ 0.00000000e+00,  1.84618627e-02,  1.10647945e+00,
+           5.06232549e+00],
+         [ 0.00000000e+00, -1.93520033e-01,  4.96785042e-02,
+          -2.01029116e+00],
+         [ 0.00000000e+00,  3.55341303e-01, -4.95048649e-01,
+          -1.04871804e+00],
+         [ 0.00000000e+00, -1.04702251e-01,  9.87133691e-01,
+          -1.05500752e+00]],
+ 
+        [[ 0.00000000e+00,  2.01300610e-02,  1.10209333e+00,
+           5.09154573e+00],
+         [ 0.00000000e+00, -1.96355178e-01,  5.85618462e-02,
+          -2.02839078e+00],
+         [ 0.00000000e+00,  3.57907873e-01, -5.02881363e-01,
+          -1.06459689e+00],
+         [ 0.00000000e+00, -1.07532737e-01,  9.95510780e-01,
+          -1.06919452e+00]],
+ 
+        [[ 0.00000000e+00,  0.00000000e+00,  1.09810241e+00,
+           5.11828176e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  6.66598653e-02,
+          -2.04493444e+00],
+         [ 0.00000000e+00,  0.00000000e+00, -5.10024747e-01,
+          -1.07911401e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  1.00315282e+00,
+          -1.08214837e+00]],
+ 
+        [[ 0.00000000e+00,  0.00000000e+00,  1.09446977e+00,
+           5.14273550e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  7.40431334e-02,
+          -2.06005137e+00],
+         [ 0.00000000e+00,  0.00000000e+00, -5.16538961e-01,
+          -1.09238217e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  1.01012386e+00,
+          -1.09397413e+00]],
+ 
+        [[ 0.00000000e+00,  0.00000000e+00,  1.09116391e+00,
+           5.16509509e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  8.07727873e-02,
+          -2.07386193e+00],
+         [ 0.00000000e+00,  0.00000000e+00, -5.22479109e-01,
+          -1.10450591e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  1.01648199e+00,
+          -1.10476847e+00]],
+ 
+        [[ 0.00000000e+00,  0.00000000e+00,  1.08815441e+00,
+           5.18553297e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  8.69076785e-02,
+          -2.08647533e+00],
+         [ 0.00000000e+00,  0.00000000e+00, -5.27895407e-01,
+          -1.11558111e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  1.02228082e+00,
+          -1.11461975e+00]],
+ 
+        [[ 0.00000000e+00,  0.00000000e+00,  1.08541467e+00,
+           5.20420969e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  9.24998230e-02,
+          -2.09799362e+00],
+         [ 0.00000000e+00,  0.00000000e+00, -5.32833787e-01,
+          -1.12569633e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  1.02756907e+00,
+          -1.12360927e+00]],
+ 
+        [[ 0.00000000e+00,  0.00000000e+00,  1.08292030e+00,
+           5.22127316e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  9.75970846e-02,
+          -2.10851033e+00],
+         [ 0.00000000e+00,  0.00000000e+00, -5.37336182e-01,
+          -1.13493309e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  1.03239136e+00,
+          -1.13181148e+00]],
+ 
+        [[ 0.00000000e+00,  0.00000000e+00,  1.08064899e+00,
+           5.23685710e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  1.02243417e-01,
+          -2.11810873e+00],
+         [ 0.00000000e+00,  0.00000000e+00, -5.41440875e-01,
+          -1.14336549e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  1.03678851e+00,
+          -1.13929406e+00]],
+ 
+        [[ 0.00000000e+00,  0.00000000e+00,  1.07858114e+00,
+           5.25108969e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  1.06477782e-01,
+          -2.12687077e+00],
+         [ 0.00000000e+00,  0.00000000e+00, -5.45182848e-01,
+          -1.15106314e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  1.04079763e+00,
+          -1.14612002e+00]],
+ 
+        [[ 0.00000000e+00,  0.00000000e+00,  1.07669795e+00,
+           5.26408253e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  1.10337383e-01,
+          -2.13486484e+00],
+         [ 0.00000000e+00,  0.00000000e+00, -5.48593989e-01,
+          -1.15808803e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  1.04445287e+00,
+          -1.15234576e+00]],
+ 
+        [[ 0.00000000e+00,  0.00000000e+00,  1.07498285e+00,
+           5.27594377e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  1.13855278e-01,
+          -2.14215972e+00],
+         [ 0.00000000e+00,  0.00000000e+00, -5.51703426e-01,
+          -1.16449873e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  1.04778529e+00,
+          -1.15802400e+00]],
+ 
+        [[ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           5.28676967e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -2.14881517e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -1.17034803e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -1.16320235e+00]],
+ 
+        [[ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           5.29664721e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -2.15488455e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -1.17568375e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -1.16792409e+00]],
+ 
+        [[ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           5.30565687e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -2.16041717e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -1.18055034e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -1.17222887e+00]],
+ 
+        [[ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+           5.31388116e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -2.16546813e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -1.18499049e+00],
+         [ 0.00000000e+00,  0.00000000e+00,  0.00000000e+00,
+          -1.17615477e+00]]]))</pre>
 </div>
 
 </div>
@@ -12602,8 +14382,7 @@ To also get back the entire regulatrization paths, run</p>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
+</div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="Sufficient-reduction-projection">Sufficient reduction projection<a class="anchor-link" href="#Sufficient-reduction-projection">&#182;</a></h2><p>A sufficient reduction projection summarizes the counts, much like a sufficient
 statistic, and is useful for reducing the d dimensional counts in a potentially
@@ -12616,13 +14395,14 @@ example</p>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[12]:</div>
+<div class="prompt input_prompt">In&nbsp;[11]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">z</span> <span class="o">=</span> <span class="n">srproj</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">counts</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">z</span> <span class="o">=</span> <span class="n">hd</span><span class="o">.</span><span class="n">srproj</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">counts</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">z</span>
 </pre></div>
 
-</div>
+    </div>
 </div>
 </div>
 
@@ -12632,39 +14412,112 @@ example</p>
 
 <div class="output_area">
 
-<div class="prompt output_prompt">Out[12]:</div>
+    <div class="prompt output_prompt">Out[11]:</div>
 
 
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>100×4 Array{Float64,2}:
- -0.367472   19.0768   10.0  2.0
- -0.0821325  19.0768   10.0  2.0
-  0.203207   38.1537    3.0  1.0
- -0.158994   11.9921    9.0  3.0
-  0.135472   11.9921    6.0  3.0
-  0.203207   38.1537    7.0  1.0
- -0.670108   11.9921    7.0  3.0
- -0.204421   19.0768    7.0  2.0
- -0.153467   19.0768    8.0  2.0
- -0.430881   19.0768    9.0  2.0
- -0.113837   19.0768    9.0  2.0
-  0.203207   38.1537    4.0  1.0
-  0.203207   38.1537    4.0  1.0
-  ⋮                             
- -1.01943     8.99406   5.0  4.0
-  0.203207   38.1537    4.0  1.0
- -1.22349    19.0768    4.0  2.0
- -0.747925   19.0768    6.0  2.0
- -0.367472   19.0768    5.0  2.0
- -0.510142   19.0768    4.0  2.0
- -0.315592   19.0768   11.0  2.0
- -0.233451   11.9921    7.0  3.0
- -1.24889    12.7179    8.0  3.0
- -1.22349    19.0768    2.0  2.0
- -1.22349    19.0768    6.0  2.0
- -0.612049   19.0768    7.0  2.0</pre>
+<pre>array([[ 0.08265601, -0.2233692 ,  8.        ,  3.        ],
+       [ 0.11020801, -0.2233692 ,  6.        ,  3.        ],
+       [ 0.06612481, -0.2233692 ,  5.        ,  3.        ],
+       [ 0.036736  , -0.2233692 ,  9.        ,  3.        ],
+       [ 0.06612481, -0.2233692 ,  5.        ,  3.        ],
+       [ 0.036736  , -0.2233692 ,  9.        ,  3.        ],
+       [ 0.04132801, -0.2233692 ,  8.        ,  3.        ],
+       [ 0.05510401, -0.33505381,  6.        ,  2.        ],
+       [ 0.0330624 , -0.2233692 , 10.        ,  3.        ],
+       [ 0.        , -0.33505381,  5.        ,  2.        ],
+       [ 0.08265601, -0.2233692 ,  4.        ,  3.        ],
+       [ 0.        , -0.33505381,  5.        ,  2.        ],
+       [ 0.08265601, -0.2233692 ,  8.        ,  3.        ],
+       [ 0.        , -0.33505381,  9.        ,  2.        ],
+       [ 0.05510401,  0.        ,  6.        ,  2.        ],
+       [ 0.        , -0.33505381,  7.        ,  2.        ],
+       [ 0.06612481, -0.33505381,  5.        ,  2.        ],
+       [ 0.        , -0.33505381,  4.        ,  2.        ],
+       [ 0.04132801, -0.2233692 ,  8.        ,  3.        ],
+       [ 0.036736  , -0.2233692 ,  9.        ,  3.        ],
+       [ 0.06612481, -0.2233692 ,  5.        ,  3.        ],
+       [ 0.04723201, -0.33505381,  7.        ,  2.        ],
+       [ 0.        , -0.33505381,  7.        ,  2.        ],
+       [ 0.04132801, -0.2233692 ,  8.        ,  3.        ],
+       [ 0.04723201, -0.2233692 ,  7.        ,  3.        ],
+       [ 0.        , -0.33505381,  6.        ,  2.        ],
+       [ 0.        , -0.33505381,  3.        ,  2.        ],
+       [ 0.08265601, -0.33505381,  4.        ,  2.        ],
+       [ 0.        , -0.33505381,  4.        ,  2.        ],
+       [ 0.        , -0.33505381,  8.        ,  2.        ],
+       [ 0.06612481, -0.2233692 ,  5.        ,  3.        ],
+       [ 0.04723201, -0.33505381,  7.        ,  2.        ],
+       [ 0.05510401, -0.2233692 ,  6.        ,  3.        ],
+       [ 0.04723201, -0.2233692 ,  7.        ,  3.        ],
+       [ 0.09446401, -0.33505381,  7.        ,  2.        ],
+       [ 0.08265601, -0.2233692 ,  4.        ,  3.        ],
+       [ 0.        , -0.33505381,  5.        ,  2.        ],
+       [ 0.06612481, -0.2233692 ,  5.        ,  3.        ],
+       [ 0.09446401, -0.2233692 ,  7.        ,  3.        ],
+       [ 0.04723201,  0.        ,  7.        ,  2.        ],
+       [ 0.        , -0.67010761,  5.        ,  1.        ],
+       [ 0.        , -0.33505381,  5.        ,  2.        ],
+       [ 0.        ,  0.        ,  3.        ,  1.        ],
+       [ 0.        , -0.33505381,  5.        ,  2.        ],
+       [ 0.        , -0.33505381,  5.        ,  2.        ],
+       [ 0.16531202,  0.        ,  4.        ,  2.        ],
+       [ 0.        , -0.33505381,  3.        ,  2.        ],
+       [ 0.08265601, -0.2233692 , 12.        ,  3.        ],
+       [ 0.        , -0.33505381,  4.        ,  2.        ],
+       [ 0.        , -0.33505381,  2.        ,  2.        ],
+       [ 0.16531202, -0.2233692 ,  4.        ,  3.        ],
+       [ 0.        , -0.33505381,  7.        ,  2.        ],
+       [ 0.04723201, -0.2233692 ,  7.        ,  3.        ],
+       [ 0.        , -0.67010761,  4.        ,  1.        ],
+       [ 0.16531202, -0.33505381,  4.        ,  2.        ],
+       [ 0.06612481, -0.2233692 , 10.        ,  3.        ],
+       [ 0.09446401, -0.2233692 ,  7.        ,  3.        ],
+       [ 0.08265601, -0.2233692 ,  8.        ,  3.        ],
+       [ 0.        , -0.33505381,  3.        ,  2.        ],
+       [ 0.06612481, -0.2233692 ,  5.        ,  3.        ],
+       [ 0.05510401, -0.2233692 ,  6.        ,  3.        ],
+       [ 0.        , -0.33505381,  8.        ,  2.        ],
+       [ 0.        , -0.33505381, 10.        ,  2.        ],
+       [ 0.        , -0.33505381,  4.        ,  2.        ],
+       [ 0.06612481, -0.2233692 ,  5.        ,  3.        ],
+       [ 0.        , -0.67010761,  5.        ,  1.        ],
+       [ 0.11020801, -0.2233692 ,  6.        ,  3.        ],
+       [ 0.        , -0.33505381,  4.        ,  2.        ],
+       [ 0.13224962, -0.2233692 ,  5.        ,  3.        ],
+       [ 0.        , -0.33505381,  5.        ,  2.        ],
+       [ 0.0330624 , -0.2233692 , 10.        ,  3.        ],
+       [ 0.11020801, -0.2233692 ,  3.        ,  3.        ],
+       [ 0.        , -0.33505381,  5.        ,  2.        ],
+       [ 0.        , -0.33505381,  7.        ,  2.        ],
+       [ 0.05510401, -0.2233692 ,  6.        ,  3.        ],
+       [ 0.11020801, -0.2233692 ,  6.        ,  3.        ],
+       [ 0.13224962, -0.2233692 ,  5.        ,  3.        ],
+       [ 0.18892802, -0.2233692 ,  7.        ,  3.        ],
+       [ 0.14169602, -0.33505381,  7.        ,  2.        ],
+       [ 0.        , -0.33505381,  4.        ,  2.        ],
+       [ 0.        , -0.67010761,  5.        ,  1.        ],
+       [ 0.        , -0.33505381,  5.        ,  2.        ],
+       [ 0.13224962, -0.2233692 ,  5.        ,  3.        ],
+       [ 0.07347201, -0.2233692 ,  9.        ,  3.        ],
+       [ 0.06612481, -0.2233692 , 10.        ,  3.        ],
+       [ 0.        , -0.67010761,  8.        ,  1.        ],
+       [ 0.06612481, -0.33505381,  5.        ,  2.        ],
+       [ 0.08265601, -0.33505381,  4.        ,  2.        ],
+       [ 0.05510401, -0.2233692 ,  6.        ,  3.        ],
+       [ 0.04132801, -0.2233692 ,  8.        ,  3.        ],
+       [ 0.        , -0.33505381,  6.        ,  2.        ],
+       [ 0.        , -0.33505381,  5.        ,  2.        ],
+       [ 0.        , -0.33505381,  5.        ,  2.        ],
+       [ 0.05510401, -0.2233692 ,  6.        ,  3.        ],
+       [ 0.16531202, -0.33505381,  6.        ,  2.        ],
+       [ 0.04723201, -0.2233692 , 14.        ,  3.        ],
+       [ 0.        , -0.33505381,  7.        ,  2.        ],
+       [ 0.19837443, -0.2233692 ,  5.        ,  3.        ],
+       [ 0.        , -0.33505381,  6.        ,  2.        ],
+       [ 0.13224962,  0.        ,  5.        ,  2.        ]])</pre>
 </div>
 
 </div>
@@ -12674,8 +14527,7 @@ example</p>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
+</div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>Here, the first column is the SR projection from the model for positive counts, the second is the the SR projection from the model for hurdle crossing (zeros), and the third is the total count for each observation.</p>
 
@@ -12683,8 +14535,7 @@ example</p>
 </div>
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
+</div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="Counts-Inverse-Regression-(CIR)">Counts Inverse Regression (CIR)<a class="anchor-link" href="#Counts-Inverse-Regression-(CIR)">&#182;</a></h2><p>Counts inverse regression allows us to predict a covariate with the counts and other covariates.
 Here we use hdmr for the backward regression and another model for the forward regression.
@@ -12695,13 +14546,17 @@ This can be accomplished with a single command, by fitting a CIR{HDMR,FM} where 
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[13]:</div>
+<div class="prompt input_prompt">In&nbsp;[12]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">cir</span> <span class="o">=</span> <span class="n">fit</span><span class="p">(</span><span class="n">CIR</span><span class="p">{</span><span class="n">HDMR</span><span class="p">,</span><span class="n">LinearModel</span><span class="p">},</span><span class="n">mf</span><span class="p">,</span><span class="n">covarsdf</span><span class="p">,</span><span class="n">counts</span><span class="p">,</span><span class="o">:</span><span class="n">vy</span><span class="p">;</span> <span class="n">nocounts</span><span class="o">=</span><span class="kc">true</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">jl</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s2">&quot;using GLM: LinearModel&quot;</span><span class="p">)</span>
+<span class="n">spec</span> <span class="o">=</span> <span class="n">jl</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="s2">&quot;CIR{HDMR,LinearModel}&quot;</span><span class="p">)</span>
+<span class="n">cir</span> <span class="o">=</span> <span class="n">hd</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span><span class="n">covars</span><span class="p">,</span><span class="n">counts</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span> 
+             <span class="n">select</span><span class="o">=</span><span class="n">Lasso</span><span class="o">.</span><span class="n">MinBIC</span><span class="p">(),</span> <span class="n">nocounts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">cir</span>
 </pre></div>
 
-</div>
+    </div>
 </div>
 </div>
 
@@ -12711,52 +14566,37 @@ This can be accomplished with a single command, by fitting a CIR{HDMR,FM} where 
 
 <div class="output_area">
 
-<div class="prompt"></div>
-
-
-<div class="output_subarea output_stream output_stderr output_text">
-<pre>┌ Info: fitting 100 observations on 4 categories 
-│ 2 covariates for positive and 3 for zero counts
-└ @ HurdleDMR /home/root/.julia/dev/HurdleDMR/src/hdmr.jl:468
-┌ Info: distributed InclusionRepetition run on local cluster with 4 nodes
-└ @ HurdleDMR /home/root/.julia/dev/HurdleDMR/src/hdmr.jl:481
-</pre>
-</div>
-</div>
-
-<div class="output_area">
-
-<div class="prompt output_prompt">Out[13]:</div>
+    <div class="prompt output_prompt">Out[12]:</div>
 
 
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>CIR{HDMR,LinearModel}(1, [1, 2], HDMRCoefs{InclusionRepetition,Array{Float64,2},MinAICc,Array{Int64,1}}([0.0 -2.48491 -0.505547 -0.23561; 0.0 0.0 -2.65019 0.203207; 0.0 0.0 -0.491465 0.0], [-2.59356 1.23117 1.73801 -13.9022; 0.0 -2.17746 0.0 38.1537; 0.0 -2.89271 0.0 423.955; 0.0 -1.23601 -1.85064 -19.9601], true, 100, 4, [1, 2], [1, 2, 3], MinAICc(2)), LinearModel{GLM.LmResp{Array{Float64,1}},GLM.DensePredChol{Float64,Cholesky{Float64,Array{Float64,2}}}}:
+<pre>&lt;PyCall.jlwrap CIR{HDMR,LinearModel}(1, [1, 2], HDMRCoefs{InclusionRepetition,Array{Float64,2},Lasso.MinBIC,UnitRange{Int64}}([0.0 -2.18288 -1.1806 -0.415995; 0.0 0.330624 0.0 0.0; 0.0 0.0 0.0299796 0.0788679; 0.0 0.0 0.0 0.0], [0.0 0.0461661 1.36309 3.07912; 0.0 0.0 0.0 -0.670108; 0.0 0.0 0.0 0.0; 0.0 0.0 0.0 0.0], true, 100, 4, 1:3, 1:3, Lasso.MinBIC()), LinearModel{GLM.LmResp{Array{Float64,1}},GLM.DensePredChol{Float64,LinearAlgebra.Cholesky{Float64,Array{Float64,2}}}}:
 
 Coefficients:
-─────────────────────────────────────────────────────────────────────────
-       Estimate  Std. Error    t value  Pr(&gt;|t|)    Lower 95%   Upper 95%
-─────────────────────────────────────────────────────────────────────────
-x1   0.806879    0.254456     3.171       0.0021   0.30158     1.31218   
-x2  -0.103535    0.096488    -1.07304     0.2860  -0.295142    0.0880707 
-x3  -0.115557    0.103506    -1.11642     0.2671  -0.321099    0.0899861 
-x4   0.154634    0.0814074    1.89951     0.0606  -0.00702506  0.316293  
-x5  -0.00108295  0.00500668  -0.216302    0.8292  -0.0110252   0.00885932
-x6   0.00588134  0.012264     0.479563    0.6327  -0.0184725   0.0302351 
-x7  -0.0905476   0.0652975   -1.38669     0.1689  -0.220216    0.0391203 
-─────────────────────────────────────────────────────────────────────────
-, LinearModel{GLM.LmResp{Array{Float64,1}},GLM.DensePredChol{Float64,Cholesky{Float64,Array{Float64,2}}}}:
+───────────────────────────────────────────────────────────────────────
+       Estimate  Std. Error    t value  Pr(&gt;|t|)   Lower 95%  Upper 95%
+───────────────────────────────────────────────────────────────────────
+x1   0.887227     0.23313     3.80572     0.0003   0.424277   1.35018  
+x2  -0.00275704   0.101541   -0.027152    0.9784  -0.204397   0.198883 
+x3  -0.132434     0.101139   -1.30943     0.1936  -0.333275   0.0684076
+x4   0.393855     0.697003    0.565069    0.5734  -0.990255   1.77797  
+x5   0.236098     0.319183    0.739695    0.4613  -0.397736   0.869933 
+x6  -0.00979175   0.0158525  -0.617678    0.5383  -0.0412717  0.0216882
+x7  -0.0817407    0.0717278  -1.1396      0.2574  -0.224178   0.0606965
+───────────────────────────────────────────────────────────────────────
+, LinearModel{GLM.LmResp{Array{Float64,1}},GLM.DensePredChol{Float64,LinearAlgebra.Cholesky{Float64,Array{Float64,2}}}}:
 
 Coefficients:
-─────────────────────────────────────────────────────────────────────
-      Estimate  Std. Error    t value  Pr(&gt;|t|)  Lower 95%  Upper 95%
-─────────────────────────────────────────────────────────────────────
-x1   0.456718    0.0713401   6.40198     &lt;1e-8    0.315127   0.598308
-x2  -0.0414989   0.0975448  -0.425434    0.6715  -0.235098   0.152101
-x3   0.0921372   0.0909831   1.01269     0.3137  -0.088439   0.272713
-─────────────────────────────────────────────────────────────────────
-)</pre>
+──────────────────────────────────────────────────────────────────────
+      Estimate  Std. Error     t value  Pr(&gt;|t|)  Lower 95%  Upper 95%
+──────────────────────────────────────────────────────────────────────
+x1   0.57844     0.0794739   7.27837      &lt;1e-10   0.420707  0.736174 
+x2   0.0068076   0.1002      0.0679403    0.9460  -0.192061  0.205676 
+x3  -0.13156     0.0990448  -1.32829      0.1872  -0.328136  0.0650164
+──────────────────────────────────────────────────────────────────────
+)&gt;</pre>
 </div>
 
 </div>
@@ -12766,10 +14606,10 @@ x3   0.0921372   0.0909831   1.01269     0.3137  -0.088439   0.272713
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
+</div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<p>where the <code>nocounts=true</code> means we also fit a benchmark model without counts.</p>
+<p>where the <code>nocounts=True</code> means we also fit a benchmark model without counts,
+and <code>select=Lasso.MinBIC()</code> selects BIC minimizing Lasso segments for each category.</p>
 <p>we can get the forward and backward model coefficients with</p>
 
 </div>
@@ -12777,13 +14617,13 @@ x3   0.0921372   0.0909831   1.01269     0.3137  -0.088439   0.272713
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[14]:</div>
+<div class="prompt input_prompt">In&nbsp;[13]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">coefbwd</span><span class="p">(</span><span class="n">cir</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">hd</span><span class="o">.</span><span class="n">coefbwd</span><span class="p">(</span><span class="n">cir</span><span class="p">)</span>
 </pre></div>
 
-</div>
+    </div>
 </div>
 </div>
 
@@ -12793,13 +14633,20 @@ x3   0.0921372   0.0909831   1.01269     0.3137  -0.088439   0.272713
 
 <div class="output_area">
 
-<div class="prompt output_prompt">Out[14]:</div>
+    <div class="prompt output_prompt">Out[13]:</div>
 
 
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>([0.0 -2.48491 -0.505547 -0.23561; 0.0 0.0 -2.65019 0.203207; 0.0 0.0 -0.491465 0.0], [-2.59356 1.23117 1.73801 -13.9022; 0.0 -2.17746 0.0 38.1537; 0.0 -2.89271 0.0 423.955; 0.0 -1.23601 -1.85064 -19.9601])</pre>
+<pre>(array([[ 0.        , -2.18288411, -1.18060442, -0.41599536],
+        [ 0.        ,  0.33062404,  0.        ,  0.        ],
+        [ 0.        ,  0.        ,  0.02997958,  0.07886791],
+        [ 0.        ,  0.        ,  0.        ,  0.        ]]),
+ array([[ 0.        ,  0.04616614,  1.36309252,  3.07912436],
+        [ 0.        ,  0.        ,  0.        , -0.67010761],
+        [ 0.        ,  0.        ,  0.        ,  0.        ],
+        [ 0.        ,  0.        ,  0.        ,  0.        ]]))</pre>
 </div>
 
 </div>
@@ -12810,13 +14657,13 @@ x3   0.0921372   0.0909831   1.01269     0.3137  -0.088439   0.272713
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[15]:</div>
+<div class="prompt input_prompt">In&nbsp;[14]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">coeffwd</span><span class="p">(</span><span class="n">cir</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">hd</span><span class="o">.</span><span class="n">coeffwd</span><span class="p">(</span><span class="n">cir</span><span class="p">)</span>
 </pre></div>
 
-</div>
+    </div>
 </div>
 </div>
 
@@ -12826,20 +14673,14 @@ x3   0.0921372   0.0909831   1.01269     0.3137  -0.088439   0.272713
 
 <div class="output_area">
 
-<div class="prompt output_prompt">Out[15]:</div>
+    <div class="prompt output_prompt">Out[14]:</div>
 
 
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>7-element Array{Float64,1}:
-  0.8068791910919334   
- -0.10353546049021634  
- -0.11555664427731226  
-  0.1546339871132811   
- -0.0010829538468236821
-  0.005881340629811088 
- -0.0905476479689421   </pre>
+<pre>array([ 0.88722732, -0.00275704, -0.13243369,  0.39385493,  0.23609827,
+       -0.00979175, -0.08174069])</pre>
 </div>
 
 </div>
@@ -12849,8 +14690,7 @@ x3   0.0921372   0.0909831   1.01269     0.3137  -0.088439   0.272713
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
+</div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>The fitted model can be used to predict vy with new data</p>
 
@@ -12859,13 +14699,13 @@ x3   0.0921372   0.0909831   1.01269     0.3137  -0.088439   0.272713
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[16]:</div>
+<div class="prompt input_prompt">In&nbsp;[15]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">yhat</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span><span class="n">cir</span><span class="p">,</span> <span class="n">covarsdf</span><span class="p">[</span><span class="mi">1</span><span class="o">:</span><span class="mi">10</span><span class="p">,</span><span class="o">:</span><span class="p">],</span> <span class="n">counts</span><span class="p">[</span><span class="mi">1</span><span class="o">:</span><span class="mi">10</span><span class="p">,</span><span class="o">:</span><span class="p">])</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">hd</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">cir</span><span class="p">,</span> <span class="n">covars</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">),:],</span> <span class="n">counts</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">),:])</span>
 </pre></div>
 
-</div>
+    </div>
 </div>
 </div>
 
@@ -12875,23 +14715,14 @@ x3   0.0921372   0.0909831   1.01269     0.3137  -0.088439   0.272713
 
 <div class="output_area">
 
-<div class="prompt output_prompt">Out[16]:</div>
+    <div class="prompt output_prompt">Out[15]:</div>
 
 
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>10-element Array{Union{Missing, Float64},1}:
- 0.4698993353328307 
- 0.45963979129838384
- 0.5782657496603597 
- 0.484620220504942  
- 0.5023887465911144 
- 0.5914871966842338 
- 0.40669982045527   
- 0.5011220105167319 
- 0.4811118616060238 
- 0.5030932551174164 </pre>
+<pre>array([0.55374217, 0.44339513, 0.41348183, 0.44716221, 0.42806591,
+       0.46489547, 0.48025307, 0.45795602, 0.56790706])</pre>
 </div>
 
 </div>
@@ -12901,8 +14732,7 @@ x3   0.0921372   0.0909831   1.01269     0.3137  -0.088439   0.272713
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
+</div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>We can also predict only with the other covariates, which in this case
 is just a linear regression</p>
@@ -12912,13 +14742,13 @@ is just a linear regression</p>
 </div>
 <div class="cell border-box-sizing code_cell rendered">
 <div class="input">
-<div class="prompt input_prompt">In&nbsp;[17]:</div>
+<div class="prompt input_prompt">In&nbsp;[16]:</div>
 <div class="inner_cell">
     <div class="input_area">
-<div class=" highlight hl-julia"><pre><span></span><span class="n">yhat_nocounts</span> <span class="o">=</span> <span class="n">predict</span><span class="p">(</span><span class="n">cir</span><span class="p">,</span> <span class="n">covarsdf</span><span class="p">[</span><span class="mi">1</span><span class="o">:</span><span class="mi">10</span><span class="p">,</span><span class="o">:</span><span class="p">],</span> <span class="n">counts</span><span class="p">[</span><span class="mi">1</span><span class="o">:</span><span class="mi">10</span><span class="p">,</span><span class="o">:</span><span class="p">];</span> <span class="n">nocounts</span><span class="o">=</span><span class="kc">true</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">hd</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">cir</span><span class="p">,</span> <span class="n">covars</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">),:],</span> <span class="n">counts</span><span class="p">[</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">),:],</span> <span class="n">nocounts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 
-</div>
+    </div>
 </div>
 </div>
 
@@ -12928,23 +14758,14 @@ is just a linear regression</p>
 
 <div class="output_area">
 
-<div class="prompt output_prompt">Out[17]:</div>
+    <div class="prompt output_prompt">Out[16]:</div>
 
 
 
 
 <div class="output_text output_subarea output_execute_result">
-<pre>10-element Array{Union{Missing, Float64},1}:
- 0.45731660084749226
- 0.5179985510761541 
- 0.4807768729723196 
- 0.47254808567420575
- 0.47267552235044974
- 0.48519627697522144
- 0.4799151241219515 
- 0.44186379731084846
- 0.4592317510593359 
- 0.4232136851484049 </pre>
+<pre>array([0.55869446, 0.46528463, 0.48635113, 0.4689304 , 0.49773856,
+       0.51824815, 0.45533037, 0.53886851, 0.55713808])</pre>
 </div>
 
 </div>
@@ -12954,8 +14775,7 @@ is just a linear regression</p>
 
 </div>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
-</div>
-<div class="inner_cell">
+</div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <p>Kelly, Manela, and Moreira (2018) show that the differences between DMR and HDMR can be substantial in some cases, especially when the counts data is highly sparse.</p>
 <p>Please reference the paper for additional details and example applications.</p>

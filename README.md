@@ -6,7 +6,7 @@
 
 <!-- | **Package Evaluator**   | [![][pkg-0.5-img]][pkg-0.5-url] [![][pkg-0.6-img]][pkg-0.6-url] | -->
 
-HurdleDMR.jl is a Julia implementation of the Hurdle Distributed Multiple Regression (HDMR), as described in:
+HurdleDMR.jl is a Julia implementation of the Hurdle Distributed Multinomial Regression (HDMR), as described in:
 
 Kelly, Bryan, Asaf Manela, and Alan Moreira (2018). Text Selection. [Working paper](http://apps.olin.wustl.edu/faculty/manela/kmm/textselection/).
 

@@ -1,6 +1,6 @@
 # HurdleDMR.jl
 
-HurdleDMR.jl is a Julia implementation of the Hurdle Distributed Multiple Regression (HDMR), as described in:
+HurdleDMR.jl is a Julia implementation of the Hurdle Distributed Multinomial Regression (HDMR), as described in:
 
 Kelly, Bryan, Asaf Manela, and Alan Moreira (2018). Text Selection. [Working paper](http://apps.olin.wustl.edu/faculty/manela/kmm/textselection/).
 
@@ -8,7 +8,7 @@ It includes a Julia implementation of the Distributed Multinomial Regression (DM
 
 ## Setup
 
-Install the HurdleDMR package
+Install the HurdleDMR package, switch to Pkg mode (hit ])
 ```julia
 pkg> add HurdleDMR
 ```
@@ -16,7 +16,7 @@ pkg> add HurdleDMR
 Add parallel workers and make package available to workers
 ```julia
 using Distributed
-addprocs(Sys.CPU_THREADS-2)
+addprocs(4)
 import HurdleDMR; @everywhere using HurdleDMR
 ```
 
@@ -65,9 +65,9 @@ To also get back the entire regulatrization paths, run
 ```julia
 paths = fit(DMRPaths, mf, covarsdf, counts)
 ```
-we can now select, for example the coefficients that minimize CV mse (takes a while)
+we can now select, for example the coefficients that minimize 10-fold CV mse (takes a while)
 ```julia
-coef(paths; select=:CVmin)
+coef(paths, MinCVKfold{MinCVmse}(10))
 ```
 
 ```@autodocs
@@ -77,10 +77,10 @@ Pages   = ["src/dmr.jl"]
 Private = false
 ```
 
-## Hurdle Distributed Multiple Regression (HDMR)
+## Hurdle Distributed Multinomial Regression (HDMR)
 
 For highly sparse counts, as is often the case with text that is selected for
-various reasons, the Hurdle Distributed Multiple Regression (HDMR) model of
+various reasons, the Hurdle Distributed Multinomial Regression (HDMR) model of
 Kelly, Manela, and Moreira (2018), may be superior to the DMR. It approximates
 a higher dispersion Multinomial using distributed (independent, parallel)
 Hurdle regressions, one for each of the d categories (columns) of a large `counts` matrix,
@@ -109,11 +109,11 @@ coefspos, coefszero = coef(m)
 ```
 
 By default we only return the AICc maximizing coefficients.
-To also get back the entire regulatrization paths, run
+To also get back the entire regularization paths, run
 ```julia
 paths = fit(HDMRPaths, mf, covarsdf, counts)
 
-coef(paths; select=:all)
+coef(paths, AllSeg())
 ```
 
 Syntax:

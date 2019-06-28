@@ -13,3 +13,13 @@ macro test_show(expr, expected)
     end
     :(@test $(esc(s)) == $expected)
 end
+
+# returns true iff v is a column of A
+function hascol(A::AbstractMatrix, v::AbstractVector)
+    for c = (view(A, :, i) for i in axes(A, 2))
+        if c == v
+            return true
+        end
+    end
+    return false
+end

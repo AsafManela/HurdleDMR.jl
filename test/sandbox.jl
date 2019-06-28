@@ -9,8 +9,8 @@ addprocs(Sys.CPU_THREADS-2)
 
 # Setup your data into an n-by-p covars matrix, and a (sparse) n-by-d counts matrix
 # Here we generate some random data
-using CSV, GLM, DataFrames, Distributions, Random, SparseArrays, CategoricalArrays#, StatsModels
-n = 100
+using CSV, GLM, DataFrames, Distributions, Random, SparseArrays, CategoricalArrays, InteractiveUtils #, StatsModels
+n = 200
 p = 3
 d = 4
 
@@ -30,7 +30,14 @@ counts = convert(SparseMatrixCSC{Float64,Int}, hcat(broadcast((qi,mi)->rand(Mult
 covars = ModelMatrix(ModelFrame(@formula(y ~ cat + x + y + z), covarsdf)).m[:,2:end]
 
 ## To fit a hurdle distribtued multiple regression (hdmr):
-m = hdmr(covars, counts; inpos=1:4, inzero=1:5, showwarnings=true)
+m = hdmr(covars, counts)
+
+prem = vec(sum(counts, dims=2))
+m1 = hdmr(covars, counts[:,1:2]; m=prem)
+m2 = hdmr(covars, counts[:,3:4]; m=prem)
+
+hcat(m1.coefspos, m2.coefspos) == m.coefspos
+hcat(m1.coefszero, m2.coefszero) == m.coefszero
 
 # or with a dataframe and formula
 mf = @model(h ~ cat + x + y + z, c ~ cat + x + y)
@@ -67,7 +74,7 @@ coefspos, coefszero = coef(m)
 # To also get back the entire regulatrization paths, run
 paths = fit(HDMRPaths, mf, covarsdf, counts)
 
-coef(paths; select=:all)
+coef(paths; select=AllSeg())
 
 # To get a sufficient reduction projection in direction of vy
 z = srproj(m,counts,1,1)
@@ -104,7 +111,7 @@ coef(m)
 paths = fit(DMRPaths, mf, covarsdf, counts)
 
 # we can now select, for example the coefficients that minimize CV mse (takes a while)
-coef(paths; select=:CVmin)
+coef(paths; select=MinCVmse(Kfold(size(covars,1), 5)))
 
 # To get a sufficient reduction projection in direction of vy
 z = srproj(m,counts,1)

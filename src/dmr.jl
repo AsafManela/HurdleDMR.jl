@@ -18,30 +18,25 @@ struct DMRPaths <: DMR
   n::Int                      # number of observations. May be lower than provided after removing all zero obs.
   d::Int                      # number of categories (terms/words/phrases)
   p::Int                      # number of covariates
-
-  DMRPaths(nlpaths::Vector{Union{Missing,GammaLassoPath}}, intercept::Bool,
-    n::Int, d::Int, p::Int) =
-    new(nlpaths, intercept, n, d, p)
 end
+
+const defsegselect = MinAICc()
 
 """
 Relatively light object used to return DMR results when we only care about estimated coefficients.
 """
-struct DMRCoefs <: DMR
-  coefs::AbstractMatrix         # model coefficients
-  intercept::Bool               # whether to include an intercept in each Poisson regression
+struct DMRCoefs{T<:AbstractMatrix, S<:SegSelect} <: DMR
+  coefs::T                    # model coefficients
+  intercept::Bool             # whether to include an intercept in each Poisson regression
   n::Int                      # number of observations. May be lower than provided after removing all zero obs.
   d::Int                      # number of categories (terms/words/phrases)
   p::Int                      # number of covariates
-  select::Symbol              # path segment selector
+  select::S                   # path segment selector
+end
 
-  DMRCoefs(coefs::AbstractMatrix, intercept::Bool, n::Int, d::Int, p::Int, select::Symbol) =
-    new(coefs, intercept, n, d, p, select)
-
-  function DMRCoefs(m::DMRPaths; select=:AICc)
-    coefs = coef(m; select=select)
-    new(coefs, m.intercept, m.n, m.d, m.p, select)
-  end
+function DMRCoefs(m::DMRPaths, select::SegSelect=defsegselect)
+  coefs = coef(m, select)
+  DMRCoefs(coefs, m.intercept, m.n, m.d, m.p, select)
 end
 
 """
@@ -72,7 +67,7 @@ for the entire multinomial (includes the intercept if one was included).
     for which sharing memory is costly.
 - `verbose::Bool=true`
 - `showwarnings::Bool=false`
-- `select::Symbol=:AICc` which path segment to pick
+- `select::SegSelect=MinAICc()` which path segment to pick
 - `kwargs...` additional keyword arguments passed along to fit(GammaLassoPath,...)
 """
 function StatsBase.fit(::Type{D}, covars::AbstractMatrix{T}, counts::AbstractMatrix;
@@ -120,7 +115,8 @@ end
 """
     coef(m::DMRCoefs)
 
-Returns the AICc optimal coefficients matrix fitted with DMR.
+Returns the coefficient matrices fitted with DMR using
+the segment selected during fit (MinAICc by default).
 
 # Example:
 ```julia
@@ -128,30 +124,44 @@ Returns the AICc optimal coefficients matrix fitted with DMR.
   coef(m)
 ```
 """
-function StatsBase.coef(m::DMRCoefs; select=m.select)
-  if select == m.select
-    m.coefs
-  else
-    error("coef(m::DMRCoefs) supports only the regulatrization path segement
-      selector $(m.select) specified during fit().")
+StatsBase.coef(m::DMRCoefs) = m.coefs
+
+coefspace(p, d, nλ, select::SegSelect) = zeros(p,d)
+coefspace(p, d, nλ, select::AllSeg) = zeros(nλ,p,d)
+
+coeffill!(coefs, path::Missing, p, j, select::SegSelect) = nothing
+
+function coeffill!(coefs, path::RegularizationPath, p, j, select::SegSelect)
+  cj = coef(path, select)
+  coeffill!(coefs, cj, p, j, select)
+end
+
+function coeffill!(coefs, cj::AbstractArray, p, j, select::SegSelect)
+  for i=1:p
+    coefs[i,j] = cj[i]
+  end
+end
+function coeffill!(coefs, cj::AbstractArray, p, j, select::AllSeg)
+  for i=1:p
+    for s=1:size(cj,2)
+      coefs[s,i,j] = cj[i,s]
+    end
   end
 end
 
 """
-    coef(m::DMRPaths; select=:AICc)
+    coef(m::DMRPaths, select::SegSelect=MinAICc())
 
 Returns all or selected coefficients matrix fitted with DMR.
 
 # Example:
 ```julia
   m = fit(DMRPaths,covars,counts)
-  coef(m; select=:CVmin)
+  coef(m, MinCVKfold{MinCVmse}(5))
 ```
-
-# Keywords
-- `select=:AICc` See [`coef(::RegularizationPath)`](@ref).
 """
-function StatsBase.coef(m::DMRPaths; select=:AICc)
+# StatsBase.coef(m::DMRPaths; select=defsegselect) = coef(m, select)
+function StatsBase.coef(m::DMRPaths, select::SegSelect=defsegselect)
   # get dims
   d = length(m.nlpaths)
   d < 1 && return nothing
@@ -169,29 +179,12 @@ function StatsBase.coef(m::DMRPaths; select=:AICc)
   end
 
   # allocate space
-  if select==:all
-    coefs = zeros(nλ,p,d)
-  else
-    coefs = zeros(p,d)
-  end
+  coefs = coefspace(p, d, nλ, select)
 
   # iterate over paths
   for j=1:d
     path = m.nlpaths[j]
-    if !ismissing(path)
-      cj = coef(path;select=select)
-      if select==:all
-        for i=1:p
-          for s=1:size(cj,2)
-            coefs[s,i,j] = cj[i,s]
-          end
-        end
-      else
-        for i=1:p
-          coefs[i,j] = cj[i]
-        end
-      end
-    end
+    coeffill!(coefs, path, p, j, select)
   end
 
   coefs
@@ -237,14 +230,14 @@ fpcounts(counts::M) where {V<:GLM.FP, N, M<:SparseMatrixCSC{V,N}} = counts
 fpcounts(counts::M) where {V<:GLM.FP, M<:AbstractMatrix{V}} = counts
 
 totalcounts(counts, prespecifiedm::Nothing) = vec(sum(counts, dims=2))
-totalcounts(counts::AbstractMatrix{C}, prespecifiedm::AbstractVector{C}) where C = convert(Vector{GLM.FP}, prespecifiedm)
+totalcounts(counts, prespecifiedm::AbstractVector) = convert(Vector{GLM.FP}, prespecifiedm)
 
 """
 Computes DMR shifters (μ=log(m)) and removes all zero observations.
 Optionally uses a prespecifed total counts `m`, to allow computation in batches.
 """
-function shifters(covars::AbstractMatrix{T}, counts::AbstractMatrix{C}, showwarnings::Bool,
-  prespecifiedm::Union{Nothing, AbstractVector{C}}) where {T<:AbstractFloat,C}
+function shifters(::Type{DMR}, covars::AbstractMatrix, counts::AbstractMatrix{C}, showwarnings::Bool,
+  prespecifiedm::Union{Nothing, AbstractVector}) where C
 
   # standardize counts matrix to conform to GLM.FP
   counts = fpcounts(counts)
@@ -267,11 +260,41 @@ function shifters(covars::AbstractMatrix{T}, counts::AbstractMatrix{C}, showwarn
   covars, counts, μ, n
 end
 
+"Destandardize coefficents estimated using a potentially standardized covars matrix"
+function destandardize!(coefs::AbstractMatrix{T}, covarsnorm::AbstractVector{T},
+    standardize, intercept) where T
+
+  if standardize
+    if intercept
+      covarsnorm = [one(T); covarsnorm]
+    end
+
+    # destandardize all coefs only once
+    lmul!(Diagonal(covarsnorm), coefs)
+  end
+  nothing
+end
+
+"Destandardize path.coefs estimated using a potentially standardized covars matrix"
+function destandardize!(path::RegularizationPath{S,T}, covarsnorm::AbstractVector{T},
+    standardize) where {S,T}
+
+  if standardize && isdefined(path,:coefs)
+    # destandardize all coefs only once
+    lmul!(Diagonal(covarsnorm), path.coefs)
+    # not really used but set just in case it is in the future
+    path.Xnorm = covarsnorm
+  end
+
+  path
+end
+
 """
 This version is built for local clusters and shares memory used by both inputs and outputs if run in parallel mode.
 """
 function dmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
-          parallel,verbose,showwarnings,intercept; select=:AICc, m=nothing, kwargs...) where {T<:AbstractFloat,V}
+          parallel,verbose,showwarnings,intercept; select=defsegselect, m=nothing,
+          standardize=true, kwargs...) where {T<:AbstractFloat,V}
   # get dimensions
   n, d = size(counts)
   n1,p = size(covars)
@@ -281,37 +304,47 @@ function dmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
   # add one coef for intercept
   ncoef = p + (intercept ? 1 : 0)
 
-  covars, counts, μ, n = shifters(covars, counts, showwarnings, m)
+  covars, counts, μ, n = shifters(DMR, covars, counts, showwarnings, m)
+
+  # standardize covars only once if needed
+  covars, covarsnorm = Lasso.standardizeX(covars, standardize)
 
   # fit separate GammaLassoPath's to each dimension of counts j=1:d and pick its min AICc segment
   if parallel
     verbose && @info("distributed poisson run on local cluster with $(nworkers()) nodes")
-    counts = convert(SharedArray,counts)
-    coefs = SharedMatrix{T}(ncoef,d)
-    covars = convert(SharedArray,covars)
+    scounts = convert(SharedArray,counts)
+    scoefs = SharedMatrix{T}(ncoef,d)
+    scovars = convert(SharedArray,covars)
     # μ = convert(SharedArray,μ) incompatible with GLM
 
     @sync @distributed for j=1:d
-      tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false,
-        showwarnings=showwarnings, intercept=intercept, select=select, kwargs...)
+      tryfitgl!(scoefs, j, scovars, scounts; offset=μ, verbose=false,
+        showwarnings=showwarnings, intercept=intercept, select=select,
+        standardize=false, kwargs...)
     end
+
+    coefs = convert(Matrix{T}, scoefs)
   else
     verbose && @info("serial poisson run on a single node")
     coefs = Matrix{T}(undef,ncoef,d)
     for j=1:d
       tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false,
-        showwarnings=showwarnings, intercept=intercept, select=select, kwargs...)
+        showwarnings=showwarnings, intercept=intercept, select=select,
+        standardize=false, kwargs...)
     end
   end
+
+  # destandardize coefs only once if needed
+  destandardize!(coefs, covarsnorm, standardize, intercept)
 
   DMRCoefs(coefs, intercept, n, d, p, select)
 end
 
 "This version does not share memory across workers, so may be more efficient for small problems, or on remote clusters."
 function dmr_remote_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
-          parallel,verbose,showwarnings,intercept; select=:AICc, kwargs...) where {T<:AbstractFloat,V}
+          parallel,verbose,showwarnings,intercept; select=defsegselect, kwargs...) where {T<:AbstractFloat,V}
   paths = dmrpaths(covars, counts; parallel=parallel, verbose=verbose, showwarnings=showwarnings, intercept=intercept, kwargs...)
-  DMRCoefs(paths; select=select)
+  DMRCoefs(paths, select)
 end
 
 "Shorthand for fit(DMRPaths,covars,counts). See also [`fit(::DMRPaths)`](@ref)"
@@ -320,6 +353,7 @@ function dmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
       parallel=true,
       verbose=true, showwarnings=false,
       m=nothing,
+      standardize=true,
       kwargs...) where {T<:AbstractFloat}
   # get dimensions
   n, d = size(counts)
@@ -327,12 +361,16 @@ function dmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
   @assert n==n1 "counts and covars should have the same number of observations"
   verbose && @info("fitting $n observations on $d categories, $p covariates ")
 
-  covars, counts, μ, n = shifters(covars, counts, showwarnings, m)
+  covars, counts, μ, n = shifters(DMR, covars, counts, showwarnings, m)
+
+  # standardize covars only once if needed
+  covars, covarsnorm = Lasso.standardizeX(covars, standardize)
 
   function tryfitgl(countsj::AbstractVector)
     try
       # we make it dense remotely to reduce communication costs
-      fit(GammaLassoPath,covars,Vector(countsj),Poisson(),LogLink(); offset=μ, verbose=false, kwargs...)
+      path = fit(GammaLassoPath,covars,Vector(countsj),Poisson(),LogLink(); offset=μ, standardize=false, verbose=false, kwargs...)
+      destandardize!(path, covarsnorm, standardize)
     catch e
       showwarnings && @warn("fitgl failed for countsj with frequencies $(sort(countmap(countsj))) and will return missing path ($e)")
       missing
@@ -350,18 +388,17 @@ function dmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
     mapfn = map
   end
 
-  # TODO: the conversion here may be redudant
-  nlpaths = convert(Vector{Union{Missing,GammaLassoPath}},mapfn(tryfitgl,countscols))
+  nlpaths = allowmissing(mapfn(tryfitgl,countscols))
 
   DMRPaths(nlpaths, intercept, n, d, p)
 end
 
 "Fits a regularized poisson regression counts[:,j] ~ covars saving the coefficients in coefs[:,j]"
 function poisson_regression!(coefs::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},counts::AbstractMatrix{V};
-  select=:AICc, kwargs...) where {T<:AbstractFloat,V}
+  select=defsegselect, kwargs...) where {T<:AbstractFloat,V}
   cj = Vector(counts[:,j])
   path = fit(GammaLassoPath,covars,cj,Poisson(),LogLink(); kwargs...)
-  coefs[:,j] = coef(path; select=select)
+  coefs[:,j] = coef(path, select)
   nothing
 end
 
@@ -409,7 +446,7 @@ Predict counts using a fitted DMRPaths object and given newcovars.
 ```julia
   m = fit(DMRPaths,covars,counts)
   newcovars = covars[1:10,:]
-  countshat = predict(m, newcovars; select=:AICc)
+  countshat = predict(m, newcovars; select=MinAICc())
 ```
 
 # Arguments
@@ -417,21 +454,21 @@ Predict counts using a fitted DMRPaths object and given newcovars.
 - `newcovars` n-by-p matrix of covariates of same dimensions used to fit m.
 
 # Keywords
-- `select=:AICc` See [`coef(::RegularizationPath)`](@ref).
+- `select=MinAICc()` See [`coef(::RegularizationPath)`](@ref).
 - `kwargs...` additional keyword arguments passed along to predict() for each
   category j=1..size(counts,2)
 """
 function StatsBase.predict(m::DMRPaths, newcovars::AbstractMatrix{T};
-  select=:AICc, kwargs...) where {T<:AbstractFloat}
+  select=defsegselect, kwargs...) where {T<:AbstractFloat}
 
   _predict(m,newcovars;select=select,kwargs...)
 end
 
 # internal mothod used by both dmr and hdmr
 function _predict(m, newcovars::AbstractMatrix{T};
-  select=:AICc, kwargs...) where {T<:AbstractFloat}
+  select=defsegselect, kwargs...) where {T<:AbstractFloat}
 
-  @assert select != :all "select cannot be :all and must choose a particular segment (e.g. select=:AICc)"
+  @assert !isa(select, AllSeg) "select cannot be AllSeg and must choose a particular segment (e.g. select=MinAICc())"
 
   # dimensions
   newn = size(newcovars,1)
@@ -453,7 +490,7 @@ function _predict(m, newcovars::AbstractMatrix{T};
 end
 
 function StatsBase.predict(m::M, newcovars::AbstractMatrix{T};
-  select=:AICc, kwargs...) where {T<:AbstractFloat, M<:DMR}
+  select=defsegselect, kwargs...) where {T<:AbstractFloat, M<:DMR}
 
   error("predict(m::DMR,...) can currently only be evaluated for DMRPaths structs returned from fit(DMRPaths,...)")
 end

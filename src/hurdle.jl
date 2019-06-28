@@ -2,13 +2,21 @@
 # hurdle
 #############################################
 
+abstract type TwoPartModel{Z<:RegressionModel,P<:RegressionModel} <: RegressionModel end
+
 "Hurdle returned object"
-mutable struct Hurdle <: RegressionModel
-  mzero::RegressionModel  # model for zeros
-  mpos::RegressionModel   # model for positive counts
+mutable struct Hurdle{Z<:RegressionModel,P<:RegressionModel} <: TwoPartModel{Z,P}
+  mzero::Z                # model for zeros
+  mpos::P                 # model for positive counts
   fittedzero::Bool        # whether the model for zeros was fitted
   fittedpos::Bool         # whether the model for positives was fitted
 end
+
+# does nothing for hurdle
+excessy!(ypos, ::Type{Hurdle}) = ypos
+
+# minimum ypos element
+minypos(::Type{Hurdle}) = 1.0
 
 "Returns an (offsetzero, offsetpos) tuple of offset vector"
 function setoffsets(y::AbstractVector, ixpos::Vector{Int}, offset::AbstractVector, offsetzero::AbstractVector, offsetpos::AbstractVector)
@@ -41,6 +49,33 @@ function getIy(y::AbstractVector{T}) where {T}
     ixpos, Iy
 end
 
+"Drops observations with infinite offset"
+function finiteoffsetobs(part::Symbol, X, y, offset, wts, showwarnings)
+  if any(isinf,offset)
+      ixfinite = isfinite.(offset)
+      showwarnings && @warn("omitting $(length(offset)-sum(ixfinite)) observations with infinite offset from $part model")
+      offset = offset[ixfinite]
+      X = X[ixfinite, :]
+      y = y[ixfinite]
+      wts = wts[ixfinite]
+  end
+
+  X, y, offset, wts
+end
+
+mildexception(e::PosDefException) = true
+mildexception(e::DomainError) = true
+mildexception(e::ConvergenceException) = true
+mildexception(e::ErrorException) = (occursin("step-halving", e.msg) || occursin("failure to converge", e.msg) || occursin("failed to converge", e.msg))
+
+function getlogger(showwarnings::Bool)
+  if showwarnings
+    current_logger()
+  else
+    MinLevelLogger(current_logger(), Logging.Error)
+  end
+end
+
 "Fits the model for zeros Iy ~ X"
 function fitzero(::Type{M},
   X::AbstractMatrix{T}, Iy::V,
@@ -53,40 +88,43 @@ function fitzero(::Type{M},
   showwarnings::Bool,
   fitargs...) where {M<:RegressionModel,T<:FP,V<:FPVector}
 
-  # fit zero model to entire sample
+  X, Iy, offsetzero, wts = finiteoffsetobs(:zeros, X, Iy, offsetzero, wts, showwarnings)
+
   mzero = nothing
   fittedzero = false
-  if var(Iy) > zero(T)
-    try
-      mzero = fit(M, X, Iy, dzero, lzero; dofit=dofit, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
-      fittedzero = dofit
-    catch e
-      showwarnings && @warn("failed to fit zero counts model, possibly not enough variation in I(y). countmap(Iy)=$(countmap(Iy))")
-      if typeof(e) <: ErrorException && (occursin("step-halving", e.msg) || occursin("failure to converge", e.msg) || occursin("failed to converge", e.msg)) ||
-          typeof(e) == PosDefException || typeof(e) == DomainError
-        fittedzero = false
-      else
-        showwarnings && @warn("X'=$(X')")
-        showwarnings && @warn("Iy=$Iy)")
-        rethrow(e)
-      end
-    end
-  else
-    if verbose
-      if all(iszero,Iy)
-        showwarnings && @warn("I(y) is all zeros. There is nothing to explain.")
-      else
-        showwarnings && @warn("I(y) is all ones. Data may be fully described by a poisson model.")
-      end
-    end
-  end
 
-  if !fittedzero
-    # create blank zeros model without fitting
-    if M <: RegularizationPath
-      mzero = fit(M, X, Iy, dzero, lzero; dofit=false, λ=[0.0], wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
+  with_logger(getlogger(showwarnings)) do
+    if var(Iy) > zero(T)
+      try
+        mzero = fit(M, X, Iy, dzero, lzero; dofit=dofit, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
+        fittedzero = dofit
+      catch e
+        @warn("failed to fit zero counts model, possibly not enough variation in I(y). countmap(Iy)=$(countmap(Iy))")
+        if mildexception(e)
+          fittedzero = false
+        else
+          @warn("X'=$(X')")
+          @warn("Iy=$Iy)")
+          rethrow(e)
+        end
+      end
     else
-      mzero = fit(M, X, Iy, dzero, lzero; dofit=false, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
+      if verbose
+        if all(iszero,Iy)
+          @warn("I(y) is all zeros. There is nothing to explain.")
+        else
+          @warn("I(y) is all ones. Data may be fully described by a poisson model.")
+        end
+      end
+    end
+
+    if !fittedzero
+      # create blank zeros model without fitting
+      if M <: RegularizationPath
+        mzero = fit(M, X, Iy, dzero, lzero; dofit=false, λ=[0.0], wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
+      else
+        mzero = fit(M, X, Iy, dzero, lzero; dofit=false, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
+      end
     end
   end
 
@@ -94,7 +132,7 @@ function fitzero(::Type{M},
 end
 
 "Fits the model for positives ypos ~ Xpos"
-function fitpos(::Type{M},
+function fitpos(::Type{TPM},::Type{M},
   Xpos::AbstractMatrix{T}, ypos::V,
   dpos::UnivariateDistribution,
   lpos::Link,
@@ -103,40 +141,44 @@ function fitpos(::Type{M},
   offsetpos::AbstractVector,
   verbose::Bool,
   showwarnings::Bool,
-  fitargs...) where {M<:RegressionModel,T<:FP,V<:FPVector}
+  fitargs...) where {TPM<:TwoPartModel, M<:RegressionModel,T<:FP,V<:FPVector}
 
-  # fit truncated counts model to positive subsample
+  excessy!(ypos, TPM)
+  Xpos, ypos, offsetpos, wtspos = finiteoffsetobs(:positives, Xpos, ypos, offsetpos, wtspos, showwarnings)
+
   mpos=nothing
   fittedpos = false
-  if any(x->x>1, ypos)
-    try
-      mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=dofit, wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
-      fittedpos = dofit
-    catch e
-      showwarnings && @warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos. countmap(ypos)=$(sort(countmap(ypos)))")
-      if typeof(e) <: ErrorException && (occursin("step-halving", e.msg) || occursin("failure to converge", e.msg) || occursin("failed to converge", e.msg)) ||
-          typeof(e) == PosDefException || typeof(e) == DomainError
-        fittedpos = false
+
+  with_logger(getlogger(showwarnings)) do
+    if any(x->x>minypos(TPM), ypos)
+      try
+        mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=dofit, wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
+        fittedpos = dofit
+      catch e
+        @warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos. countmap(ypos)=$(sort(countmap(ypos)))")
+        if mildexception(e)
+          fittedpos = false
+        else
+          @warn("Xpos'=$(Xpos')")
+          @warn("ypos=$ypos)")
+          rethrow(e)
+        end
+      end
+    else
+      if length(ypos) == 0
+        error("y is all zeros! There is nothing to explain.")
       else
-        showwarnings && @warn("Xpos'=$(Xpos')")
-        showwarnings && @warn("ypos=$ypos)")
-        rethrow(e)
+        @warn("ypos has no elements larger than $(minypos(TPM))! Data may be fully described by a probability model.")
       end
     end
-  else
-    if length(ypos) == 0
-      error("y is all zeros! There is nothing to explain.")
-    else
-      showwarnings && @warn("ypos has no elements larger than 1! Data may be fully described by a probability model.")
-    end
-  end
 
-  if !fittedpos
-    # create blank positives model without fitting
-    if M <: RegularizationPath
-      mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=false, λ=[0.0], wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
-    else
-      mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=false, wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
+    if !fittedpos
+      # create blank positives model without fitting
+      if M <: RegularizationPath
+        mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=false, λ=[0.0], wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
+      else
+        mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=false, wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
+      end
     end
   end
 
@@ -158,7 +200,7 @@ covariates matrix Xpos used to model positive counts.
 # Example with Lasso regularization:
 ```julia
   m = fit(Hurdle,GammaLassoPath,X,y; Xpos=Xpos)
-  yhat = predict(m, X; Xpos=Xpos, select=:AICc)
+  yhat = predict(m, X; Xpos=Xpos, select=MinAICc())
 ```
 
 # Arguments
@@ -212,7 +254,7 @@ function StatsBase.fit(::Type{Hurdle},::Type{M},
     Xpos = Xpos[ixpos,:]
   end
 
-  mpos, fittedpos = fitpos(M, Xpos, y[ixpos], dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, showwarnings, fitargs...)
+  mpos, fittedpos = fitpos(Hurdle, M, Xpos, y[ixpos], dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, showwarnings, fitargs...)
 
   Hurdle(mzero,mpos,fittedzero,fittedpos)
 end
@@ -262,40 +304,34 @@ function StatsBase.fit(::Type{Hurdle},::Type{M},
   mmpos = (f===fpos) ? mmzero : ModelMatrix(mfpos)
   mmpos.m = mmpos.m[ixpos,:]
 
-  mpos, fittedpos = fitpos(M, mmpos.m, y[ixpos], dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, showwarnings, fitargs...)
+  mpos, fittedpos = fitpos(Hurdle, M, mmpos.m, y[ixpos], dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, showwarnings, fitargs...)
 
   Hurdle(mzero,mpos,fittedzero,fittedpos)
 end
 
-function Base.show(io::IO, hurdle::Hurdle)
-  println(io, "Hurdle regression\n")
+function Base.show(io::IO, tpm::TwoPartModel)
+  name = typeof(tpm).name
+  println(io, "$name regression\n")
 
-  if typeof(hurdle.mpos) <: RegularizationPath
-    println(io, "Count model regularization path ($(distfun(hurdle.mpos)) with $(linkfun(hurdle.mpos)) link):")
-    println(io, hurdle.fittedpos ? hurdle.mpos : "Not Fitted")
+  if typeof(tpm.mpos) <: RegularizationPath
+    println(io, "Positive part regularization path ($(distfun(tpm.mpos)) with $(linkfun(tpm.mpos)) link):")
+    println(io, tpm.fittedpos ? tpm.mpos : "Not Fitted")
 
-    println(io, "Zero hurdle regularization path ($(distfun(hurdle.mzero)) with $(linkfun(hurdle.mzero)) link):")
-    println(io, hurdle.fittedzero ? hurdle.mzero : "Not Fitted")
+    println(io, "Zero part regularization path ($(distfun(tpm.mzero)) with $(linkfun(tpm.mzero)) link):")
+    println(io, tpm.fittedzero ? tpm.mzero : "Not Fitted")
   else
-    println(io, "Count model coefficients ($(Distribution(hurdle.mpos)) with $(Link(hurdle.mpos)) link):")
-    println(io, hurdle.fittedpos ? hurdle.mpos : "Not Fitted")
+    println(io, "Positive part coefficients ($(Distribution(tpm.mpos)) with $(Link(tpm.mpos)) link):")
+    println(io, tpm.fittedpos ? tpm.mpos : "Not Fitted")
 
-    println(io, "Zero hurdle coefficients ($(Distribution(hurdle.mzero)) with $(Link(hurdle.mzero)) link):")
-    println(io, hurdle.fittedzero ? hurdle.mzero : "Not Fitted")
+    println(io, "Zero part coefficients ($(Distribution(tpm.mzero)) with $(Link(tpm.mzero)) link):")
+    println(io, tpm.fittedzero ? tpm.mzero : "Not Fitted")
   end
 end
 
-# function copypad!{T}(destA::AbstractMatrix{T},srcA::AbstractMatrix{T},padvalue=zero(T))
-#   for i=eachindex(srcA)
-#     destA[i] = srcA[i]
-#   end
-#   destA
-# end
-
 """
-    coef(m::Hurdle; <keyword arguments>)
+    coef(m::Hurdle; select=MinAICc())
 
-Returns the AICc optimal coefficient matrices fitted the Hurdle.
+Returns a selected segment of the coefficient matrices of the fitted the TwoPartModel.
 
 # Example:
 ```julia
@@ -306,23 +342,58 @@ Returns the AICc optimal coefficient matrices fitted the Hurdle.
 # Keywords
 - `kwargs...` are passed along to two coef() calls on the two model parts.
 """
-function StatsBase.coef(hurdle::Hurdle; kwargs...)
-  czero = coef(hurdle.mzero; kwargs...)
-  cpos = coef(hurdle.mpos; kwargs...)
-  # # dimensions of this differ if regularization paths terminates early at
-  # # different segments
-  # if size(czero,2) > size(cpos,2)
-  #   cpos = copypad!(similar(czero),cpos)
-  # elseif size(czero,2) < size(cpos,2)
-  #   czero = copypad!(similar(cpos),czero)
-  # end
+function StatsBase.coef(tpm::TwoPartModel; kwargs...)
+  czero = coef(tpm.mzero; kwargs...)
+  cpos = coef(tpm.mpos; kwargs...)
   cpos,czero
 end
+
+# the following coef definitions override those in Lasso for Hurdles
+function StatsBase.coef(tpm::TwoPartModel, select::SegSelect; kwargs...)
+  czero = coef(tpm.mzero, select; kwargs...)
+  cpos = coef(tpm.mpos, select; kwargs...)
+  cpos,czero
+end
+
+function StatsBase.coef(tpm::TwoPartModel, select::S; kwargs...) where {S<:CVSegSelect}
+  error("""
+    Specifying an instance of a `CVSegSelect` is not supported because there is
+    more than one path and its generator has a fixed number of observation indices.
+    Instead, consider passing a `MinCVKfold{$S}(k)`.
+    """)
+end
+
+"Selects the RegularizationPath segment according to `CVSegSelect` with `k`-fold cross-validation"
+struct MinCVKfold{S<:CVSegSelect} <: CVSegSelect
+  k::Int  # number of CV folds
+end
+
+"Selects the RegularizationPath segment coefficients according to `S` with `k`-fold cross-validation"
+function StatsBase.coef(path::RegularizationPath, select::MinCVKfold{S};
+  kwargs...) where {S<:CVSegSelect}
+
+  selector = S(path, select.k)
+  coef(path, selector; kwargs...)
+end
+
+"Selects the RegularizationPath segment coefficients according to `S` with `k`-fold cross-validation"
+function StatsBase.coef(tpm::TwoPartModel, select::MinCVKfold{S};
+  kwargs...) where {S<:CVSegSelect}
+
+  selectzero = S(tpm.mzero, select.k)
+  selectpos = S(tpm.mpos, select.k)
+  czero = coef(tpm.mzero, selectzero; kwargs...)
+  cpos = coef(tpm.mpos, selectpos; kwargs...)
+  cpos,czero
+end
+
+# predicted counts vector given expected inclusion (μzero) and repetition (μpos)
+μtpm(m::Hurdle, μzero, μpos) = μzero .* μpos
 
 """
     predict(m,X; Xpos=Xpos, <keyword arguments>)
 
-Predict using a fitted Hurdle given new X (and potentially Xpos).
+Predict using a fitted TwoPartModel given new X (and potentially Xpos).
 
 # Example with GLM:
 ```julia
@@ -333,7 +404,7 @@ Predict using a fitted Hurdle given new X (and potentially Xpos).
 # Example with Lasso regularization:
 ```julia
   m = fit(Hurdle,GammaLassoPath,X,y; Xpos=Xpos)
-  yhat = predict(m, X; Xpos=Xpos, select=:AICc)
+  yhat = predict(m, X; Xpos=Xpos, select=MinAICc())
 ```
 
 # Arguments
@@ -346,7 +417,7 @@ Predict using a fitted Hurdle given new X (and potentially Xpos).
 - `kwargs...` additional keyword arguments passed along to predict() for each
   of the two model parts.
 """
-function StatsBase.predict(hurdle::Hurdle, X::AbstractMatrix{T};
+function StatsBase.predict(tpm::TwoPartModel, X::AbstractMatrix{T};
   Xpos::AbstractMatrix{T} = X,
   offsetzero::AbstractVector = Array{T}(undef, 0),
   offsetpos::AbstractVector = Array{T}(undef, 0),
@@ -363,10 +434,10 @@ function StatsBase.predict(hurdle::Hurdle, X::AbstractMatrix{T};
     end
   end
 
-  muzero = predict(hurdle.mzero, X; offset=offsetzero, kwargs...)
-  mupos = predict(hurdle.mpos, Xpos; offset=offsetpos, kwargs...)
+  μzero = predict(tpm.mzero, X; offset=offsetzero, kwargs...)
+  μpos = predict(tpm.mpos, Xpos; offset=offsetpos, kwargs...)
 
-  @assert size(muzero) == size(mupos) "Predicted values from zero and positives models have different dimensions, $(size(muzero)) != $(size(mupos))\nCan result from fitting a RegularizationPath with autoλ and select=:all is specified."
+  @assert size(μzero) == size(μpos) "Predicted values from zero and positives models have different dimensions, $(size(μzero)) != $(size(μpos))\nCan result from fitting a RegularizationPath with autoλ and select=AllSeg() is specified."
 
-  muzero .* mupos
+  μtpm(tpm, μzero, μpos)
 end

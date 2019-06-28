@@ -10,7 +10,7 @@ f = @model(c ~ x + z + cat + y)
 dmrcoefs = dmr(covars, counts; testargs...)
 coefs = coef(dmrcoefs)
 @test size(coefs) == (p+1, d)
-@test_throws ErrorException coef(dmrcoefs; select=:all)
+@test_throws MethodError coef(dmrcoefs, AllSeg())
 @test coefs ≈ coefsRdistrom rtol=rtol
 # println("rdist(coefs,coefsRdistrom)=$(rdist(coefs,coefsRdistrom))")
 
@@ -27,10 +27,10 @@ dmrb = fit(DMR, covars, counts; testargs...)
 @test d == ncategories(dmrcoefsb)
 @test p == ncovars(dmrcoefsb)
 
-# select=:BIC
-dmrcoefsb = fit(DMRCoefs, covars, counts; select=:BIC, testargs...)
+# select=MinBIC()
+dmrcoefsb = fit(DMRCoefs, covars, counts; select=MinBIC(), testargs...)
 @test coef(dmrcoefsb) != coefs
-dmrb = fit(DMR, covars, counts; select=:BIC, testargs...)
+dmrb = fit(DMR, covars, counts; select=MinBIC(), testargs...)
 @test coef(dmrb) != coefs
 
 # serial run
@@ -57,7 +57,7 @@ dmrPathss = fit(DMRPaths, covars, counts; parallel=false, testargs...)
 @test coef(dmrPaths) == coef(dmrPaths2)
 @test coef(dmrPaths) ≈ coefs
 @test coef(dmrPathss) ≈ coefs
-coefsall = coef(dmrPaths; select=:all)
+coefsall = coef(dmrPaths, AllSeg())
 @test size(coefsall,1) > 1
 @test size(coefsall,2) == p+1
 @test size(coefsall,3) == d
@@ -173,8 +173,8 @@ mnirglmdf = fit(CIR{DMR,GeneralizedLinearModel},f,covarsdf,counts,:y,Gamma(); no
 @test coefbwd(mnirglmdf) ≈ coef(dmrcoefs)
 @test_throws ErrorException coeffwd(mnirglmdf; nocounts=true)
 
-# select=:BIC
-mnirdfb = fit(CIR{DMR,LinearModel},f,covarsdf,counts,:y; nocounts=true, select=:BIC, testargs...)
+# select=MinBIC()
+mnirdfb = fit(CIR{DMR,LinearModel},f,covarsdf,counts,:y; nocounts=true, select=MinBIC(), testargs...)
 @test coefbwd(mnirdf) != coefbwd(mnirdfb)
 @test coeffwd(mnirdf) != coeffwd(mnirdfb)
 

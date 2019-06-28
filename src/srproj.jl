@@ -10,8 +10,8 @@ your original covariates/attributes, are independent of text counts C given SR
 projections Z=[z_1 ... z_K].
 dir == nothing returns projections in all directions.
 """
-srproj(m::DMRPaths, counts, dir::Union{Nothing,Int}=nothing; focusj=axes(counts,2), select=:AICc) =
-  srproj(coef(m; select=select), counts, dir; intercept=hasintercept(m), focusj=focusj)
+srproj(m::DMRPaths, counts, dir::Union{Nothing,Int}=nothing; focusj=axes(counts,2), select=defsegselect) =
+  srproj(coef(m, select), counts, dir; intercept=hasintercept(m), focusj=focusj)
 
 srproj(m::DMRCoefs, counts, dir::Union{Nothing,Int}=nothing; focusj=axes(counts,2)) =
   srproj(coef(m), counts, dir; intercept=hasintercept(m), focusj=focusj)
@@ -99,43 +99,51 @@ function srprojX(coefs::AbstractMatrix{T},counts,covars,projdir; includem=true, 
 end
 srprojX(m::DMRCoefs,counts,covars,projdir; inz=[1], testrank=false,
   kwargs...) = srprojX(coef(m),counts,covars,projdir; kwargs...)
-srprojX(m::DMRPaths,counts,covars,projdir; select=:AICc, inz=[1], testrank=false,
-  kwargs...) = srprojX(coef(m;select=select),counts,covars,projdir; kwargs...)
+srprojX(m::DMRPaths,counts,covars,projdir; select=defsegselect, inz=[1], testrank=false,
+  kwargs...) = srprojX(coef(m, select),counts,covars,projdir; kwargs...)
 
 """
 srproj for hurdle dmr takes two coefficent matrices
 coefspos, coefszero, and a two specific directions
-and returns an n-by-3 matrix Z = [zpos zzero m].
+and returns an n-by-4 matrix Z = [zpos zzero m l].
 dirpos = 0 omits positive counts projections and
 dirzero = 0 omits zero counts projections.
 Setting any of these to nothing will return projections in all directions.
 """
-srproj(m::HDMRCoefs, counts, dirpos::D=nothing, dirzero::D=nothing; kwargs...) where {D<:Union{Nothing,Int}}=
-  srproj(coef(m)..., counts, dirpos, dirzero; intercept=hasintercept(m), kwargs...)
-srproj(m::HDMRPaths, counts, dirpos::D=nothing, dirzero::D=nothing; select=:AICc, kwargs...) where {D<:Union{Nothing,Int}}=
-  srproj(coef(m; select=select)..., counts, dirpos, dirzero; intercept=hasintercept(m), kwargs...)
+srproj(m::HDMRCoefs, counts, dirpos::D=0, dirzero::D=0; includel=includelinX(m), kwargs...) where {D<:Int}=
+  srproj(coef(m)..., counts, dirpos, dirzero; intercept=hasintercept(m), includel=includel, kwargs...)
+srproj(m::HDMRPaths, counts, dirpos::D=0, dirzero::D=0; includel=includelinX(m), select=defsegselect, kwargs...) where {D<:Int}=
+  srproj(coef(m, select)..., counts, dirpos, dirzero; intercept=hasintercept(m), includel=includel, kwargs...)
 
 """
 srproj for hurdle dmr takes two coefficent matrices
 coefspos, coefszero, and a two specific directions
-and returns an n-by-3 matrix Z = [zpos zzero m].
+and returns an n-by-4 matrix Z = [zpos zzero m l].
 dirpos = 0 omits positive counts projections and
 dirzero = 0 omits zero counts projections.
 Setting any of these to nothing will return projections in all directions.
 """
-function srproj(coefspos::C, coefszero::C, counts, dirpos::D, dirzero::D; kwargs...) where {T, C<:AbstractMatrix{T}, D<:Union{Nothing,Int}}
-  if (dirpos == nothing || dirpos>0) && (dirzero == nothing || dirzero>0)
+function srproj(coefspos::C, coefszero::C, counts, dirpos::D, dirzero::D;
+  includem=true,        # whether to include total counts in Z
+  includel=false,      # whether to include total 1(counts) in Z
+  kwargs...) where {T, C<:AbstractMatrix{T}, D<:Int}
+
+  if dirpos>0 && dirzero>0
     zpos = srproj(coefspos, counts, dirpos; kwargs...)
     zzero = srproj(coefszero, posindic(counts), dirzero; kwargs...)
     # second element should be same m in both, but because zero model
     # only sums indicators it generates smaller totals, so use the one
     # from the pos model
     # TODO: this needs to be fleshed out better in the theory to guide this choice
-    [zpos[:,1] zzero[:,1] zpos[:,2]]
-  elseif (dirpos == nothing || dirpos>0)
-    srproj(coefspos, counts, dirpos; kwargs...)
-  elseif (dirzero == nothing || dirzero>0)
-    srproj(coefszero, posindic(counts), dirzero; kwargs...)
+    # revised paper says to use l too
+    Z = [zpos[:,1] zzero[:,1] zpos[:,2] zzero[:,2]]
+    Z[:, [true, true, includem, includel]]
+  elseif dirpos>0
+    Z = srproj(coefspos, counts, dirpos; kwargs...)
+    Z[:, [true, includem]]
+  elseif dirzero>0
+    Z = srproj(coefszero, posindic(counts), dirzero; kwargs...)
+    Z[:, [true, includel]]
   else
     error("No direction to project to (dirpos=$dirpos,dirzero=$dirzero)")
   end
@@ -164,7 +172,11 @@ end
   inz=[2] if zpos is dropped due to collinearity
 """
 function srprojX(coefspos::M, coefszero::M, counts, covars, projdir::Int;
-  inpos=1:size(covars,2), inzero=1:size(covars,2), includem=true, inz=[1,2], testrank=true, srprojargs...) where {T, M<:AbstractMatrix{T}}
+  inpos=1:size(covars,2), inzero=1:size(covars,2),
+  includem=true,        # whether to include total counts in Z
+  includel=false,      # whether to include total 1(counts) in Z
+  inz=[1,2], testrank=true, srprojargs...) where {T, M<:AbstractMatrix{T}}
+
   # dims
   n,p = size(covars)
 
@@ -177,7 +189,8 @@ function srprojX(coefspos::M, coefszero::M, counts, covars, projdir::Int;
   includezpos = 1 ∈ inz
   # add srproj of counts data to X
   if includezpos
-    Z = srproj(coefspos, coefszero, counts, dirpos, dirzero; srprojargs...)
+    Z = srproj(coefspos, coefszero, counts, dirpos, dirzero;
+      includem=includem, includel=includel, srprojargs...)
     X = [X_nocounts Z]
   end
 
@@ -192,12 +205,18 @@ function srprojX(coefspos::M, coefszero::M, counts, covars, projdir::Int;
     inz = [2]
   end
 
-  if !includem
-    # drop last column with total counts m
-    X = X[:,1:end-1]
-  end
-
   X, X_nocounts, inz
 end
-srprojX(m::HDMRCoefs,counts,covars,projdir; kwargs...) = srprojX(coef(m)...,counts,covars,projdir; inpos=m.inpos, inzero=m.inzero, kwargs...)
-srprojX(m::HDMRPaths,counts,covars,projdir; select=:AICc, kwargs...) = srprojX(coef(m;select=select)...,counts,covars,projdir; inpos=m.inpos, inzero=m.inzero, kwargs...)
+
+"Set the default value for whether to include obs-specific lexicon (l) in the srproj"
+includelinX(m::HDMRCoefs{<:Hurdle}) = false
+includelinX(m::HDMRPaths{<:Union{Missing, Hurdle}}) = false
+includelinX(m::HDMRPaths{<:Hurdle}) = false
+
+includelinX(m::HDMRCoefs{<:InclusionRepetition}) = true
+includelinX(m::HDMRPaths{<:InclusionRepetition}) = true
+includelinX(m::HDMRPaths{<:Union{Missing, InclusionRepetition}}) = true
+includelinX(m::HDMRPaths{Missing}) = true
+
+srprojX(m::HDMRCoefs,counts,covars,projdir; includel=includelinX(m), kwargs...) = srprojX(coef(m)...,counts,covars,projdir; inpos=m.inpos, inzero=m.inzero, includel=includel, kwargs...)
+srprojX(m::HDMRPaths,counts,covars,projdir; includel=includelinX(m), select=defsegselect, kwargs...) = srprojX(coef(m, select)...,counts,covars,projdir; inpos=m.inpos, inzero=m.inzero, includel=includel, kwargs...)

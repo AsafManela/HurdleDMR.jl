@@ -1,5 +1,5 @@
-using Test, Distributions, CSV, GLM, Lasso, DataFrames
-using Random, Distributed, LinearAlgebra, SparseArrays, SharedArrays
+using Test, Distributions, CSV, GLM, Lasso, DataFrames, MLBase
+using Random, Distributed, LinearAlgebra, SparseArrays, SharedArrays, Logging
 
 include("testutils.jl")
 
@@ -11,6 +11,7 @@ import HurdleDMR; @everywhere using HurdleDMR
 
 include("positive_poisson.jl")
 include("hurdle.jl")
+include("inrep.jl")
 include("testdata.jl")
 include("helpers.jl")
 include("dmr.jl")
