@@ -97,16 +97,6 @@ coefsJCVmin=vcat(coef(hurdleglrfit, MinCVKfold{MinCVmse}(5))...)
 @test coefsJCVmin ≈ coefsR1 rtol=0.30
 # rdist(coefsJCVmin,coefsR1)
 
-# try with SharedArray
-Xs = convert(SharedArray,X)
-hurdleglrfitShared = fit(Hurdle,GammaLassoPath,Xs,y; γ=0.0)
-coefsJShared=vcat(coef(hurdleglrfitShared;select=MinAICc())...)
-@test coefsJShared ≈ coefsJ
-yhatJ = predict(hurdleglrfitShared, X; select=MinAICc())
-@test yhatJ ≈ yhatR1 rtol=0.05
-yhatJpartial=predict(hurdleglrfitShared, X[ixpartial,:]; select=MinAICc())
-@test yhatJpartial ≈ yhatR1partial rtol=0.05
-
 # regulated gamma lasso path
 hurdleglrfit = fit(Hurdle,GammaLassoPath,X,y; γ=10.0)
 coefsJ=vcat(coef(hurdleglrfit;select=MinAICc())...)
@@ -116,13 +106,6 @@ yhatJ = predict(hurdleglrfit, X; select=MinAICc())
 @test yhatJ ≈ yhatR1 rtol=0.05
 yhatJpartial=predict(hurdleglrfit, X[ixpartial,:]; select=MinAICc())
 @test yhatJpartial ≈ yhatR1partial rtol=0.05
-
-# using ProfileView
-# Profile.init(delay=0.001)
-# Profile.clear()
-# @profile hurdleglrfit2 = fit2(Hurdle,GammaLassoPath,X,y; γ=10.0);
-# ProfileView.view()
-# Profile.print()
 
 # using DataFrames formula interface
 hurdlefit = fit(Hurdle,GeneralizedLinearModel,@formula(art ~ femWomen + marMarried + kid5 + phd + ment), bioChemists)
@@ -196,17 +179,6 @@ yhatJpartial=predict(hurdleglrfit, Xzero[ixpartial,:]; Xpos=Xpos[ixpartial,:], s
 coefsJpos, coefsJzero = coef(hurdleglrfit;select=AllSeg())
 @test size(coefsJpos,1) == 4
 @test size(coefsJzero,1) == 3
-
-# try with SharedArray
-Xzeros = convert(SharedArray,Xzero)
-Xposs = convert(SharedArray,Xpos)
-hurdleglrfitShared = fit(Hurdle,GammaLassoPath,Xzeros,y; Xpos=Xposs, γ=0.0)
-coefsJShared=vcat(coef(hurdleglrfitShared;select=MinAICc())...)
-@test coefsJShared ≈ coefsJ
-yhatJ = predict(hurdleglrfitShared, Xzeros; Xpos=Xposs, select=MinAICc())
-@test yhatJ ≈ yhatR2 rtol=0.05
-yhatJpartial=predict(hurdleglrfitShared, Xzeros[ixpartial,:]; Xpos=Xposs[ixpartial,:], select=MinAICc())
-@test yhatJpartial ≈ yhatR2partial rtol=0.05
 
 # regulated gamma lasso path
 hurdleglrfit = fit(Hurdle,GammaLassoPath,Xzero,y; Xpos=Xpos, γ=10.0)
@@ -293,19 +265,6 @@ yhatJpartial=predict(hurdleglrfit, Xzero[ixpartial,:]; Xpos=Xpos[ixpartial,:], o
 coefsJpos, coefsJzero = coef(hurdleglrfit;select=AllSeg())
 @test size(coefsJpos,1) == 4
 @test size(coefsJzero,1) == 3
-
-# try with SharedArray
-Xzeros = convert(SharedArray,Xzero)
-Xposs = convert(SharedArray,Xpos)
-offzeros = convert(SharedArray,offzero)
-offposs = convert(SharedArray,offpos)
-hurdleglrfitShared = fit(Hurdle,GammaLassoPath,Xzeros,y; Xpos=Xposs, offsetzero=offzeros, offsetpos=offposs, γ=0.0)
-coefsJShared=vcat(coef(hurdleglrfitShared;select=MinAICc())...)
-@test coefsJShared ≈ coefsJ
-yhatJ = predict(hurdleglrfitShared, Xzeros; Xpos=Xposs, offsetzero=offzeros, offsetpos=offposs, select=MinAICc())
-@test yhatJ ≈ yhatR3 rtol=0.05
-yhatJpartial=predict(hurdleglrfitShared, Xzeros[ixpartial,:]; Xpos=Xposs[ixpartial,:], offsetzero=offzeros[ixpartial], offsetpos=offposs[ixpartial], select=MinAICc())
-@test yhatJpartial ≈ yhatR3partial rtol=0.05
 
 # regulated gamma lasso path
 hurdleglrfit = fit(Hurdle,GammaLassoPath,Xzero,y; Xpos=Xpos, offsetzero=offzero, offsetpos=offpos, γ=10.0)

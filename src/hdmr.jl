@@ -476,27 +476,24 @@ function hdmr_local_cluster(::Type{M}, covars::AbstractMatrix{T},counts::Abstrac
   # standardize covars only once if needed
   covars, covarsnorm = Lasso.standardizeX(covars, standardize)
 
+  # allocate space for coef matrices
+  coefszero = Matrix{T}(undef,ncoefzero,d)
+  coefspos = Matrix{T}(undef,ncoefpos,d)
+
   # fit separate GammaLassoPath's to each dimension of counts j=1:d and pick its min AICc segment
   if parallel
-    verbose && @info("distributed $M run on local cluster with $(nworkers()) nodes")
-    scounts = convert(SharedArray,counts)
-    scoefszero = SharedMatrix{T}(ncoefzero,d)
-    scoefspos = SharedMatrix{T}(ncoefpos,d)
-    scovars = convert(SharedArray,covars)
-    # μ = convert(SharedArray,μ) incompatible with GLM
+    verbose && @info("multi-threaded $M run on local cluster with $(Threads.nthreads()) threads")
 
-    @sync @distributed for j=1:d
-      tryfith!(M, scoefspos, scoefszero, j, scovars, scounts, inpos, inzero, μpos, μzero;
-        verbose=false, showwarnings=showwarnings, intercept=intercept,
-        standardize=false, select=select, kwargs...)
+    with_logger(getlogger(false)) do # cannot log when multithreading
+      Threads.@threads for j=1:d
+        tryfith!(M, coefspos, coefszero, j, covars, counts, inpos, inzero, μpos, μzero;
+          verbose=false, showwarnings=false, intercept=intercept,
+          standardize=false, select=select, kwargs...)
+      end
     end
-
-    coefszero = convert(Matrix{T}, scoefszero)
-    coefspos = convert(Matrix{T}, scoefspos)
   else
     verbose && @info("serial $M run on a single node")
-    coefszero = Matrix{T}(undef,ncoefzero,d)
-    coefspos = Matrix{T}(undef,ncoefpos,d)
+
     for j=1:d
       tryfith!(M, coefspos, coefszero, j, covars, counts, inpos, inzero, μpos, μzero;
         verbose=false, showwarnings=showwarnings, intercept=intercept,

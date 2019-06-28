@@ -205,24 +205,6 @@ ncovars(m::DMR) = m.p
 "Number of coefficient potentially including intercept used for each independent Poisson regression"
 ncoefs(m::DMR) = ncovars(m) + (hasintercept(m) ? 1 : 0)
 
-# some helpers for converting to SharedArray
-Base.convert(::Type{SharedArray}, A::SubArray) = (S = SharedArray{eltype(A)}(size(A)); copyto!(S, A))
-function Base.convert(::Type{SharedArray}, A::SparseMatrixCSC{T,N}) where {T,N}
-  S = SharedArray{T}(size(A))
-  fill!(S,zero(T))
-  rows = rowvals(A)
-  vals = nonzeros(A)
-  n, m = size(A)
-  for j = 1:m
-     for i in nzrange(A, j)
-        row = rows[i]
-        val = vals[i]
-        S[row,j] = val
-     end
-  end
-  S
-end
-
 "convert counts matrix elements to Float64 if necessary"
 fpcounts(counts::M) where {V, N, M<:SparseMatrixCSC{V,N}} = convert(SparseMatrixCSC{Float64,N}, counts)
 fpcounts(counts::M) where {V, M<:AbstractMatrix{V}} = convert(Matrix{Float64}, counts)
@@ -309,24 +291,23 @@ function dmr_local_cluster(covars::AbstractMatrix{T},counts::AbstractMatrix{V},
   # standardize covars only once if needed
   covars, covarsnorm = Lasso.standardizeX(covars, standardize)
 
+  # allocate space for coef matrices
+  coefs = Matrix{T}(undef,ncoef,d)
+
   # fit separate GammaLassoPath's to each dimension of counts j=1:d and pick its min AICc segment
   if parallel
-    verbose && @info("distributed poisson run on local cluster with $(nworkers()) nodes")
-    scounts = convert(SharedArray,counts)
-    scoefs = SharedMatrix{T}(ncoef,d)
-    scovars = convert(SharedArray,covars)
-    # μ = convert(SharedArray,μ) incompatible with GLM
+    verbose && @info("multi-threaded poisson run on local cluster with $(Threads.nthreads()) threads")
 
-    @sync @distributed for j=1:d
-      tryfitgl!(scoefs, j, scovars, scounts; offset=μ, verbose=false,
-        showwarnings=showwarnings, intercept=intercept, select=select,
-        standardize=false, kwargs...)
+    with_logger(getlogger(false)) do # cannot log when multithreading
+      Threads.@threads for j=1:d
+        tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false,
+          showwarnings=false, intercept=intercept, select=select,
+          standardize=false, kwargs...)
+      end
     end
-
-    coefs = convert(Matrix{T}, scoefs)
   else
     verbose && @info("serial poisson run on a single node")
-    coefs = Matrix{T}(undef,ncoef,d)
+
     for j=1:d
       tryfitgl!(coefs, j, covars, counts; offset=μ, verbose=false,
         showwarnings=showwarnings, intercept=intercept, select=select,
@@ -410,7 +391,7 @@ function tryfitgl!(coefs::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},c
     poisson_regression!(coefs, j, covars, counts; kwargs...)
   catch e
     showwarnings && @warn("fitgl! failed on count dimension $j with frequencies $(sort(countmap(counts[:,j]))) and will return zero coefs ($e)")
-    # redudant ASSUMING COEFS ARRAY INTIAILLY FILLED WITH ZEROS, but can be uninitialized in serial case
+    # zero out coef column because coefs array is uninitialized at first
     for i=1:size(coefs,1)
       coefs[i,j] = zero(T)
     end
