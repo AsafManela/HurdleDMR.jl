@@ -1,14 +1,19 @@
 # a short exmple script comparing two branches
 using BenchmarkTools, PkgBenchmark
+import HurdleDMR
 
 cd(@__DIR__)
 
-# checkout master
-baseline = benchmarkpkg("HurdleDMR", "master")
-#writeresults("results.master.json", baseline)
-#baseline = readresults("results.master.json")
+env = Dict("JULIA_NUM_THREADS" => Sys.CPU_THREADS-2)
+pkg = joinpath(dirname(pathof(HurdleDMR)),"..")
 
 # now switch branches and run
-target = benchmarkpkg("HurdleDMR", "typesafe_segselect")
+current = benchmarkpkg(pkg, BenchmarkConfig(env = env))
+writeresults("results.current.json", current)
 
-export_markdown("benchmark.md", judge(target, baseline))
+# checkout master
+baseline = benchmarkpkg(pkg, BenchmarkConfig(id = "master", env = env))
+writeresults("results.baseline.json", baseline)
+#baseline = readresults("results.baseline.json")
+
+export_markdown("benchmark.md", judge(current, baseline))
