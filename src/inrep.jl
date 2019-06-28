@@ -14,8 +14,8 @@ end
 μtpm(m::InclusionRepetition, μzero::V, μpos::V) where {T, V<:AbstractArray{T}} = μzero .* (one(T) .+ μpos)
 
 function excessy!(ypos::V, ::Type{InclusionRepetition}) where {T, V<:AbstractVector{T}}
-  for i = eachindex(ypos)
-    ypos[i] -= one(T)
+  @simd for i = 1:length(ypos)
+    @inbounds ypos[i] -= one(T)
   end
   ypos
 end
@@ -85,13 +85,16 @@ function StatsBase.fit(::Type{InclusionRepetition},::Type{M},
   # Xpos optional argument allows to specify a data matrix only for positive counts
   if Xpos == nothing
     # use X for Xpos too
-    Xpos = X[ixpos,:]
+    @inbounds Xpos = X[ixpos,:]
   elseif size(Xpos,1) == length(y)
     # Xpos has same dimensions as X, take only positive y ones
-    Xpos = Xpos[ixpos,:]
+    @inbounds Xpos = Xpos[ixpos,:]
   end
 
-  mpos, fittedpos = fitpos(InclusionRepetition, M, Xpos, y[ixpos], dpos, lpos, dofit, wts[ixpos], offsetpos, verbose, showwarnings, fitargs...)
+  @inbounds ypos = y[ixpos]
+  @inbounds wtspos = wts[ixpos]
+
+  mpos, fittedpos = fitpos(InclusionRepetition, M, Xpos, ypos, dpos, lpos, dofit, wtspos, offsetpos, verbose, showwarnings, fitargs...)
 
   InclusionRepetition(mzero,mpos,fittedzero,fittedpos)
 end

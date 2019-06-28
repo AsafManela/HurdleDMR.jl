@@ -321,14 +321,15 @@ function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix,::Type{M}=HD
   HDMRPaths(nlpaths, intercept, n, d, inpos, inzero)
 end
 
-"Returns a (covarspos, covarszero) tuple with views into covars"
+"Returns a (covarspos, covarszero) tuple from covars"
 function incovars(covars,inpos,inzero)
+  #NOTE: we don't use views for typesafety
   inall = 1:size(covars,2)
 
   if inzero == inall
     covarszero = covars
   else
-    covarszero = view(covars,:,inzero)
+    covarszero = covars[:,inzero]
   end
 
   if inzero == inpos
@@ -336,7 +337,7 @@ function incovars(covars,inpos,inzero)
   elseif inpos == inall
     covarspos = covars
   else
-    covarspos = view(covars,:,inpos)
+    covarspos = covars[:,inpos]
   end
 
   covarspos, covarszero
@@ -484,12 +485,10 @@ function hdmr_local_cluster(::Type{M}, covars::AbstractMatrix{T},counts::Abstrac
   if parallel
     verbose && @info("multi-threaded $M run on local cluster with $(Threads.nthreads()) threads")
 
-    with_logger(getlogger(false)) do # cannot log when multithreading
-      Threads.@threads for j=1:d
-        tryfith!(M, coefspos, coefszero, j, covars, counts, inpos, inzero, μpos, μzero;
-          verbose=false, showwarnings=false, intercept=intercept,
-          standardize=false, select=select, kwargs...)
-      end
+    Threads.@threads for j=1:d
+      tryfith!(M, coefspos, coefszero, j, covars, counts, inpos, inzero, μpos, μzero;
+        verbose=false, showwarnings=false, intercept=intercept,
+        standardize=false, select=select, kwargs...)
     end
   else
     verbose && @info("serial $M run on a single node")

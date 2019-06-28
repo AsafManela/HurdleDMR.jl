@@ -19,7 +19,7 @@ excessy!(ypos, ::Type{Hurdle}) = ypos
 minypos(::Type{Hurdle}) = 1.0
 
 "Returns an (offsetzero, offsetpos) tuple of offset vector"
-function setoffsets(y::AbstractVector, ixpos::Vector{Int}, offset::AbstractVector, offsetzero::AbstractVector, offsetpos::AbstractVector)
+function setoffsets(y::AbstractVector, ixpos::BitVector, offset::AbstractVector, offsetzero::AbstractVector, offsetpos::AbstractVector)
     # set offsets
     if length(offset) != 0
       if length(offsetpos) == 0
@@ -39,14 +39,21 @@ end
 
 "Returns positives indicators for y"
 function getIy(y::AbstractVector{T}) where {T}
-    # find positive y entries
-    ixpos = findall(x->x!=zero(T), y)
+  # find positive y entries
+  n = length(y)
+  ixpos = BitVector(undef, n)
+  Iy = Vector{T}(undef, n)
+  @inbounds for i=1:n
+    if y[i] == zero(T)
+      Iy[i] = zero(T)
+      ixpos[i] = false
+    else
+      Iy[i] = one(T)
+      ixpos[i] = true
+    end
+  end
 
-    # build positive indicators vector
-    Iy = zero(y)
-    Iy[ixpos] .= one(T)
-
-    ixpos, Iy
+  ixpos, Iy
 end
 
 "Drops observations with infinite offset"
