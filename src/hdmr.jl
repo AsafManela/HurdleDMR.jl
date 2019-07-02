@@ -449,6 +449,97 @@ function hdmr(covars::AbstractMatrix{T},counts::AbstractMatrix{V},::Type{M}=HDMR
   end
 end
 
+function hdmr2(covars::AbstractMatrix{T},counts::AbstractMatrix{V},::Type{M}=HDMR_DEFAULT_MODEL;
+          inpos=1:size(covars,2), inzero=1:size(covars,2),
+          intercept=true,
+          parallel=true, local_cluster=true,
+          verbose=true, showwarnings=false,
+          kwargs...) where {T<:AbstractFloat,V,M<:TwoPartModel}
+  if local_cluster || !parallel
+    hdmr_local_cluster2(M, covars,counts,inpos,inzero,intercept,parallel,verbose,showwarnings; kwargs...)
+  else
+    hdmr_remote_cluster(M, covars,counts,inpos,inzero,intercept,parallel,verbose,showwarnings; kwargs...)
+  end
+end
+
+using SharedArrays
+# some helpers for converting to SharedArray
+Base.convert(::Type{SharedArray}, A::SubArray) = (S = SharedArray{eltype(A)}(size(A)); copyto!(S, A))
+function Base.convert(::Type{SharedArray}, A::SparseMatrixCSC{T,N}) where {T,N}
+  S = SharedArray{T}(size(A))
+  fill!(S,zero(T))
+  rows = rowvals(A)
+  vals = nonzeros(A)
+  n, m = size(A)
+  for j = 1:m
+     for i in nzrange(A, j)
+        row = rows[i]
+        val = vals[i]
+        S[row,j] = val
+     end
+  end
+  S
+end
+
+function hdmr_local_cluster2(::Type{M}, covars::AbstractMatrix{T},counts::AbstractMatrix{V},
+          inpos,inzero,intercept,parallel,verbose,showwarnings;
+          select=defsegselect,
+          m=nothing, l=nothing, D=nothing,
+          standardize=true, kwargs...) where {T<:AbstractFloat,V,M<:TwoPartModel}
+  # get dimensions
+  n, d = size(counts)
+  n1,p = size(covars)
+  @assert n==n1 "counts and covars should have the same number of observations"
+
+  ppos = length(inpos)
+  pzero = length(inzero)
+
+  verbose && @info("fitting $n observations on $d categories \n$ppos covariates for positive and $pzero for zero counts")
+
+  # add one coef for intercept
+  ncoefpos = ppos + (intercept ? 1 : 0)
+  ncoefzero = pzero + (intercept ? 1 : 0)
+
+  covars, counts, μpos, μzero, n = shifters(M, covars, counts, showwarnings, m, l, D)
+
+  # standardize covars only once if needed
+  covars, covarsnorm = Lasso.standardizeX(covars, standardize)
+
+  # fit separate GammaLassoPath's to each dimension of counts j=1:d and pick its min AICc segment
+  if parallel
+    verbose && @info("distributed $M run on local cluster with $(nworkers()) nodes")
+    scounts = convert(SharedArray,counts)
+    scoefszero = SharedMatrix{T}(ncoefzero,d)
+    scoefspos = SharedMatrix{T}(ncoefpos,d)
+    scovars = convert(SharedArray,covars)
+    # μ = convert(SharedArray,μ) incompatible with GLM
+
+    @sync @distributed for j=1:d
+      tryfith!(M, scoefspos, scoefszero, j, scovars, scounts, inpos, inzero, μpos, μzero;
+        verbose=false, showwarnings=showwarnings, intercept=intercept,
+        standardize=false, select=select, kwargs...)
+    end
+
+    coefszero = convert(Matrix{T}, scoefszero)
+    coefspos = convert(Matrix{T}, scoefspos)
+  else
+    verbose && @info("serial $M run on a single node")
+    coefszero = Matrix{T}(undef,ncoefzero,d)
+    coefspos = Matrix{T}(undef,ncoefpos,d)
+    for j=1:d
+      tryfith!(M, coefspos, coefszero, j, covars, counts, inpos, inzero, μpos, μzero;
+        verbose=false, showwarnings=showwarnings, intercept=intercept,
+        standardize=false, select=select, kwargs...)
+    end
+  end
+
+  # destandardize coefs only once if needed
+  destandardize!(coefspos, covarsnorm[inpos], standardize, intercept)
+  destandardize!(coefszero, covarsnorm[inzero], standardize, intercept)
+
+  HDMRCoefs{M}(coefspos, coefszero, intercept, n, d, inpos, inzero, select)
+end
+
 """
 This version is built for local clusters and shares memory used by both inputs
 and outputs if run in parallel mode.

@@ -69,6 +69,18 @@ function finiteoffsetobs(part::Symbol, X, y, offset, wts, showwarnings)
 
   X, y, offset, wts
 end
+function finiteoffsetobs!(X, y, offset, wts, showwarnings, part::Symbol)
+  if any(isinf,offset)
+      ixinf = isinf.(offset)
+      showwarnings && @warn("omitting $(sum(ixinf)) observations with infinite offset from $part model")
+      deleteat(offset, ixinf)
+      X = X[.!ixinf, :]
+      deleteat(y, ixinf)
+      deleteat(wts, ixinf)
+  end
+
+  X, y, offset, wts
+end
 
 mildexception(e::PosDefException) = true
 mildexception(e::DomainError) = true
@@ -82,6 +94,11 @@ function getlogger(showwarnings::Bool)
     MinLevelLogger(current_logger(), Logging.Error)
   end
 end
+
+fitblank(::Type{M}, args...; kwargs...) where M<:RegularizationPath =
+  fit(M, args...; λ=[0.0], dofit=false, kwargs...)
+fitblank(::Type{M}, args...; kwargs...) where M<:RegressionModel =
+  fit(M, args...; dofit=false, kwargs...)
 
 "Fits the model for zeros Iy ~ X"
 function fitzero(::Type{M},
@@ -97,7 +114,7 @@ function fitzero(::Type{M},
 
   X, Iy, offsetzero, wts = finiteoffsetobs(:zeros, X, Iy, offsetzero, wts, showwarnings)
 
-  mzero = nothing
+  local mzero
   fittedzero = false
 
   with_logger(getlogger(showwarnings)) do
@@ -127,11 +144,7 @@ function fitzero(::Type{M},
 
     if !fittedzero
       # create blank zeros model without fitting
-      if M <: RegularizationPath
-        mzero = fit(M, X, Iy, dzero, lzero; dofit=false, λ=[0.0], wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
-      else
-        mzero = fit(M, X, Iy, dzero, lzero; dofit=false, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
-      end
+      mzero = fitblank(M, X, Iy, dzero, lzero; wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
     end
   end
 
@@ -153,7 +166,7 @@ function fitpos(::Type{TPM},::Type{M},
   excessy!(ypos, TPM)
   Xpos, ypos, offsetpos, wtspos = finiteoffsetobs(:positives, Xpos, ypos, offsetpos, wtspos, showwarnings)
 
-  mpos=nothing
+  local mpos
   fittedpos = false
 
   with_logger(getlogger(showwarnings)) do
@@ -181,11 +194,7 @@ function fitpos(::Type{TPM},::Type{M},
 
     if !fittedpos
       # create blank positives model without fitting
-      if M <: RegularizationPath
-        mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=false, λ=[0.0], wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
-      else
-        mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=false, wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
-      end
+      mpos = fitblank(M, Xpos, ypos, dpos, lpos; wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
     end
   end
 
