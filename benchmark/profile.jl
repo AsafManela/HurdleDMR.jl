@@ -23,17 +23,14 @@ m3 = @btime dmr(covars, counts; parallel=false, kwargs...)
 m1 = @btime hdmr(covars, counts; local_cluster=true, kwargs...)
 m2 = @btime hdmr(covars, counts; local_cluster=false, kwargs...)
 m3 = @btime hdmr(covars, counts; parallel=false, kwargs...)
-m4 = @btime HurdleDMR.hdmr2(covars, counts; local_cluster=true, kwargs...)
 
 @which(hcat(v1, v2))
 
 @assert m1.coefspos == m2.coefspos
 @assert m1.coefszero == m2.coefszero
 @assert m1.coefspos == m3.coefspos
-@assert m1.coefspos == m4.coefspos
 @assert m1.coefszero == m3.coefszero
 @assert m1.coefszero == m2.coefszero
-@assert m1.coefszero ≈ m4.coefszero
 
 @info "fit(InclusionRepetition,...)"
 function minifit(counts, covars)

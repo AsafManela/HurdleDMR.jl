@@ -70,6 +70,16 @@ coefsJCVmin=vcat(coef(increpglrfit, MinCVKfold{MinCVmse}(5))...)
 @test coefsJCVmin[1+p:end] ≈ coefsR1[1+p:end] rtol=0.30
 # rdist(coefsJCVmin,coefsR1)
 
+# try with SharedArray
+Xs = convert(SharedArray,X)
+increpglrfitShared = fit(InclusionRepetition,GammaLassoPath,Xs,y; γ=0.0)
+coefsJShared=vcat(coef(increpglrfitShared;select=MinAICc())...)
+@test coefsJShared ≈ coefsJ
+yhatJ = predict(increpglrfitShared, X; select=MinAICc())
+@test yhatJ ≈ yhatR1 rtol=0.05
+yhatJpartial=predict(increpglrfitShared, X[ixpartial,:]; select=MinAICc())
+@test yhatJpartial ≈ yhatR1partial rtol=0.05
+
 # regulated gamma lasso path
 increpglrfit = fit(InclusionRepetition,GammaLassoPath,X,y; γ=10.0)
 coefsJ=vcat(coef(increpglrfit;select=MinAICc())...)
@@ -152,6 +162,17 @@ coefsJpos, coefsJzero = coef(increpglrfit;select=AllSeg())
 @test size(coefsJpos,1) == 4
 @test size(coefsJzero,1) == 3
 
+# try with SharedArray
+Xzeros = convert(SharedArray,Xzero)
+Xposs = convert(SharedArray,Xpos)
+increpglrfitShared = fit(InclusionRepetition,GammaLassoPath,Xzeros,y; Xpos=Xposs, γ=0.0)
+coefsJShared=vcat(coef(increpglrfitShared;select=MinAICc())...)
+@test coefsJShared ≈ coefsJ
+yhatJ = predict(increpglrfitShared, Xzeros; Xpos=Xposs, select=MinAICc())
+@test yhatJ ≈ yhatR2 rtol=0.05
+yhatJpartial=predict(increpglrfitShared, Xzeros[ixpartial,:]; Xpos=Xposs[ixpartial,:], select=MinAICc())
+@test yhatJpartial ≈ yhatR2partial rtol=0.05
+
 # regulated gamma lasso path
 increpglrfit = fit(InclusionRepetition,GammaLassoPath,Xzero,y; Xpos=Xpos, γ=10.0)
 coefsJ=vcat(coef(increpglrfit;select=MinAICc())...)
@@ -228,6 +249,19 @@ yhatJpartial=predict(increpglrfit, Xzero[ixpartial,:]; Xpos=Xpos[ixpartial,:], o
 coefsJpos, coefsJzero = coef(increpglrfit;select=AllSeg())
 @test size(coefsJpos,1) == 4
 @test size(coefsJzero,1) == 3
+
+# try with SharedArray
+Xzeros = convert(SharedArray,Xzero)
+Xposs = convert(SharedArray,Xpos)
+offzeros = convert(SharedArray,offzero)
+offposs = convert(SharedArray,offpos)
+increpglrfitShared = fit(InclusionRepetition,GammaLassoPath,Xzeros,y; Xpos=Xposs, offsetzero=offzeros, offsetpos=offposs, γ=0.0)
+coefsJShared=vcat(coef(increpglrfitShared;select=MinAICc())...)
+@test coefsJShared ≈ coefsJ
+yhatJShared = predict(increpglrfitShared, Xzeros; Xpos=Xposs, offsetzero=offzeros, offsetpos=offposs, select=MinAICc())
+@test yhatJShared ≈ yhatJ
+yhatJSharedpartial=predict(increpglrfitShared, Xzeros[ixpartial,:]; Xpos=Xposs[ixpartial,:], offsetzero=offzeros[ixpartial], offsetpos=offposs[ixpartial], select=MinAICc())
+@test yhatJSharedpartial ≈ yhatJpartial
 
 # regulated gamma lasso path
 increpglrfit = fit(InclusionRepetition,GammaLassoPath,Xzero,y; Xpos=Xpos, offsetzero=offzero, offsetpos=offpos, γ=10.0)

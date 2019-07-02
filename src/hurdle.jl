@@ -69,18 +69,6 @@ function finiteoffsetobs(part::Symbol, X, y, offset, wts, showwarnings)
 
   X, y, offset, wts
 end
-function finiteoffsetobs!(X, y, offset, wts, showwarnings, part::Symbol)
-  if any(isinf,offset)
-      ixinf = isinf.(offset)
-      showwarnings && @warn("omitting $(sum(ixinf)) observations with infinite offset from $part model")
-      deleteat(offset, ixinf)
-      X = X[.!ixinf, :]
-      deleteat(y, ixinf)
-      deleteat(wts, ixinf)
-  end
-
-  X, y, offset, wts
-end
 
 mildexception(e::PosDefException) = true
 mildexception(e::DomainError) = true
