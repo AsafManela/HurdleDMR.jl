@@ -410,7 +410,7 @@ function tryfitgl!(coefs::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},c
     poisson_regression!(coefs, j, covars, counts; kwargs...)
   catch e
     showwarnings && @warn("fitgl! failed on count dimension $j with frequencies $(sort(countmap(counts[:,j]))) and will return zero coefs ($e)")
-    # redudant ASSUMING COEFS ARRAY INTIAILLY FILLED WITH ZEROS, but can be uninitialized in serial case
+    # zero out coef column because coefs array is uninitialized at first
     for i=1:size(coefs,1)
       coefs[i,j] = zero(T)
     end

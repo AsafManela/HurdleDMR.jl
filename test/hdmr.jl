@@ -1,7 +1,7 @@
 # common args for all hdmr tests
 testargs = Dict(:verbose=>false,:showwarnings=>true)
 
-@testset "HDMR" begin
+@testset "hdmr" begin
 
 hdmrmodels = [
     @model(h ~ x + z + cat + y, c ~ x + z + cat + y)

@@ -321,14 +321,15 @@ function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix,::Type{M}=HD
   HDMRPaths(nlpaths, intercept, n, d, inpos, inzero)
 end
 
-"Returns a (covarspos, covarszero) tuple with views into covars"
+"Returns a (covarspos, covarszero) tuple from covars"
 function incovars(covars,inpos,inzero)
+  #NOTE: we don't use views for typesafety
   inall = 1:size(covars,2)
 
   if inzero == inall
     covarszero = covars
   else
-    covarszero = view(covars,:,inzero)
+    covarszero = covars[:,inzero]
   end
 
   if inzero == inpos
@@ -336,7 +337,7 @@ function incovars(covars,inpos,inzero)
   elseif inpos == inall
     covarspos = covars
   else
-    covarspos = view(covars,:,inpos)
+    covarspos = covars[:,inpos]
   end
 
   covarspos, covarszero

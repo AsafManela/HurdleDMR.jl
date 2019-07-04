@@ -117,13 +117,6 @@ yhatJ = predict(hurdleglrfit, X; select=MinAICc())
 yhatJpartial=predict(hurdleglrfit, X[ixpartial,:]; select=MinAICc())
 @test yhatJpartial ≈ yhatR1partial rtol=0.05
 
-# using ProfileView
-# Profile.init(delay=0.001)
-# Profile.clear()
-# @profile hurdleglrfit2 = fit2(Hurdle,GammaLassoPath,X,y; γ=10.0);
-# ProfileView.view()
-# Profile.print()
-
 # using DataFrames formula interface
 hurdlefit = fit(Hurdle,GeneralizedLinearModel,@formula(art ~ femWomen + marMarried + kid5 + phd + ment), bioChemists)
 coefsJ=vcat(coef(hurdlefit)...)

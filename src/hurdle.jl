@@ -19,7 +19,7 @@ excessy!(ypos, ::Type{Hurdle}) = ypos
 minypos(::Type{Hurdle}) = 1.0
 
 "Returns an (offsetzero, offsetpos) tuple of offset vector"
-function setoffsets(y::AbstractVector, ixpos::Vector{Int}, offset::AbstractVector, offsetzero::AbstractVector, offsetpos::AbstractVector)
+function setoffsets(y::AbstractVector, ixpos::BitVector, offset::AbstractVector, offsetzero::AbstractVector, offsetpos::AbstractVector)
     # set offsets
     if length(offset) != 0
       if length(offsetpos) == 0
@@ -39,14 +39,21 @@ end
 
 "Returns positives indicators for y"
 function getIy(y::AbstractVector{T}) where {T}
-    # find positive y entries
-    ixpos = findall(x->x!=zero(T), y)
+  # find positive y entries
+  n = length(y)
+  ixpos = BitVector(undef, n)
+  Iy = Vector{T}(undef, n)
+  @inbounds for i=1:n
+    if y[i] == zero(T)
+      Iy[i] = zero(T)
+      ixpos[i] = false
+    else
+      Iy[i] = one(T)
+      ixpos[i] = true
+    end
+  end
 
-    # build positive indicators vector
-    Iy = zero(y)
-    Iy[ixpos] .= one(T)
-
-    ixpos, Iy
+  ixpos, Iy
 end
 
 "Drops observations with infinite offset"
@@ -76,6 +83,11 @@ function getlogger(showwarnings::Bool)
   end
 end
 
+fitblank(::Type{M}, args...; kwargs...) where M<:RegularizationPath =
+  fit(M, args...; λ=[0.0], dofit=false, kwargs...)
+fitblank(::Type{M}, args...; kwargs...) where M<:RegressionModel =
+  fit(M, args...; dofit=false, kwargs...)
+
 "Fits the model for zeros Iy ~ X"
 function fitzero(::Type{M},
   X::AbstractMatrix{T}, Iy::V,
@@ -90,7 +102,7 @@ function fitzero(::Type{M},
 
   X, Iy, offsetzero, wts = finiteoffsetobs(:zeros, X, Iy, offsetzero, wts, showwarnings)
 
-  mzero = nothing
+  local mzero
   fittedzero = false
 
   with_logger(getlogger(showwarnings)) do
@@ -120,11 +132,7 @@ function fitzero(::Type{M},
 
     if !fittedzero
       # create blank zeros model without fitting
-      if M <: RegularizationPath
-        mzero = fit(M, X, Iy, dzero, lzero; dofit=false, λ=[0.0], wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
-      else
-        mzero = fit(M, X, Iy, dzero, lzero; dofit=false, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
-      end
+      mzero = fitblank(M, X, Iy, dzero, lzero; wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
     end
   end
 
@@ -146,7 +154,7 @@ function fitpos(::Type{TPM},::Type{M},
   excessy!(ypos, TPM)
   Xpos, ypos, offsetpos, wtspos = finiteoffsetobs(:positives, Xpos, ypos, offsetpos, wtspos, showwarnings)
 
-  mpos=nothing
+  local mpos
   fittedpos = false
 
   with_logger(getlogger(showwarnings)) do
@@ -174,11 +182,7 @@ function fitpos(::Type{TPM},::Type{M},
 
     if !fittedpos
       # create blank positives model without fitting
-      if M <: RegularizationPath
-        mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=false, λ=[0.0], wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
-      else
-        mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=false, wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
-      end
+      mpos = fitblank(M, Xpos, ypos, dpos, lpos; wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
     end
   end
 
