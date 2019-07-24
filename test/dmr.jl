@@ -19,6 +19,14 @@ dmrcoefsint = dmr(covars, countsint; testargs...)
 coefsint = coef(dmrcoefsint)
 @test coefsint == coefs
 
+# test standardize=false
+dmrcoefsunstd = dmr(covars, counts; standardize=false, testargs...)
+coefsunstd = coef(dmrcoefsunstd)
+@test coefsunstd != coefs
+dmrcoefsunstd2 = dmr(covars, counts; standardize=false, local_cluster=false, testargs...)
+coefsunstd2 = coef(dmrcoefsunstd2)
+@test coefsunstd ≈ coefsunstd2
+
 dmrcoefsb = fit(DMRCoefs, covars, counts; testargs...)
 @test coef(dmrcoefsb) == coefs
 dmrb = fit(DMR, covars, counts; testargs...)
