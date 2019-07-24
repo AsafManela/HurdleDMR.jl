@@ -255,9 +255,11 @@ ncoefspos(m::HDMR) = ncovarspos(m) + (hasintercept(m) ? 1 : 0)
 function destandardize!(tpm::TwoPartModel, covarsnorm::AbstractVector{T},
     inpos, inzero, standardize) where T
 
-  destandardize!(tpm.mzero, covarsnorm[inzero], standardize)
-  destandardize!(tpm.mpos, covarsnorm[inpos], standardize)
-
+  if standardize
+    destandardize!(tpm.mzero, covarsnorm[inzero], standardize)
+    destandardize!(tpm.mpos, covarsnorm[inpos], standardize)
+  end
+  
   tpm
 end
 
@@ -505,9 +507,11 @@ function hdmr_local_cluster(::Type{M}, covars::AbstractMatrix{T},counts::Abstrac
     end
   end
 
-  # destandardize coefs only once if needed
-  destandardize!(coefspos, covarsnorm[inpos], standardize, intercept)
-  destandardize!(coefszero, covarsnorm[inzero], standardize, intercept)
+  if standardize
+    # destandardize coefs only once if needed
+    destandardize!(coefspos, covarsnorm[inpos], standardize, intercept)
+    destandardize!(coefszero, covarsnorm[inzero], standardize, intercept)
+  end
 
   HDMRCoefs{M}(coefspos, coefszero, intercept, n, d, inpos, inzero, select)
 end

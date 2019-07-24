@@ -47,6 +47,16 @@ coefsHpposint, coefsHpzeroint = coef(hdmrcoefsint)
 @test coefsHpposint == coefsHppos
 @test coefsHpzeroint == coefsHpzero
 
+# test standardize=false
+hdmrcoefsunstd = hdmr(covars, counts, M; standardize=false, inzero=inzero, inpos=inpos, parallel=true, testargs...)
+coefsHpposunstd, coefsHpzerounstd = coef(hdmrcoefsunstd)
+@test coefsHpposunstd != coefsHppos
+@test coefsHpzerounstd != coefsHpzero
+hdmrcoefsunstd2 = hdmr(covars, counts, M; standardize=false, inzero=inzero, inpos=inpos, local_cluster=false, parallel=true, testargs...)
+coefsHpposunstd2, coefsHpzerounstd2 = coef(hdmrcoefsunstd2)
+@test coefsHpposunstd ≈ coefsHpposunstd2
+@test coefsHpzerounstd ≈ coefsHpzerounstd2
+
 hdmrcoefsb = fit(HDMRCoefs{M}, covars, counts; inzero=inzero, inpos=inpos, parallel=true, testargs...)
 @test coef(hdmrcoefsb)[1] == coefsHppos
 @test coef(hdmrcoefsb)[2] == coefsHpzero
