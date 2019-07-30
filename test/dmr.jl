@@ -5,7 +5,7 @@ testargs = Dict(:γ=>γdistrom, :λminratio=>0.01, :verbose=>false,:showwarnings
 @testset "dmr" begin
 
 f = @model(c ~ x + z + cat + y)
-@test_show f "1-part model: [Formula: c ~ x + z + cat + y]"
+@test_show f "1-part model: [c ~ x + z + cat + y]"
 
 dmrcoefs = dmr(covars, counts; testargs...)
 coefs = coef(dmrcoefs)

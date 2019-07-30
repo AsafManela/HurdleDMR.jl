@@ -4,6 +4,9 @@ using Lasso, StatsBase, StatsModels, DataFrames, LambertW,
     SparseArrays, Distributed, SharedArrays, LinearAlgebra, Logging
 using GLM: FPVector, FP, Link
 using LoggingExtras: MinLevelLogger
+using Tables: columntable
+using StatsModels: TupleTerm, ColumnTable, missing_omit, schema, apply_schema,termvars
+import StatsModels: ModelFrame
 
 export dmr, dmrpaths, hdmr, hdmrpaths, fit, coef, srproj, srprojX, @~, mcdmr, posindic,
   DCR, DMR, HDMR, DMRCoefs, DMRPaths, HDMRCoefs, HDMRPaths, @model, Model,

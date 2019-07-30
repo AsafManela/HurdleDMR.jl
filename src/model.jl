@@ -1,18 +1,18 @@
 """
-  Model(expr, parts::Vector{Formula})
+  Model(expr, parts::Vector{FormulaTerm})
 
-Representation of a multipart model composed of a vector of Formula's.
+Representation of a multipart model composed of a vector of FormulaTerm's.
 It is inspired by the [https://github.com/matthieugomez/FixedEffectModels.jl](FixedEffectModels.jl) package
 """
 struct Model
   expr
-  parts::Vector{Formula}
+  parts::Vector{FormulaTerm}
 end
 
 """
     @model(formula1, formula2, ...)
 
-Parses a sequence of comma-separated Formula's representing a multipart model.
+Parses a sequence of comma-separated FormulaTerm's representing a multipart model.
 """
 macro model(args...)
   Expr(:call, :model_helper, (esc(Base.Meta.quot(a)) for a in args)...)
@@ -20,7 +20,7 @@ end
 
 function model_helper(args...)
   expr = args
-  parts = Formula[]
+  parts = FormulaTerm[]
   for part in args
     push!(parts, @eval(@formula($(part.args[2]) ~ $(part.args[3]))))
   end
@@ -41,37 +41,54 @@ function Base.show(io::IO, m::Model)
   nothing
 end
 
-function mergerhsterms(a::StatsModels.Terms, b::StatsModels.Terms)
-  terms = union(a.terms,b.terms)
-  eterms = union(a.eterms,b.eterms)
-  factors = falses(length(eterms),length(terms))
-  is_non_redundant = falses(length(eterms),length(terms))
-  for t = 1:length(terms)
-    for s in [a,b]
-      it = something(findfirst(isequal(terms[t]), s.terms), 0)
-      if it > 0
-        for et = 1:length(eterms)
-          iet = something(findfirst(isequal(eterms[et]), s.terms), 0)
-          if iet > 0
-            factors[et,t] = s.factors[iet,it]
-            is_non_redundant[et,t] = s.is_non_redundant[iet,it]
-          end
-        end
-      end
-    end
-  end
-  order = vec(sum(factors, dims=1))
-  response = false
-  intercept = false
+# function mergerhsterms(a::Tuple, b::Tuple)
+#   newt = union(a.terms,b.terms)
+#   ina = findall((in)(a.terms), terms)
+#   inb = findall((in)(b.terms), terms)
+#
+#   newt, ina, inb
+# end
 
-  newt = StatsModels.Terms(terms, eterms, factors, is_non_redundant, order, response, intercept)
+function mergerhsterms(a, b)
+  terms = union(a, b)
 
-  ina = findall((in)(a.terms), terms)
-  inb = findall((in)(b.terms), terms)
+  ina = findall((in)(a), terms)
+  inb = findall((in)(b), terms)
 
-  newt, ina, inb
+  (terms...,), ina, inb
 end
 
+# function mergerhsterms(a, b)
+#   terms = union(a.terms,b.terms)
+#   eterms = union(a.eterms,b.eterms)
+#   factors = falses(length(eterms),length(terms))
+#   is_non_redundant = falses(length(eterms),length(terms))
+#   for t = 1:length(terms)
+#     for s in [a,b]
+#       it = something(findfirst(isequal(terms[t]), s.terms), 0)
+#       if it > 0
+#         for et = 1:length(eterms)
+#           iet = something(findfirst(isequal(eterms[et]), s.terms), 0)
+#           if iet > 0
+#             factors[et,t] = s.factors[iet,it]
+#             is_non_redundant[et,t] = s.is_non_redundant[iet,it]
+#           end
+#         end
+#       end
+#     end
+#   end
+#   order = vec(sum(factors, dims=1))
+#   response = false
+#   intercept = false
+#
+#   newt = terms(terms, eterms, factors, is_non_redundant, order, response, intercept)
+#
+#   ina = findall((in)(a.terms), terms)
+#   inb = findall((in)(b.terms), terms)
+#
+#   newt, ina, inb
+# end
+#
 "maps inzero and inpos to ModelMatrix columns (important with factor variables)"
 function mapins(inzero, inpos, mm)
   mappedinzero = Int[]
@@ -89,31 +106,16 @@ function mapins(inzero, inpos, mm)
 end
 
 """
-  getformula(m, lhs[, clearlhs=true])
-
-Returns the formula of the part of model `m` with left-hand-side symbol `lhs`,
-clearing its lhs.
-"""
-function getformula(m::Model, lhs::Symbol, clearlhs=true)
-  ix = findfirst(p->p.lhs==lhs,m.parts)
-  @assert ix > 0 "The model is missing a formula with $lhs on its left-hand-side."
-  f = m.parts[ix]
-  if clearlhs
-    f = copy(f)
-    f.lhs = nothing
-  end
-  f
-end
-
-"""
-  getrhsterms(m, lhs[, clearlhs=true])
+  getrhsterms(m, lhs)
 
 Returns the right-hand-side Terms of the part of model `m` with left-hand-side
 symbol `lhs`.
 """
-function getrhsterms(args...)
-  f = getformula(args...)
-  StatsModels.Terms(f)
+function getrhsterms(m::Model, lhs::Symbol)
+  ix = findfirst(p->p.lhs==term(lhs),m.parts)
+  @assert ix > 0 "The model is missing a formula with $lhs on its left-hand-side."
+  f = m.parts[ix]
+  f.rhs
 end
 
 # Replicates functionality in StatsModels, so if it changes there it would have
@@ -130,3 +132,21 @@ function createmodelmatrix(trms, df, counts, contrasts)
   end
   mf, mm, counts
 end
+
+# struct NoTerm <: AbstractTerm end
+
+function StatsModels.ModelFrame(f::TupleTerm, data;
+                    model::Type{M}=StatisticalModel, contrasts=Dict{Symbol,Any}()) where M
+
+    data = columntable(data)
+    data, _ = missing_omit(data, termvars(f))
+
+    sch = schema(f, data, contrasts)
+    f = apply_schema(f, sch, M)
+
+    ModelFrame(f, sch, data, model)
+end
+
+# function modelcols(as, cols)
+# function modelcols()
+# end

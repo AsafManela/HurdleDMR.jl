@@ -17,11 +17,35 @@ includel = (M == InclusionRepetition)
 @testset "$(replace(string(f),"\n" => " "))" for f in hdmrmodels
 
 # parse and merge rhs terms
+typeof(f.parts[1].rhs)
 trmszero = HurdleDMR.getrhsterms(f, :h)
 trmspos = HurdleDMR.getrhsterms(f, :c)
 trms, inzero, inpos = HurdleDMR.mergerhsterms(trmszero,trmspos)
-
+isa(trms, StatsModels.TupleTerm)
+using HurdleDMR: NoTerm
+NoTerm()
+ntrms = ((trms...,))
+ft = FormulaTerm(NoTerm(), (trms...,))
+ft.rhs
+ntrms.terms
 # create model matrix
+using StatsModels: columntable, schema, apply_schema, TableRegressionModel
+import StatsModels.termvars
+
+data = covarsdf
+T = HDMR
+contrasts = Dict{Symbol,Any}()
+cols = columntable(data)
+s = schema(ntrms, cols, contrasts)
+as = apply_schema(ntrms, s, HDMR)
+width.(terms(as))
+mcols = modelcols(as, cols)
+@which modelcols(as, cols)
+reduce(hcat, mcols)
+mcols = modelcols(MatrixTerm(as), cols)
+y, X = modelcols(as, data)
+mf = ModelFrame(trms, data, model=HDMR, contrasts=contrasts)
+mf = ModelFrame(trms, data, model=HDMR, contrasts=contrasts)
 mf, mm, countsb = HurdleDMR.createmodelmatrix(trms, covarsdf, counts, Dict())
 
 # inzero and inpos may be different in mm with factor variables

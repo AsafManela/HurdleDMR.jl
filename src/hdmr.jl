@@ -132,8 +132,8 @@ function StatsBase.fit(::Type{T}, m::Model, df::AbstractDataFrame, counts::Abstr
   # inzero and inpos may be different in mm with factor variables
   inzero, inpos = mapins(inzero, inpos, mm)
 
-  # fit and wrap in DataFrameRegressionModel
-  StatsModels.DataFrameRegressionModel(fit(T, mm.m, counts, args...; inzero=inzero, inpos=inpos, kwargs...), mf, mm)
+  # fit and wrap in TableRegressionModel
+  StatsModels.TableRegressionModel(fit(T, mm.m, counts, args...; inzero=inzero, inpos=inpos, kwargs...), mf, mm)
 end
 
 """
@@ -259,7 +259,7 @@ function destandardize!(tpm::TwoPartModel, covarsnorm::AbstractVector{T},
     destandardize!(tpm.mzero, covarsnorm[inzero], standardize)
     destandardize!(tpm.mpos, covarsnorm[inpos], standardize)
   end
-  
+
   tpm
 end
 

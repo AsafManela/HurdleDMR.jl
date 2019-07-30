@@ -108,8 +108,8 @@ function StatsBase.fit(::Type{T}, m::Model, df::AbstractDataFrame, counts::Abstr
   # create model matrix
   mf, mm, counts = createmodelmatrix(trms, df, counts, contrasts)
 
-  # fit and wrap in DataFrameRegressionModel
-  StatsModels.DataFrameRegressionModel(fit(T, mm.m, counts; kwargs...), mf, mm)
+  # fit and wrap in TableRegressionModel
+  StatsModels.TableRegressionModel(fit(T, mm.m, counts; kwargs...), mf, mm)
 end
 
 """
@@ -434,8 +434,8 @@ end
 # it is unregulated, so we drop it from formula
 StatsModels.drop_intercept(::Type{T}) where {T<:DCR} = true
 
-# delegate f(m::DataFrameRegressionModel,...) to f(m.model,...)
-StatsModels.@delegate StatsModels.DataFrameRegressionModel.model [hasintercept, Distributions.ncategories, ncovars, ncoefs, ncovarszero, ncovarspos, ncoefszero, ncoefspos]
+# delegate f(m::TableRegressionModel,...) to f(m.model,...)
+StatsModels.@delegate StatsModels.TableRegressionModel.model [hasintercept, Distributions.ncategories, ncovars, ncoefs, ncovarszero, ncovarspos, ncoefszero, ncoefspos]
 
 """
     predict(m,newcovars; <keyword arguments>)

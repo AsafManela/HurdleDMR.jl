@@ -101,8 +101,8 @@ function StatsBase.fit(::Type{C}, m::Model, df::AbstractDataFrame, counts::Abstr
   # resolve projdir
   projdir = ixprojdir(trms, sprojdir, mm)
 
-  # fit and wrap in DataFrameRegressionModel
-  StatsModels.DataFrameRegressionModel(fit(C, mm.m, counts, projdir, fmargs...; kwargs...), mf, mm)
+  # fit and wrap in TableRegressionModel
+  StatsModels.TableRegressionModel(fit(C, mm.m, counts, projdir, fmargs...; kwargs...), mf, mm)
 end
 
 """
@@ -139,12 +139,12 @@ function StatsBase.fit(::Type{C}, m::Model, df::AbstractDataFrame, counts::Abstr
   # resolve projdir
   projdir = ixprojdir(trms, sprojdir, mm)
 
-  # fit and wrap in DataFrameRegressionModel
-  StatsModels.DataFrameRegressionModel(fit(C, mm.m, counts, projdir, fmargs...; inzero=inzero, inpos=inpos, kwargs...), mf, mm)
+  # fit and wrap in TableRegressionModel
+  StatsModels.TableRegressionModel(fit(C, mm.m, counts, projdir, fmargs...; inzero=inzero, inpos=inpos, kwargs...), mf, mm)
 end
 
 "Find column number of sprojdir"
-function ixprojdir(trms::StatsModels.Terms, sprojdir::Symbol, mm)
+function ixprojdir(trms, sprojdir::Symbol, mm)
   ix = something(findfirst(isequal(sprojdir), trms.terms), 0)
   @assert ix > 0 "$sprojdir not found in provided dataframe"
   mappedix = something(findfirst(isequal(ix), mm.assign), 0)
@@ -152,7 +152,7 @@ function ixprojdir(trms::StatsModels.Terms, sprojdir::Symbol, mm)
   mappedix
 end
 
-StatsModels.@delegate StatsModels.DataFrameRegressionModel.model [coeffwd, coefbwd, srproj, srprojX]
+StatsModels.@delegate StatsModels.TableRegressionModel.model [coeffwd, coefbwd, srproj, srprojX]
 
 """
 Predict using a fitted Counts inverse regression (CIR) given new covars and counts.
@@ -183,7 +183,7 @@ Predict using a fitted Counts inverse regression (CIR) given new covars datafram
 and counts. See also [`predict(::CIR)`](@ref).
 """
 function StatsBase.predict(mm::MM, df::AbstractDataFrame, counts::AbstractMatrix;
-  kwargs...) where {T,M<:CIR,MM<:Union{CIR,StatsModels.DataFrameRegressionModel{M,T}}}
+  kwargs...) where {T,M<:CIR,MM<:Union{CIR,StatsModels.TableRegressionModel{M,T}}}
     # NOTE: this code is copied from StatsModels/statsmodel.jl's version of predict
     # copy terms, removing outcome if present (ModelFrame will complain if a
     # term is not found in the DataFrame and we don't want to remove elements with missing y)
