@@ -41,14 +41,6 @@ function Base.show(io::IO, m::Model)
   nothing
 end
 
-# function mergerhsterms(a::Tuple, b::Tuple)
-#   newt = union(a.terms,b.terms)
-#   ina = findall((in)(a.terms), terms)
-#   inb = findall((in)(b.terms), terms)
-#
-#   newt, ina, inb
-# end
-
 function mergerhsterms(a, b)
   terms = union(a, b)
 
@@ -58,49 +50,21 @@ function mergerhsterms(a, b)
   (terms...,), ina, inb
 end
 
-# function mergerhsterms(a, b)
-#   terms = union(a.terms,b.terms)
-#   eterms = union(a.eterms,b.eterms)
-#   factors = falses(length(eterms),length(terms))
-#   is_non_redundant = falses(length(eterms),length(terms))
-#   for t = 1:length(terms)
-#     for s in [a,b]
-#       it = something(findfirst(isequal(terms[t]), s.terms), 0)
-#       if it > 0
-#         for et = 1:length(eterms)
-#           iet = something(findfirst(isequal(eterms[et]), s.terms), 0)
-#           if iet > 0
-#             factors[et,t] = s.factors[iet,it]
-#             is_non_redundant[et,t] = s.is_non_redundant[iet,it]
-#           end
-#         end
-#       end
-#     end
-#   end
-#   order = vec(sum(factors, dims=1))
-#   response = false
-#   intercept = false
-#
-#   newt = terms(terms, eterms, factors, is_non_redundant, order, response, intercept)
-#
-#   ina = findall((in)(a.terms), terms)
-#   inb = findall((in)(b.terms), terms)
-#
-#   newt, ina, inb
-# end
-#
 "maps inzero and inpos to ModelMatrix columns (important with factor variables)"
-function mapins(inzero, inpos, mm)
+function mapins(inzero, inpos, appliedschema)
   mappedinzero = Int[]
   mappedinpos = Int[]
-  for to=1:length(mm.assign)
-    from = mm.assign[to]
-    if from in inzero
-      push!(mappedinzero, to)
+  from = 1
+  to = 0
+  for t=1:length(appliedschema)
+    to = from + width(appliedschema[t]) - 1
+    if t in inzero
+      [push!(mappedinzero, i) for i in from:to]
     end
-    if from in inpos
-      push!(mappedinpos, to)
+    if t in inpos
+      [push!(mappedinpos, i) for i in from:to]
     end
+    from = to + 1
   end
   mappedinzero, mappedinpos
 end
@@ -118,38 +82,43 @@ function getrhsterms(m::Model, lhs::Symbol)
   f.rhs
 end
 
-# Replicates functionality in StatsModels, so if it changes there it would have
-# to change here too.
-function createmodelmatrix(trms, df, counts, contrasts)
-  # StatsModels.drop_intercept(T) && (trms.intercept = true)
-  # trms.intercept = true
-  mf = ModelFrame(trms, df, contrasts=contrasts)
-  # StatsModels.drop_intercept(T) && (mf.terms.intercept = false)
-  # mf.terms.intercept = false
-  mm = ModelMatrix(mf)
-  if !all(mf.nonmissing)
-    counts = counts[mf.nonmissing,:]
-  end
-  mf, mm, counts
-end
-
-# struct NoTerm <: AbstractTerm end
-
 StatsModels.missing_omit(data::T, formula::TupleTerm) where T<:ColumnTable =
     missing_omit(NamedTuple{tuple(termvars(formula)...)}(data))
 
-function StatsModels.ModelFrame(f::TupleTerm, data;
-                    model::Type{M}=StatisticalModel, contrasts=Dict{Symbol,Any}()) where M
+function StatsModels.modelcols(trms::TupleTerm, data, counts::AbstractMatrix;
+    model::Type{M}=DCR, contrasts=Dict{Symbol,Any}()) where M
 
-    data = columntable(data)
-    data, _ = missing_omit(data, f)
-
-    sch = schema(f, data, contrasts)
-    f = apply_schema(f, sch, M)
-
-    ModelFrame(f, sch, data, model)
+  cols = columntable(data)
+  cols, nonmissing = missing_omit(cols, trms)
+  s = schema(trms, cols, contrasts)
+  as = apply_schema(trms, s, M)
+  modelcols(as, nonmissing, cols, counts)
 end
 
-# function modelcols(as, cols)
-# function modelcols()
-# end
+function StatsModels.modelcols(as::TupleTerm, nonmissing, cols, counts::AbstractMatrix)
+
+  covars = modelcols(MatrixTerm(as), cols)
+
+  if !all(nonmissing)
+    counts = counts[nonmissing,:]
+  end
+
+  covars, counts, as
+end
+
+"Similar to StatsModels.TableRegressionModel, but also holds a counts matrix and Model"
+struct TableCountsRegressionModel{M,D,C} <: RegressionModel
+  model::M    # actual fitted model (result of fit())
+  data::D     # data table used
+  counts::C   # counts matrix used
+  f::Model    # @model specification
+  schema      # applied schema
+  sprojdir::Union{Nothing,Symbol}   # lhs variable in forward regression
+end
+TableCountsRegressionModel(model, data, counts, f, schema) = TableCountsRegressionModel(model, data, counts, f, schema, nothing)
+
+function Base.show(io::IO, model::TableCountsRegressionModel)
+    println(io, typeof(model))
+    println(io)
+    println(io, model.f)
+end
