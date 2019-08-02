@@ -122,10 +122,10 @@ end
 # to change here too.
 function createmodelmatrix(trms, df, counts, contrasts)
   # StatsModels.drop_intercept(T) && (trms.intercept = true)
-  trms.intercept = true
+  # trms.intercept = true
   mf = ModelFrame(trms, df, contrasts=contrasts)
   # StatsModels.drop_intercept(T) && (mf.terms.intercept = false)
-  mf.terms.intercept = false
+  # mf.terms.intercept = false
   mm = ModelMatrix(mf)
   if !all(mf.nonmissing)
     counts = counts[mf.nonmissing,:]
@@ -135,11 +135,14 @@ end
 
 # struct NoTerm <: AbstractTerm end
 
+StatsModels.missing_omit(data::T, formula::TupleTerm) where T<:ColumnTable =
+    missing_omit(NamedTuple{tuple(termvars(formula)...)}(data))
+
 function StatsModels.ModelFrame(f::TupleTerm, data;
                     model::Type{M}=StatisticalModel, contrasts=Dict{Symbol,Any}()) where M
 
     data = columntable(data)
-    data, _ = missing_omit(data, termvars(f))
+    data, _ = missing_omit(data, f)
 
     sch = schema(f, data, contrasts)
     f = apply_schema(f, sch, M)

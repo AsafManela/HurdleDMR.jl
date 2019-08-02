@@ -22,32 +22,44 @@ trmszero = HurdleDMR.getrhsterms(f, :h)
 trmspos = HurdleDMR.getrhsterms(f, :c)
 trms, inzero, inpos = HurdleDMR.mergerhsterms(trmszero,trmspos)
 isa(trms, StatsModels.TupleTerm)
-using HurdleDMR: NoTerm
-NoTerm()
+isa(trms, StatsModels.AbstractTerm)
+
+# using HurdleDMR: NoTerm
+# NoTerm()
+typeof(trms)
 ntrms = ((trms...,))
 ft = FormulaTerm(NoTerm(), (trms...,))
 ft.rhs
 ntrms.terms
 # create model matrix
-using StatsModels: columntable, schema, apply_schema, TableRegressionModel
+using StatsModels: columntable, schema, apply_schema, TableRegressionModel, missing_omit
 import StatsModels.termvars
 
 data = covarsdf
 T = HDMR
 contrasts = Dict{Symbol,Any}()
 cols = columntable(data)
-s = schema(ntrms, cols, contrasts)
-as = apply_schema(ntrms, s, HDMR)
+s = schema(trms, cols, contrasts)
+as = apply_schema(trms, s, HDMR)
 width.(terms(as))
 mcols = modelcols(as, cols)
 @which modelcols(as, cols)
 reduce(hcat, mcols)
 mcols = modelcols(MatrixTerm(as), cols)
 y, X = modelcols(as, data)
-mf = ModelFrame(trms, data, model=HDMR, contrasts=contrasts)
+
+
 mf = ModelFrame(trms, data, model=HDMR, contrasts=contrasts)
 mf, mm, countsb = HurdleDMR.createmodelmatrix(trms, covarsdf, counts, Dict())
 
+cols
+cols, _ = missing_omit(cols, trms)
+sch = schema(trms, cols, contrasts)
+trms = apply_schema(trms, sch, T)
+ModelFrame(trms, sch, cols, T)
+
+@which NamedTuple{tuple(termvars(trms)...)}(cols)
+tuple(termvars(trms)...)
 # inzero and inpos may be different in mm with factor variables
 inzero, inpos = HurdleDMR.mapins(inzero, inpos, mm)
 pzero = length(inzero)
