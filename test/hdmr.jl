@@ -16,23 +16,23 @@ includel = (M == InclusionRepetition)
 
 @testset "$(replace(string(f),"\n" => " "))" for f in hdmrmodels
 
-# parse and merge rhs terms
+# # parse and merge rhs terms
 trmszero = HurdleDMR.getrhsterms(f, :h)
 trmspos = HurdleDMR.getrhsterms(f, :c)
 trms, inzero, inpos = HurdleDMR.mergerhsterms(trmszero,trmspos)
 
 # create model matrix
-mf, mm, countsb = HurdleDMR.createmodelmatrix(trms, covarsdf, counts, Dict())
+covarsb, countsb, as = modelcols(trms, covarsdf, counts; model=M)
 
 # inzero and inpos may be different in mm with factor variables
-inzero, inpos = HurdleDMR.mapins(inzero, inpos, mm)
+inzero, inpos = HurdleDMR.mapins(inzero, inpos, as)
 pzero = length(inzero)
 ppos = length(inpos)
 
 # resolve projdirs
-projdir = HurdleDMR.ixprojdir(trms, :y, mm)
-dirpos = something(findfirst(:y .== trmspos.terms), -1) + 1
-dirzero = something(findfirst(:y .== trmszero.terms), -1) + 1
+projdir = HurdleDMR.ixprojdir(as, :y)
+dirpos = something(findfirst(isequal(projdir), inpos), 0)
+dirzero = something(findfirst(isequal(projdir), inzero), 0)
 
 # hurdle dmr parallel local cluster
 hdmrcoefs = hdmr(covars, counts, M; inzero=inzero, inpos=inpos, parallel=true, testargs...)
