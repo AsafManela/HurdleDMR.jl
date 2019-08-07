@@ -118,8 +118,8 @@ See also [`fit(::HDMR)`](@ref).
 
 `h` and `c` on the lhs indicate the model for zeros and positives, respectively.
 """
-function StatsBase.fit(::Type{T}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix, args...;
-  contrasts::Dict = Dict(), kwargs...) where {T<:HDMR}
+function StatsBase.fit(::Type{T}, m::Model, df, counts::AbstractMatrix, args...;
+  contrasts::Dict{Symbol,<:Any} = Dict{Symbol,Any}(), kwargs...) where {T<:HDMR}
 
   # parse and merge rhs terms
   trmszero = getrhsterms(m, :h)
@@ -127,13 +127,14 @@ function StatsBase.fit(::Type{T}, m::Model, df::AbstractDataFrame, counts::Abstr
   trms, inzero, inpos = mergerhsterms(trmszero,trmspos)
 
   # create model matrix
-  mf, mm, counts = createmodelmatrix(trms, df, counts, contrasts)
+  covars, counts, as = modelcols(trms, df, counts; model=T, contrasts=contrasts)
 
-  # inzero and inpos may be different in mm with factor variables
-  inzero, inpos = mapins(inzero, inpos, mm)
+  # inzero and inpos may be different in the applied schema with factor variables
+  inzero, inpos = mapins(inzero, inpos, as)
 
-  # fit and wrap in DataFrameRegressionModel
-  StatsModels.DataFrameRegressionModel(fit(T, mm.m, counts, args...; inzero=inzero, inpos=inpos, kwargs...), mf, mm)
+  # fit and wrap in TableCountsRegressionModel
+  TableCountsRegressionModel(fit(T, covars, counts, args...;
+    inzero=inzero, inpos=inpos, kwargs...), df, counts, m, as)
 end
 
 """
@@ -259,7 +260,7 @@ function destandardize!(tpm::TwoPartModel, covarsnorm::AbstractVector{T},
     destandardize!(tpm.mzero, covarsnorm[inzero], standardize)
     destandardize!(tpm.mpos, covarsnorm[inpos], standardize)
   end
-  
+
   tpm
 end
 

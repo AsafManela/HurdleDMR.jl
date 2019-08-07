@@ -111,36 +111,41 @@ as [`fit(::InclusionRepetition)`](@ref)
 ```
 """
 function StatsBase.fit(::Type{InclusionRepetition},::Type{M},
-                      f::Formula,
-                      df::AbstractDataFrame,
+                      f::FormulaTerm,
+                      data,
                       dzero::UnivariateDistribution = Binomial(),
                       dpos::UnivariateDistribution = Poisson(),
                       lzero::Link = canonicallink(dzero),
                       lpos::Link = canonicallink(dpos);
-                      fpos::Formula = f,
+                      fpos::FormulaTerm = f,
                       dofit::Bool = true,
-                      wts = fill(1.0,size(df,1)),
+                      wts = fill(1.0,size(data,1)),
                       offsetzero = Float64[],
                       offsetpos = Float64[],
                       offset = Float64[],
                       verbose::Bool = false,
                       showwarnings::Bool = false,
+                      contrasts::Dict{Symbol,<:Any} = Dict{Symbol,Any}(),
                       fitargs...) where {M<:RegressionModel}
 
-  mfzero = ModelFrame(f, df)
+  Tables.istable(data) || throw(ArgumentError("expected data in a Table, got $(typeof(data))"))
+
+  cols = columntable(data)
+
+  mfzero = ModelFrame(f, cols, model=M, contrasts=contrasts)
   mmzero = ModelMatrix(mfzero)
-  y = model_response(mfzero)
+  y = response(mfzero)
 
   ixpos, Iy = getIy(y)
 
   offsetzero, offsetpos = setoffsets(y, ixpos, offset, offsetzero, offsetpos)
 
   # fit zero model to entire sample
-  # TODO: should be wrapped in DataFrameRegressionModel but can't figure out right now why it complains it is not defined
-  # mzero = DataFrameRegressionModel(fit(GeneralizedLinearModel, mmzero.m, Iy, dzero, lzero; wts=wts, offset=offsetzero, fitargs...), mfzero, mmzer)
+  # TODO: should be wrapped in TableRegressionModel but can't figure out right now why it complains it is not defined
+  # mzero = TableRegressionModel(fit(M, mmzero.m, Iy, dzero, lzero; wts=wts, offset=offsetzero, fitargs...), mfzero, mmzero)
   mzero, fittedzero = fitzero(M, mmzero.m, Iy, dzero, lzero, dofit, wts, offsetzero, verbose, showwarnings, fitargs...)
 
-  mfpos = (f===fpos) ? mfzero : ModelFrame(fpos, df)
+  mfpos = (f===fpos) ? mfzero : ModelFrame(fpos, cols, model=M, contrasts=contrasts)
   mmpos = (f===fpos) ? mmzero : ModelMatrix(mfpos)
   mmpos.m = mmpos.m[ixpos,:]
 

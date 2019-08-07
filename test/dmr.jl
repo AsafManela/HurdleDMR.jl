@@ -5,7 +5,7 @@ testargs = Dict(:γ=>γdistrom, :λminratio=>0.01, :verbose=>false,:showwarnings
 @testset "dmr" begin
 
 f = @model(c ~ x + z + cat + y)
-@test_show f "1-part model: [Formula: c ~ x + z + cat + y]"
+@test_show f "1-part model: [c ~ x + z + cat + y]"
 
 dmrcoefs = dmr(covars, counts; testargs...)
 coefs = coef(dmrcoefs)
@@ -215,13 +215,13 @@ zlm = lm(hcat(ones(n,1),z1,covars[:,1:4]),covars[:,projdir])
 @test r2(zlm) ≈ r2(mnir)
 @test adjr2(zlm) ≈ adjr2(mnir)
 @test predict(zlm,hcat(ones(10,1),z1[1:10,:],covars[1:10,1:4])) ≈ predict(mnir,covars[1:10,:],counts[1:10,:])
-@test predict(zlm,hcat(ones(10,1),z1[1:10,:],covars[1:10,1:4])) ≈ predict(mnirdf,covars[1:10,:],counts[1:10,:])
+@test predict(zlm,hcat(ones(10,1),z1[1:10,:],covars[1:10,1:4])) ≈ predict(mnirdf,covarsdf[1:10,:],counts[1:10,:])
 
 zlmnocounts = lm(hcat(ones(n,1),covars[:,1:4]),covars[:,projdir])
 @test r2(zlmnocounts) ≈ r2(mnir; nocounts=true)
 @test adjr2(zlmnocounts) ≈ adjr2(mnir; nocounts=true)
 @test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,1:4])) ≈ predict(mnir,covars[1:10,:],counts[1:10,:]; nocounts=true)
-@test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,1:4])) ≈ predict(mnirdf,covars[1:10,:],counts[1:10,:]; nocounts=true)
+@test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,1:4])) ≈ predict(mnirdf,covarsdf[1:10,:],counts[1:10,:]; nocounts=true)
 
 end
 
@@ -276,13 +276,21 @@ zcoefs3 = coef(dmrzcoefs)
 @test zcoefs3 == coef(dmrzcoefs2)
 
 zcovarsdf = deepcopy(covarsdf)
-zcovarsdf[1] = convert(Vector{Union{Float64,Missing}},zcovarsdf[1])
-zcovarsdf[1,1] = missing
+allowmissing!(zcovarsdf, :y)
+zcovarsdf[1,:y] = missing
 dmrzcoefsdf = fit(DMR, f, zcovarsdf, counts; testargs...)
 zcoefsdf = coef(dmrzcoefsdf)
 @test zcoefsdf == zcoefs3
 
 zmnirdf = fit(CIR{DMR,LinearModel},f,zcovarsdf,counts,:y; nocounts=true, testargs...)
+
+# a missing lhs variable shouldn't matter
+zyhat = predict(zmnirdf, zcovarsdf, counts)
+@test !any(ismissing,zyhat)
+
+# but a missing rhs variable means an observation is dropped
+allowmissing!(zcovarsdf, :x)
+zcovarsdf[1,:x] = missing
 zyhat = predict(zmnirdf, zcovarsdf, counts)
 @test ismissing(zyhat[1])
 @test !any(ismissing,zyhat[2:end])

@@ -1,8 +1,8 @@
 # HurdleDMR
 
-| Documentation | Linux/MacOS | Windows | Code |
-| --- | --- | --- | --- |
-| [![][docs-latest-img]][docs-latest-url] | [![][travis-img]][travis-url]  | [![][appveyor-img]][appveyor-url]  | [![][coveralls-img]][coveralls-url] |
+| Documentation | Linux/MacOS/Windows | Code |
+| --- | --- | --- |
+| [![][docs-latest-img]][docs-latest-url] | [![][travis-img]][travis-url]  [![][coveralls-img]][coveralls-url] |
 
 <!-- | **Package Evaluator**   | [![][pkg-0.5-img]][pkg-0.5-url] [![][pkg-0.6-img]][pkg-0.6-url] | -->
 
@@ -24,13 +24,5 @@ Read the [documentation][docs-latest-url] and [tutorials][docs-latest-tutorials]
 [travis-img]: https://travis-ci.org/AsafManela/HurdleDMR.jl.svg?branch=master
 [travis-url]: https://travis-ci.org/AsafManela/HurdleDMR.jl
 
-[appveyor-img]: https://ci.appveyor.com/api/projects/status/github/AsafManela/HurdleDMR.jl?svg=true
-[appveyor-url]: https://ci.appveyor.com/project/AsafManela/hurdledmr-jl
-
 [coveralls-img]: https://coveralls.io/repos/AsafManela/HurdleDMR.jl/badge.svg?branch=master
 [coveralls-url]: https://coveralls.io/r/AsafManela/HurdleDMR.jl?branch=master
-
-[pkg-0.6-img]: http://pkg.julialang.org/badges/HurdleDMR_0.6.svg
-[pkg-0.6-url]: http://pkg.julialang.org/?pkg=HurdleDMR&ver=0.6
-[pkg-0.7-img]: http://pkg.julialang.org/badges/HurdleDMR_0.7.svg
-[pkg-0.7-url]: http://pkg.julialang.org/?pkg=HurdleDMR&ver=0.7
