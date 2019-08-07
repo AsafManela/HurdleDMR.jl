@@ -1,7 +1,7 @@
 # reusing data loaded by test/hurdle.jl
-X=convert(Array{Float64,2},bioChemists[[:femWomen,:marMarried,:kid5,:phd,:ment]])
+X=convert(Array{Float64,2},bioChemists[!,[:femWomen,:marMarried,:kid5,:phd,:ment]])
 Xwconst=[ones(size(X,1)) X]
-y=convert(Array{Float64,1},bioChemists[:art])
+y=convert(Array{Float64,1},bioChemists.art)
 p = size(Xwconst,2)
 
 ###########################################################
@@ -204,8 +204,8 @@ coefsR3=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_coe
 yhatR3=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_yhatR3.csv"))))
 yhatR3partial=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_yhatR3partial.csv"))))
 
-offpos = convert(Vector{Float64},bioChemists[:offpos])
-offzero = convert(Vector{Float64},bioChemists[:offzero])
+offpos = convert(Vector{Float64},bioChemists.offpos)
+offzero = convert(Vector{Float64},bioChemists.offzero)
 Xpos = X[:,1:3]
 Xzero = X[:,4:5]
 Xzerowconst=[ones(size(X,1)) Xzero]
