@@ -2,7 +2,7 @@
 
 | Documentation | Linux/MacOS/Windows | Code |
 | --- | --- | --- |
-| [![][docs-latest-img]][docs-latest-url] | [![][travis-img]][travis-url]  [![][coveralls-img]][coveralls-url] |
+| [![][docs-latest-img]][docs-latest-url] | [![][travis-img]][travis-url] | [![][coveralls-img]][coveralls-url] |
 
 <!-- | **Package Evaluator**   | [![][pkg-0.5-img]][pkg-0.5-url] [![][pkg-0.6-img]][pkg-0.6-url] | -->
 
