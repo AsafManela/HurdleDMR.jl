@@ -1,16 +1,20 @@
 module HurdleDMR
 
-using Lasso, StatsBase, StatsModels, DataFrames, LambertW,
+using Lasso, StatsBase, StatsModels, Missings, LambertW,
     SparseArrays, Distributed, SharedArrays, LinearAlgebra, Logging
 using GLM: FPVector, FP, Link
 using LoggingExtras: MinLevelLogger
+using Tables: columntable
+using StatsModels: TupleTerm, ColumnTable, missing_omit, schema, apply_schema, termvars
+import StatsModels: modelcols
+import Tables
 
 export dmr, dmrpaths, hdmr, hdmrpaths, fit, coef, srproj, srprojX, @~, mcdmr, posindic,
   DCR, DMR, HDMR, DMRCoefs, DMRPaths, HDMRCoefs, HDMRPaths, @model, Model,
   CIR, predict, coeffwd, coefbwd, MinCVKfold,
   hasintercept, ncategories, nobs, ncoefs, ncovars, ncovarszero, ncovarspos, ncoefszero, ncoefspos,
   Hurdle, PositivePoisson, LogProductLogLink, logpdf_exact, logpdf_approx,
-  InclusionRepetition
+  InclusionRepetition, TableCountsRegressionModel
 
 ##############################################
 # hurdle glm model involves

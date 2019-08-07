@@ -90,19 +90,21 @@ We can then predict with a dataframe as well
   yhatnc = predict(m, df, counts; nocounts=true)
 ```
 """
-function StatsBase.fit(::Type{C}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix, sprojdir::Symbol, fmargs...;
-  contrasts::Dict = Dict(), kwargs...) where {BM<:DMR,FM<:RegressionModel,C<:CIR{BM,FM}}
+function StatsBase.fit(::Type{C}, m::Model, df, counts::AbstractMatrix, sprojdir::Symbol, fmargs...;
+  contrasts::Dict{Symbol,<:Any} = Dict{Symbol,Any}(), kwargs...) where {BM<:DMR,FM<:RegressionModel,C<:CIR{BM,FM}}
+
   # parse and merge rhs terms
   trms = getrhsterms(m, :c)
 
   # create model matrix
-  mf, mm, counts = createmodelmatrix(trms, df, counts, contrasts)
+  covars, counts, as = modelcols(trms, df, counts; model=C, contrasts=contrasts)
 
   # resolve projdir
-  projdir = ixprojdir(trms, sprojdir, mm)
+  projdir = ixprojdir(as, sprojdir)
 
-  # fit and wrap in DataFrameRegressionModel
-  StatsModels.DataFrameRegressionModel(fit(C, mm.m, counts, projdir, fmargs...; kwargs...), mf, mm)
+  # fit and wrap in TableCountsRegressionModel
+  TableCountsRegressionModel(fit(C, covars, counts, projdir, fmargs...; kwargs...),
+    df, counts, m, as, sprojdir)
 end
 
 """
@@ -123,36 +125,37 @@ We can then predict with a dataframe as well
   yhatnc = predict(m, df, counts; nocounts=true)
 ```
 """
-function StatsBase.fit(::Type{C}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix, sprojdir::Symbol, fmargs...;
-  contrasts::Dict = Dict(), kwargs...) where {BM<:HDMR,FM<:RegressionModel,C<:CIR{BM,FM}}
+function StatsBase.fit(::Type{C}, m::Model, df, counts::AbstractMatrix, sprojdir::Symbol, fmargs...;
+  contrasts::Dict{Symbol,<:Any} = Dict{Symbol,Any}(), kwargs...) where {BM<:HDMR,FM<:RegressionModel,C<:CIR{BM,FM}}
   # parse and merge rhs terms
   trmszero = getrhsterms(m, :h)
   trmspos = getrhsterms(m, :c)
   trms, inzero, inpos = mergerhsterms(trmszero,trmspos)
 
   # create model matrix
-  mf, mm, counts = createmodelmatrix(trms, df, counts, contrasts)
+  covars, counts, as = modelcols(trms, df, counts; model=C, contrasts=contrasts)
 
-  # inzero and inpos may be different in mm with factor variables
-  inzero, inpos = mapins(inzero, inpos, mm)
+  # inzero and inpos may be different in the applied schema with factor variables
+  inzero, inpos = mapins(inzero, inpos, as)
 
   # resolve projdir
-  projdir = ixprojdir(trms, sprojdir, mm)
+  projdir = ixprojdir(as, sprojdir)
 
-  # fit and wrap in DataFrameRegressionModel
-  StatsModels.DataFrameRegressionModel(fit(C, mm.m, counts, projdir, fmargs...; inzero=inzero, inpos=inpos, kwargs...), mf, mm)
+  # fit and wrap in TableCountsRegressionModel
+  TableCountsRegressionModel(fit(C, covars, counts, projdir, fmargs...; inzero=inzero, inpos=inpos, kwargs...),
+    df, counts, m, as, sprojdir)
 end
 
 "Find column number of sprojdir"
-function ixprojdir(trms::StatsModels.Terms, sprojdir::Symbol, mm)
-  ix = something(findfirst(isequal(sprojdir), trms.terms), 0)
-  @assert ix > 0 "$sprojdir not found in provided dataframe"
-  mappedix = something(findfirst(isequal(ix), mm.assign), 0)
-  @assert mappedix > 0 "$sprojdir not found in ModelMatrix (perhaps redundant?)"
+function ixprojdir(appliedschema, sprojdir::Symbol)
+  ix = something(findfirst(isequal(sprojdir), termvars(appliedschema)), 0)
+  @assert ix > 0 "$sprojdir not found in applied model (schema)"
+  @assert width(appliedschema[ix]) == 1 "$sprojdir must map to a single (noncategorical) variable"
+  mappedix = sum(width.(appliedschema[1:ix]))
   mappedix
 end
 
-StatsModels.@delegate StatsModels.DataFrameRegressionModel.model [coeffwd, coefbwd, srproj, srprojX]
+StatsModels.@delegate TableCountsRegressionModel.model [coeffwd, coefbwd, srproj, srprojX]
 
 """
 Predict using a fitted Counts inverse regression (CIR) given new covars and counts.
@@ -182,25 +185,24 @@ end
 Predict using a fitted Counts inverse regression (CIR) given new covars dataframe
 and counts. See also [`predict(::CIR)`](@ref).
 """
-function StatsBase.predict(mm::MM, df::AbstractDataFrame, counts::AbstractMatrix;
-  kwargs...) where {T,M<:CIR,MM<:Union{CIR,StatsModels.DataFrameRegressionModel{M,T}}}
-    # NOTE: this code is copied from StatsModels/statsmodel.jl's version of predict
-    # copy terms, removing outcome if present (ModelFrame will complain if a
-    # term is not found in the DataFrame and we don't want to remove elements with missing y)
-    newTerms = StatsModels.dropresponse!(mm.mf.terms)
-    # create new model frame/matrix
-    newTerms.intercept = true
-    mf = ModelFrame(newTerms, df; contrasts = mm.mf.contrasts)
-    mf.terms.intercept = false
+function StatsBase.predict(mm::MM, df, counts::AbstractMatrix;
+  kwargs...) where {T,M<:CIR,D,C,MM<:Union{CIR,TableCountsRegressionModel{M,D,C}}}
 
-    newX = ModelMatrix(mf).m
-    if !all(mf.nonmissing)
-      counts = counts[mf.nonmissing,:]
-    end
-    yp = predict(mm, newX, counts; kwargs...)
+    # drop projection direction from schema used to select model cols so it can be missing
+    as = StatsModels.drop_term(mm.schema, term(mm.sprojdir))
+    cols, nonmissing = missing_omit(columntable(df), as)
+
+    # create model matrix
+    covars, counts, as = modelcols(as, nonmissing, cols, counts)
+
+    # predict with underlying model
+    yp = predict(mm.model, covars, counts; kwargs...)
+
+    # add missings for observations missing in provided df
     out = missings(eltype(yp), size(df, 1))
-    out[mf.nonmissing] = yp
-    return(out)
+    out[nonmissing] = yp
+
+    out
 end
 # # when the backward model is an HDMR we need to make sure we didn't drop a colinear zpos
 # function StatsBase.predict(m::C,covars::AbstractMatrix{T},counts::AbstractMatrix{V};

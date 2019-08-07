@@ -99,17 +99,17 @@ See also [`fit(::DMR)`](@ref).
 
 `c` must be specified on the lhs to indicate the model for counts.
 """
-function StatsBase.fit(::Type{T}, m::Model, df::AbstractDataFrame, counts::AbstractMatrix;
-  contrasts::Dict = Dict(), kwargs...) where {T<:DMR}
+function StatsBase.fit(::Type{T}, m::Model, df, counts::AbstractMatrix;
+  contrasts::Dict{Symbol,<:Any} = Dict{Symbol,Any}(), kwargs...) where {T<:DMR}
 
   # parse and merge rhs terms
   trms = getrhsterms(m, :c)
 
   # create model matrix
-  mf, mm, counts = createmodelmatrix(trms, df, counts, contrasts)
+  covars, counts, as = modelcols(trms, df, counts; model=T, contrasts=contrasts)
 
-  # fit and wrap in DataFrameRegressionModel
-  StatsModels.DataFrameRegressionModel(fit(T, mm.m, counts; kwargs...), mf, mm)
+  # fit and wrap in TableCountsRegressionModel
+  TableCountsRegressionModel(fit(T, covars, counts; kwargs...), df, counts, m, as)
 end
 
 """
@@ -434,8 +434,17 @@ end
 # it is unregulated, so we drop it from formula
 StatsModels.drop_intercept(::Type{T}) where {T<:DCR} = true
 
-# delegate f(m::DataFrameRegressionModel,...) to f(m.model,...)
-StatsModels.@delegate StatsModels.DataFrameRegressionModel.model [hasintercept, Distributions.ncategories, ncovars, ncoefs, ncovarszero, ncovarspos, ncoefszero, ncoefspos]
+# delegate f(m::TableCountsRegressionModel,...) to f(m.model,...)
+StatsModels.@delegate TableCountsRegressionModel.model [hasintercept,
+  Distributions.ncategories, ncovars, ncoefs, ncovarszero, ncovarspos, 
+  ncoefszero, ncoefspos,
+  StatsBase.coef, StatsBase.confint,
+  StatsBase.deviance, StatsBase.nulldeviance,
+  StatsBase.loglikelihood, StatsBase.nullloglikelihood,
+  StatsBase.dof, StatsBase.dof_residual, StatsBase.nobs,
+  StatsBase.stderror, StatsBase.vcov,
+  StatsBase.residuals, StatsBase.response,
+  StatsBase.predict, StatsBase.predict!]
 
 """
     predict(m,newcovars; <keyword arguments>)
