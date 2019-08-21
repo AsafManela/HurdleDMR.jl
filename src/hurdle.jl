@@ -83,7 +83,20 @@ function getlogger(showwarnings::Bool)
   end
 end
 
-fitblank(::Type{M}, args...; kwargs...) where M<:RegularizationPath =
+# fitblank is wrapped in try catch only for M<:RegularizationPath and when the penalty_factor is specified
+fitblank(::Type{M}, args...; penalty_factor::Union{Vector,Nothing}=nothing, kwargs...) where M<:RegularizationPath =
+  fitblank(penalty_factor, M, args...; kwargs...)
+
+function fitblank(penalty_factor::Vector, ::Type{M}, args...; kwargs...) where M<:RegularizationPath
+  try
+    fit(M, args...; λ=[0.0], dofit=false, penalty_factor=penalty_factor, kwargs...)
+  catch e
+    @warn "fitblank($M) caught a $e and will ignore penalty_factor for this part"
+    fit(M, args...; λ=[0.0], dofit=false, penalty_factor=nothing, kwargs...)
+  end
+end
+
+fitblank(penalty_factor::Nothing, ::Type{M}, args...; kwargs...) where M<:RegularizationPath =
   fit(M, args...; λ=[0.0], dofit=false, kwargs...)
 fitblank(::Type{M}, args...; kwargs...) where M<:RegressionModel =
   fit(M, args...; dofit=false, kwargs...)
