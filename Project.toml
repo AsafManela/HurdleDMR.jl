@@ -1,6 +1,6 @@
 name = "HurdleDMR"
 uuid = "f9e53bcf-9449-548a-a5fe-a83e43094f75"
-version = "1.1.1"
+version = "1.2.1"
 
 [deps]
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"
