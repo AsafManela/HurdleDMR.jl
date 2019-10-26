@@ -118,7 +118,13 @@ hdmrpathsdf = fit(HDMRPaths{M}, f, covarsdf, counts; inzero=inzero, inpos=inpos,
 @test coef(hdmrpathsdf)[2] ≈ coefsHpzero3
 @test predict(hdmrpathsdf,newcovars) ≈ η
 
-zHpos = srproj(coefsHppos, counts)
+if M == InclusionRepetition
+    srprojcounts = counts - posindic(counts)
+else
+    srprojcounts = counts
+end
+
+zHpos = srproj(coefsHppos, srprojcounts)
 @test size(zHpos) == (n,ppos+1)
 
 zHzero = srproj(coefsHpzero, posindic(counts))
@@ -128,7 +134,7 @@ Z1 = srproj(coefsHppos, coefsHpzero, counts, dirpos, dirzero;
     includel=includel, intercept=true)
 
 if dirpos > 0
-    z1pos = srproj(coefsHppos, counts, dirpos)
+    z1pos = srproj(coefsHppos, srprojcounts, dirpos)
     @test z1pos ≈ zHpos[:,[dirpos,ppos+1]]
     @test hascol(Z1,z1pos[:,1])
     @test !includel || hascol(Z1,z1pos[:,2])

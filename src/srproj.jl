@@ -128,9 +128,15 @@ function srproj(coefspos::C, coefszero::C, counts, dirpos::D, dirzero::D;
   includel=false,      # whether to include total 1(counts) in Z
   kwargs...) where {T, C<:AbstractMatrix{T}, D<:Int}
 
+  Icounts = posindic(counts)
+  if includel
+    # using this as indication that we in IncRep mode, where the srproj is phi*(c-h) instead of phi*c
+    counts = counts - Icounts
+  end
+  
   if dirpos>0 && dirzero>0
+    zzero = srproj(coefszero, Icounts, dirzero; kwargs...)
     zpos = srproj(coefspos, counts, dirpos; kwargs...)
-    zzero = srproj(coefszero, posindic(counts), dirzero; kwargs...)
     # second element should be same m in both, but because zero model
     # only sums indicators it generates smaller totals, so use the one
     # from the pos model
@@ -142,7 +148,7 @@ function srproj(coefspos::C, coefszero::C, counts, dirpos::D, dirzero::D;
     Z = srproj(coefspos, counts, dirpos; kwargs...)
     Z[:, [true, includem]]
   elseif dirzero>0
-    Z = srproj(coefszero, posindic(counts), dirzero; kwargs...)
+    Z = srproj(coefszero, Icounts, dirzero; kwargs...)
     Z[:, [true, includel]]
   else
     error("No direction to project to (dirpos=$dirpos,dirzero=$dirzero)")
