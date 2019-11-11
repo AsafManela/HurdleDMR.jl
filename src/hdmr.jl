@@ -261,6 +261,32 @@ function destandardize!(tpm::TwoPartModel, covarsnorm::AbstractVector{T},
   tpm
 end
 
+# Override GLM to revert to GLM v1.1.1 behavior for Binomial regression because new approach is often not stable
+# and results in extreme coefficients. This may not be a problem for others, but for HDMR it is a major issue, 
+# because we use the coefficients to derive the sr projections.
+# Also note we make the methods more specific than in GLM to avoid issues with fatally broken precompliation.
+import GLM
+
+function GLM.inverselink(::LogitLink, η::AbstractFloat)
+  expabs = exp(-abs(η))
+  opexpabs = 1 + expabs
+  deriv = (expabs / opexpabs) / opexpabs
+  η ≤ 0 ? expabs / opexpabs : inv(opexpabs), deriv, deriv
+end
+
+function GLM.updateμ!(r::GLM.GlmResp{V,D,L}) where {V<:GLM.FPVector,D<:Union{Bernoulli,Binomial},L<:LogitLink}
+  y, η, μ, wrkres, wrkwt, dres = r.y, r.eta, r.mu, r.wrkresid, r.wrkwt, r.devresid
+
+  @inbounds for i in eachindex(y, η, μ, wrkres, wrkwt, dres)
+      μi, dμdη, μomμ = GLM.inverselink(L(), η[i])
+      μ[i] = μi
+      yi = y[i]
+      wrkres[i] = (yi - μi) / dμdη
+      wrkwt[i] = GLM.cancancel(r) ? dμdη : abs2(dμdη) / μomμ
+      dres[i] = GLM.devresid(r.d, yi, μi)
+  end
+end
+
 "Shorthand for fit(HDMRPaths,covars,counts). See also [`fit(::HDMRPaths)`](@ref)"
 function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix,::Type{M}=HDMR_DEFAULT_MODEL;
       inpos=1:size(covars,2), inzero=1:size(covars,2),

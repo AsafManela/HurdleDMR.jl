@@ -70,6 +70,7 @@ function finiteoffsetobs(part::Symbol, X, y, offset, wts, showwarnings)
   X, y, offset, wts
 end
 
+mildexception(e) = false
 mildexception(e::PosDefException) = true
 mildexception(e::DomainError) = true
 mildexception(e::ConvergenceException) = true
