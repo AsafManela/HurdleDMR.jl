@@ -1,6 +1,6 @@
 module HurdleDMR
 
-using Lasso, StatsBase, StatsModels, Missings, LambertW,
+using Lasso, StatsBase, StatsModels, Missings, LambertW, DataStructures,
     SparseArrays, Distributed, SharedArrays, LinearAlgebra, Logging
 using GLM: FPVector, FP, Link
 using LoggingExtras: MinLevelLogger

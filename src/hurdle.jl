@@ -177,7 +177,7 @@ function fitpos(::Type{TPM},::Type{M},
         mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=dofit, wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
         fittedpos = dofit
       catch e
-        @warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos. countmap(ypos)=$(sort(countmap(ypos)))")
+        @warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos. countmap(ypos)=$(sort(OrderedDict(countmap(ypos))))")
         if mildexception(e)
           fittedpos = false
         else

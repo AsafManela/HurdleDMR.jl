@@ -43,12 +43,12 @@ Distributions.rate(d::PositivePoisson) = d.λ
 ### Statistics
 Distributions.mean(d::PositivePoisson) = d.λ / (1.0-exp(-d.λ))
 
-function logfactorialapprox(n::Integer)
+function logfactorialapprox(n)
   x=n+1.0::Float64
   (x-0.5)*log(x) - x + 0.5*log(2π) + 1.0/(12.0*x)
 end
 
-function logfactorial(n::Integer)
+function logfactorial(n)
   if n<2
     return 0.0
   end
@@ -68,17 +68,21 @@ function logexpm1(x::T) where {T}
 end
 
 # Note that the factorial will blow up with moderately large x
-Distributions.pdf(d::PositivePoisson, x::Int) = d.λ^x / ((exp(d.λ)-1.0) * factorial(x))
+_pdf(d, x) = d.λ^x / ((exp(d.λ)-1.0) * factorial(x))
+Distributions.pdf(d::PositivePoisson, x::Integer) = _pdf(d,x)
+Distributions.pdf(d::PositivePoisson, x::Real) = _pdf(d,x)
 
 # calculating the log factorial is too expensive, we use an approximation
 # given here: http://www.johndcook.com/blog/2010/08/16/how-to-compute-log-factorial/
-Distributions.logpdf(d::PositivePoisson, x::Int) = x*log(d.λ) - logexpm1(d.λ) - logfactorialapprox(x)
+_logpdf(d, x) = x*log(d.λ) - logexpm1(d.λ) - logfactorialapprox(x)
+Distributions.logpdf(d::PositivePoisson, x::Integer) = _logpdf(d, x)
+Distributions.logpdf(d::PositivePoisson, x::Real) = _logpdf(d, x)
 
 # for comparison we define the exact logpdf for the positive poisson
-logpdf_exact(d::PositivePoisson, x::Integer) = x*log(d.λ) - log(exp(d.λ)-1.0) - logfactorial(x)
+logpdf_exact(d::PositivePoisson, x) = x*log(d.λ) - log(exp(d.λ)-1.0) - logfactorial(x)
 
 # similar calculation for the regular poisson
-logpdf_approx(d::Poisson, x::Integer) = x*log(d.λ) - d.λ - logfactorialapprox(x)
+logpdf_approx(d::Poisson, x) = x*log(d.λ) - d.λ - logfactorialapprox(x)
 
 ###################################################################
 # GLM.jl extensions

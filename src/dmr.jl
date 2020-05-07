@@ -372,7 +372,7 @@ function dmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix;
       path = fit(GammaLassoPath,covars,Vector(countsj),Poisson(),LogLink(); offset=μ, standardize=false, verbose=false, kwargs...)
       destandardize!(path, covarsnorm, standardize)
     catch e
-      showwarnings && @warn("fitgl failed for countsj with frequencies $(sort(countmap(countsj))) and will return missing path ($e)")
+      showwarnings && @warn("fitgl failed for countsj with frequencies $(sort(OrderedDict(countmap(countsj)))) and will return missing path ($e)")
       missing
     end
   end
@@ -409,7 +409,7 @@ function tryfitgl!(coefs::AbstractMatrix{T}, j::Int, covars::AbstractMatrix{T},c
   try
     poisson_regression!(coefs, j, covars, counts; kwargs...)
   catch e
-    showwarnings && @warn("fitgl! failed on count dimension $j with frequencies $(sort(countmap(counts[:,j]))) and will return zero coefs ($e)")
+    showwarnings && @warn("fitgl! failed on count dimension $j with frequencies $(sort(OrderedDict(countmap(counts[:,j])))) and will return zero coefs ($e)")
     # zero out coef column because coefs array is uninitialized at first
     for i=1:size(coefs,1)
       coefs[i,j] = zero(T)
