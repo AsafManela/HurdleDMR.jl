@@ -24,7 +24,7 @@ end
 """
 Relatively light object used to return HDMR results when we only care about estimated coefficients.
 """
-struct HDMRCoefs{M<:TwoPartModel, T<:AbstractMatrix, S<:SegSelect, X} <: HDMR{M}
+struct HDMRCoefs{M<:Union{Missing, <:TwoPartModel}, T<:AbstractMatrix, S<:SegSelect, X} <: HDMR{M}
   coefspos::T                   # positives model coefficients
   coefszero::T                  # zeros model coefficients
   intercept::Bool               # whether to include an intercept in each Poisson regression
@@ -36,10 +36,10 @@ struct HDMRCoefs{M<:TwoPartModel, T<:AbstractMatrix, S<:SegSelect, X} <: HDMR{M}
 end
 
 HDMRCoefs{M}(coefspos::T, coefszero::T, intercept::Bool, n::Int, d::Int,
-  inpos::X, inzero::X, select::S) where {M<:TwoPartModel, T<:AbstractMatrix, S<:SegSelect, X} =
+  inpos::X, inzero::X, select::S) where {M<:Union{Missing, <:TwoPartModel}, T<:AbstractMatrix, S<:SegSelect, X} =
   HDMRCoefs{M,T,S,X}(coefspos, coefszero, intercept, n, d, inpos, inzero, select)
 
-function HDMRCoefs(m::HDMRPaths{M}, select::SegSelect=defsegselect) where {M<:TwoPartModel}
+function HDMRCoefs(m::HDMRPaths{M}, select::SegSelect=defsegselect) where {M<:Union{Missing, <:TwoPartModel}}
   coefspos, coefszero = coef(m, select)
   HDMRCoefs{M}(coefspos, coefszero, m.intercept, m.n, m.d, m.inpos, m.inzero, select)
 end

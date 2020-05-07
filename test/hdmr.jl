@@ -352,6 +352,12 @@ coefsHppos2, coefsHpzero2 = coef(hdmrcoefs2)
 @test coefsHpzero ≈ coefsHpzero2
 @test HurdleDMR.includelinX(hdmrcoefs2) == includel
 
+# compare with hdmr() variant
+hdmrcoefs2b = hdmr(covars, zcounts, M; parallel=true, local_cluster=false, testargs...)
+coefsHppos2b, coefsHpzero2b = coef(hdmrcoefs2b)
+@test coefsHppos ≈ coefsHppos2b
+@test coefsHpzero ≈ coefsHpzero2b
+
 # just checking the fit(HDMRPaths...) ignore local_cluster
 hdmrcoefs3 = fit(HDMRPaths{M},covars, zcounts; parallel=true, local_cluster=true, testargs...)
 coefsHppos3, coefsHpzero3 = coef(hdmrcoefs3)
