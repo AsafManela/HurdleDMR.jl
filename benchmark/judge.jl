@@ -4,8 +4,11 @@ import HurdleDMR
 
 cd(@__DIR__)
 
-env = Dict("JULIA_NUM_THREADS" => Sys.CPU_THREADS-2)
 pkg = joinpath(dirname(pathof(HurdleDMR)),"..")
+env = Dict(
+        "JULIA_NUM_THREADS" => Sys.CPU_THREADS-2, 
+        "JULIA_PROJECT" => pkg
+    )
 
 # now switch branches and run
 current = benchmarkpkg(pkg, BenchmarkConfig(env = env))
