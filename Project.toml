@@ -27,7 +27,7 @@ LoggingExtras = "0.3"
 Missings = "0.4"
 StatsBase = "0.30, 0.31, 0.32"
 StatsModels = "0.6"
-Tables = "0.2"
+Tables = "0.2, 1.0"
 julia = "0.7, 1"
 
 [extras]
