@@ -2,7 +2,7 @@
 
 | Documentation | Linux/MacOS/Windows | Code |
 | --- | --- | --- |
-| [![][docs-latest-img]][docs-latest-url] | [![][travis-img]][travis-url] | [![][coveralls-img]][coveralls-url] |
+| [![][docs-latest-img]][docs-latest-url] | [![][actions-img]][actions-url] | [![][codecov-img]][codecov-url] |
 
 <!-- | **Package Evaluator**   | [![][pkg-0.5-img]][pkg-0.5-url] [![][pkg-0.6-img]][pkg-0.6-url] | -->
 
@@ -21,8 +21,8 @@ Read the [documentation][docs-latest-url] and [tutorials][docs-latest-tutorials]
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: https://asafmanela.github.io/HurdleDMR.jl/stable
 
-[travis-img]: https://travis-ci.org/AsafManela/HurdleDMR.jl.svg?branch=master
-[travis-url]: https://travis-ci.org/AsafManela/HurdleDMR.jl
+[actions-img]: https://github.com/AsafManela/HurdleDMR.jl/workflows/CI/badge.svg
+[actions-url]: https://github.com/AsafManela/HurdleDMR.jl/actions?query=workflow%3ACI+branch%3Amaster
 
-[coveralls-img]: https://coveralls.io/repos/AsafManela/HurdleDMR.jl/badge.svg?branch=master
-[coveralls-url]: https://coveralls.io/r/AsafManela/HurdleDMR.jl?branch=master
+[codecov-img]: http://codecov.io/github/AsafManela/HurdleDMR.jl/coverage.svg?branch=master
+[codecov-url]: http://codecov.io/github/AsafManela/HurdleDMR.jl?branch=master
