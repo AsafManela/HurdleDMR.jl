@@ -121,8 +121,8 @@ coefs0=[b0,b1]
 
 # load saved R benchmark
 import CSV
-pdata=CSV.read(joinpath(testdir,"data","positive_poisson_pdata.csv"))
-coefsR=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","positive_poisson_coefsR.csv"))))
+pdata=CSV.read(joinpath(testdir,"data","positive_poisson_pdata.csv"), DataFrame)
+coefsR=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","positive_poisson_coefsR.csv"), DataFrame)))
 
 X=convert(Array{Float64,2}, pdata[!,[:x2]])
 Xwconst=[ones(size(X,1)) X]

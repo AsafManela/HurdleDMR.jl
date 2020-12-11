@@ -333,7 +333,7 @@ function StatsBase.fit(::Type{Hurdle},::Type{M},
 end
 
 function Base.show(io::IO, tpm::TwoPartModel)
-  name = typeof(tpm).name
+  name = nameof(typeof(tpm))
   println(io, "$name regression\n")
 
   if typeof(tpm.mpos) <: RegularizationPath
