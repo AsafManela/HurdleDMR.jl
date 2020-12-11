@@ -28,7 +28,7 @@ Missings = "0.4"
 StatsBase = "0.33"
 StatsModels = "0.6"
 Tables = "1.2"
-julia = "1"
+julia = "0.7, 1"
 
 [extras]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
