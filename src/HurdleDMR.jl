@@ -1,7 +1,8 @@
 module HurdleDMR
 
-using Lasso, StatsBase, StatsModels, Missings, LambertW, DataStructures,
+using Lasso, StatsBase, StatsModels, Missings, LambertW, 
     SparseArrays, Distributed, SharedArrays, LinearAlgebra, Logging
+using OrderedCollections: OrderedDict
 using GLM: FPVector, FP, Link
 using LoggingExtras: MinLevelLogger
 using Tables: columntable
