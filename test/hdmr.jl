@@ -122,11 +122,13 @@ hdmrcoefsdf = fit(HDMRCoefs{M}, f, covarsdf, counts; inzero=inzero, inpos=inpos,
 @test coef(hdmrcoefsdf)[1] == coefsHppos
 @test coef(hdmrcoefsdf)[2] ≈ coefsHpzero
 @test_throws ErrorException predict(hdmrcoefsdf,newcovars)
+@test_show hdmrcoefsdf string(f)
 
 hdmrpathsdf = fit(HDMRPaths{M}, f, covarsdf, counts; inzero=inzero, inpos=inpos, parallel=true, testargs...)
 @test coef(hdmrpathsdf)[1] == coefsHppos3
 @test coef(hdmrpathsdf)[2] ≈ coefsHpzero3
 @test predict(hdmrpathsdf,newcovars) ≈ η
+@test_show hdmrpathsdf string(f)
 
 if M == InclusionRepetition
     srprojcounts = counts - posindic(counts)
@@ -215,12 +217,17 @@ hirdf = fit(CIR{HDMR{M}, LinearModel},f,covarsdf,counts,:y;
 @test coefbwd(hirdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirdf)[2] ≈ coef(hdmrcoefs)[2]
 @test coeffwd(hirdf) ≈ coeffwd(hir)
+@test_show hirdf string(f)
+@test_show hirdf "Forward model coefficients for predicting y"
+
 hirglmdf = fit(CIR{HDMR{M}, GeneralizedLinearModel},f,covarsdf,counts,:y,Gamma();
     inzero=inzero, inpos=inpos, nocounts=true, testargs...)
 @test coefbwd(hirglmdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirglmdf)[2] ≈ coef(hdmrcoefs)[2]
 @test !(coeffwd(hirglmdf)[2] ≈ coeffwd(hirdf)[2])
 @test !(coeffwd(hirglmdf)[1] ≈ coeffwd(hirdf)[1])
+@test_show hirglmdf string(f)
+@test_show hirglmdf "Forward model coefficients for predicting y"
 
 # select=MinBIC()
 hirdfb = fit(CIR{HDMR{M}, LinearModel},f,covarsdf,counts,:y;

@@ -329,7 +329,7 @@ function hdmrpaths(covars::AbstractMatrix{T},counts::AbstractMatrix,::Type{M}=HD
         kwargs...)
       destandardize!(tpm, covarsnorm, inpos, inzero, standardize)
     catch e
-      showwarnings && @warn("fit($M...) failed for countsj with frequencies $(sort(OrderedDict(countmap(countsj)))) and will return missing path ($e)")
+      showwarnings && @warn("fit($M...) failed for countsj with frequencies $(countmapstr(countsj)) and will return missing path ($e)")
       missing
     end
   end
@@ -453,7 +453,7 @@ function tryfith!(::Type{M}, coefspos::AbstractMatrix{T}, coefszero::AbstractMat
       # showwarnings=showwarnings, # uncomment do help with debugging
       kwargs...)
   catch e
-    showwarnings && @warn("hurdle_regression! failed on count dimension $j with frequencies $(sort(OrderedDict(countmap(counts[:,j])))) and will return zero coefs ($e)")
+    showwarnings && @warn("hurdle_regression! failed on count dimension $j with frequencies $(countmapstr(counts[:,j])) and will return zero coefs ($e)")
     # redudant ASSUMING COEFS ARRAY INTIAILLY FILLED WITH ZEROS, but can happen in serial mode
     for i=1:size(coefszero,1)
       coefszero[i,j] = zero(T)

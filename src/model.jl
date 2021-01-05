@@ -118,7 +118,37 @@ end
 TableCountsRegressionModel(model, data, counts, f, schema) = TableCountsRegressionModel(model, data, counts, f, schema, nothing)
 
 function Base.show(io::IO, model::TableCountsRegressionModel)
-    println(io, typeof(model))
-    println(io)
-    println(io, model.f)
+  println(io, typeof(model))
+  println(io)
+  println(io, model.f)
+
+  sprojdir = model.sprojdir
+  if !isnothing(sprojdir)
+    # CIR case show show forward model
+    println(io, "\nForward model coefficients for predicting $sprojdir:")
+
+    fwdm = model.model.fwdm
+
+    ct = StatsBase.coeftable(fwdm)
+
+    # all coefnames including prediction target
+    cfnames = coefnames(model.schema)
+
+    # remove projdir
+    projdir = ixprojdir(model.schema, sprojdir)
+    deleteat!(cfnames, projdir)
+    
+    # prepend intercept (always included in forward regression)
+    prepend!(cfnames, ["(Intercept)"])
+
+    # resolve srproj / Z coef names
+    znames = srprojnames(model.model.bwdm, length(ct.rownms) - length(cfnames))
+    append!(cfnames, znames)
+
+    if length(ct.rownms) == length(cfnames)
+        ct.rownms = cfnames
+    end
+
+    show(io, ct)
+  end
 end

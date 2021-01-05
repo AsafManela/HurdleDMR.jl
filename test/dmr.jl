@@ -177,9 +177,14 @@ mnirdf = fit(CIR{DMR,LinearModel},f,covarsdf,counts,:y; nocounts=true, testargs.
 @test coeffwd(mnirdf) ≈ coeffwd(mnir)
 @test coeffwd(mnirdf) != coeffwd(mnir; nocounts=true)
 @test coef(mnirdf) ≈ coef(mnir)
+@test_show mnirdf string(f)
+@test_show mnirdf "Forward model coefficients for predicting y"
+
 mnirglmdf = fit(CIR{DMR,GeneralizedLinearModel},f,covarsdf,counts,:y,Gamma(); nocounts=false, testargs...)
 @test coefbwd(mnirglmdf) ≈ coef(dmrcoefs)
 @test_throws ErrorException coeffwd(mnirglmdf; nocounts=true)
+@test_show mnirglmdf string(f)
+@test_show mnirglmdf "Forward model coefficients for predicting y"
 
 # select=MinBIC()
 mnirdfb = fit(CIR{DMR,LinearModel},f,covarsdf,counts,:y; nocounts=true, select=MinBIC(), testargs...)
@@ -283,6 +288,8 @@ zcoefsdf = coef(dmrzcoefsdf)
 @test zcoefsdf == zcoefs3
 
 zmnirdf = fit(CIR{DMR,LinearModel},f,zcovarsdf,counts,:y; nocounts=true, testargs...)
+@test_show zmnirdf string(f)
+@test_show zmnirdf "Forward model coefficients for predicting y"
 
 # a missing lhs variable shouldn't matter
 zyhat = predict(zmnirdf, zcovarsdf, counts)

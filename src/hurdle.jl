@@ -84,6 +84,13 @@ function getlogger(showwarnings::Bool)
   end
 end
 
+# pretty printing of counts map
+function countmapstr(counts)
+  freq = sort(OrderedDict(countmap(counts)))
+  freqstr = join((string(Int(k),"=>",v) for (k,v) in pairs(freq)),", ")
+  string("[", freqstr, "]")
+end
+
 # fitblank is wrapped in try catch only for M<:RegularizationPath and when the penalty_factor is specified
 fitblank(::Type{M}, args...; penalty_factor::Union{Vector,Nothing}=nothing, kwargs...) where M<:RegularizationPath =
   fitblank(penalty_factor, M, args...; kwargs...)
@@ -125,7 +132,7 @@ function fitzero(::Type{M},
         mzero = fit(M, X, Iy, dzero, lzero; dofit=dofit, wts=wts, offset=offsetzero, verbose=verbose, fitargs...)
         fittedzero = dofit
       catch e
-        @warn("failed to fit zero counts model, possibly not enough variation in I(y). countmap(Iy)=$(countmap(Iy))")
+        @warn("failed to fit zero counts model, possibly not enough variation in I(y). countmap(Iy)=$(countmapstr(Iy))")
         if mildexception(e)
           fittedzero = false
         else
@@ -177,7 +184,7 @@ function fitpos(::Type{TPM},::Type{M},
         mpos = fit(M, Xpos, ypos, dpos, lpos; dofit=dofit, wts=wtspos, offset=offsetpos, verbose=verbose, fitargs...)
         fittedpos = dofit
       catch e
-        @warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos. countmap(ypos)=$(sort(OrderedDict(countmap(ypos))))")
+        @warn("failed to fit truncated counts model to positive subsample, possibly not enough variation in ypos. countmap(ypos)=$(countmapstr(ypos))")
         if mildexception(e)
           fittedpos = false
         else

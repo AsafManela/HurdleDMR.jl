@@ -4,14 +4,14 @@ rdist(x::AbstractArray{T}, y::AbstractArray{S}) where {T<:Number,S<:Number} = no
 
 testdir = dirname(@__FILE__)
 
-"Tests whether the output of `show(expr)` converted to String equals `expected`"
+"Tests whether the output of `show(expr)` converted to String contains `expected`"
 macro test_show(expr, expected)
     s = quote
         local o = IOBuffer()
         show(o, $expr)
         String(take!(o))
     end
-    :(@test $(esc(s)) == $expected)
+    :(@test occursin($(esc(expected)), $(esc(s))))
 end
 
 # returns true iff v is a column of A

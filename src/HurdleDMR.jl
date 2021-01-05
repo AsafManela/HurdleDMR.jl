@@ -6,7 +6,7 @@ using OrderedCollections: OrderedDict
 using GLM: FPVector, FP, Link
 using LoggingExtras: MinLevelLogger
 using Tables: columntable
-using StatsModels: TupleTerm, ColumnTable, missing_omit, schema, apply_schema, termvars
+using StatsModels: TupleTerm, ColumnTable, missing_omit, schema, apply_schema, termvars, coefnames
 import StatsModels: modelcols
 import Tables
 

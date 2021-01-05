@@ -226,3 +226,30 @@ includelinX(m::HDMRPaths{Missing}) = true
 
 srprojX(m::HDMRCoefs,counts,covars,projdir; includel=includelinX(m), kwargs...) = srprojX(coef(m)...,counts,covars,projdir; inpos=m.inpos, inzero=m.inzero, includel=includel, kwargs...)
 srprojX(m::HDMRPaths,counts,covars,projdir; includel=includelinX(m), select=defsegselect, kwargs...) = srprojX(coef(m, select)...,counts,covars,projdir; inpos=m.inpos, inzero=m.inzero, includel=includel, kwargs...)
+
+function srprojnames(m::DMR, nZcols)
+  if nZcols == 2
+    # default case
+    ["z", "m"]
+  else
+    @warn "srprojnames got an unexpected number of Z columns ($nZcols)"
+    String[]
+  end
+end
+
+function srprojnames(m::HDMR, nZcols)
+  includel = includelinX(m)
+  if nZcols == 4
+    # default InclusionRepetition case with full rank
+    ["zpos", "zzero", "m", "ℓ"]
+  elseif !includel && nZcols == 3
+    # case with old Hurdle 
+    ["zpos", "zzero", "m"]
+  elseif nZcols == 2
+    # case with colinear zpos and zzero
+    ["zzero", "ℓ"]
+  else
+    @warn "srprojnames got an unexpected number of Z columns ($nZcols)"
+    String[]
+  end
+end
