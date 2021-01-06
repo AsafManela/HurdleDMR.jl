@@ -8,6 +8,8 @@ hdmrmodels = [
     @model(h ~ x + z + cat + y, c ~ z + cat + y)
     @model(h ~ x + z + cat, c ~ x + z + cat + y)
     @model(h ~ x + z + cat, c ~ z + cat + y)
+    @model(h ~ y, c ~ y)
+    @model(h ~ x + z + cat + y, c ~ y)
     ]
 
 @testset "$M" for M in (InclusionRepetition,Hurdle)
@@ -22,7 +24,8 @@ trmspos = HurdleDMR.getrhsterms(f, :c)
 trms, inzero, inpos = HurdleDMR.mergerhsterms(trmszero,trmspos)
 
 # create model matrix
-covarsb, countsb, as = modelcols(trms, covarsdf, counts; model=M)
+covars, countsb, as = modelcols(trms, covarsdf, counts; model=M)
+p = size(covars, 2)
 
 # inzero and inpos may be different in mm with factor variables
 inzero, inpos = HurdleDMR.mapins(inzero, inpos, as)
@@ -67,7 +70,9 @@ hdmrcoefsb = fit(HDMRCoefs{M}, covars, counts; inzero=inzero, inpos=inpos, paral
 
 # select=MinBIC()
 hdmrcoefsb = fit(HDMRCoefs{M}, covars, counts; inzero=inzero, inpos=inpos, select=MinBIC(), testargs...)
-@test coef(hdmrcoefsb)[1] != coefsHppos
+if ppos > 1 && pzero > 1
+    @test coef(hdmrcoefsb)[1] != coefsHppos
+end
 # @test coef(hdmrcoefsb)[2] != coefsHpzero
 hdmrb = fit(HDMR{M}, covars, counts; inzero=inzero, inpos=inpos, select=MinBIC(), testargs...)
 @test coef(hdmrb)[1] == coef(hdmrcoefsb)[1]
@@ -232,20 +237,22 @@ hirglmdf = fit(CIR{HDMR{M}, GeneralizedLinearModel},f,covarsdf,counts,:y,Gamma()
 # select=MinBIC()
 hirdfb = fit(CIR{HDMR{M}, LinearModel},f,covarsdf,counts,:y;
     inzero=inzero, inpos=inpos, nocounts=true, select=MinBIC(), testargs...)
-@test coefbwd(hirdf)[1] != coefbwd(hirdfb)[1]
+if ppos > 1 && pzero > 1
+    @test coefbwd(hirdf)[1] != coefbwd(hirdfb)[1]
+end
 # @test coefbwd(hirdf)[2] != coefbwd(hirdfb)[2]
 @test coeffwd(hirdf)[1] != coeffwd(hirdfb)[1]
 @test coeffwd(hirdf)[2] != coeffwd(hirdfb)[2]
 
-zlm = lm(hcat(ones(n,1),Z1,covars[:,1:4]),covars[:,projdir])
+zlm = lm(hcat(ones(n,1),Z1,covars[:,1:p-1]),covars[:,projdir])
 @test r2(zlm) ≈ r2(hir)
 @test adjr2(zlm) ≈ adjr2(hir)
-@test predict(zlm,hcat(ones(10,1),Z1[1:10,:],covars[1:10,1:4])) ≈ predict(hir,covars[1:10,:],counts[1:10,:])
+@test predict(zlm,hcat(ones(10,1),Z1[1:10,:],covars[1:10,1:p-1])) ≈ predict(hir,covars[1:10,:],counts[1:10,:])
 
-zlmnocounts = lm(hcat(ones(n,1),covars[:,1:4]),covars[:,projdir])
+zlmnocounts = lm(hcat(ones(n,1),covars[:,1:p-1]),covars[:,projdir])
 @test r2(zlmnocounts) ≈ r2(hir; nocounts=true)
 @test adjr2(zlmnocounts) ≈ adjr2(hir; nocounts=true)
-@test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,1:4])) ≈ predict(hir,covars[1:10,:],counts[1:10,:]; nocounts=true)
+@test predict(zlmnocounts,hcat(ones(10,1),covars[1:10,1:p-1])) ≈ predict(hir,covars[1:10,:],counts[1:10,:]; nocounts=true)
 
 end
 

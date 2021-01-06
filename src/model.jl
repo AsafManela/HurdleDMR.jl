@@ -41,6 +41,17 @@ function Base.show(io::IO, m::Model)
   nothing
 end
 
+function mergerhsterms(a::Term, b::Term) 
+  if a == b
+    a, [1], [1]
+  else
+    (a, b), [1], [2]
+  end
+end
+
+mergerhsterms(a, b::Term) = mergerhsterms(a, (b,))
+mergerhsterms(a::Term, b) = mergerhsterms((a,), b)
+
 function mergerhsterms(a, b)
   terms = union(a, b)
 
@@ -69,6 +80,9 @@ function mapins(inzero, inpos, appliedschema)
   mappedinzero, mappedinpos
 end
 
+# special case of a single variable on both model parts
+mapins(inzero, inpos, singleterm::AbstractTerm) = [1], [1]
+
 """
   getrhsterms(m, lhs)
 
@@ -85,7 +99,7 @@ end
 StatsModels.missing_omit(data::T, formula::TupleTerm) where T<:ColumnTable =
     missing_omit(NamedTuple{tuple(termvars(formula)...)}(data))
 
-function StatsModels.modelcols(trms::TupleTerm, data, counts::AbstractMatrix;
+function StatsModels.modelcols(trms, data, counts::AbstractMatrix;
     model::Type{M}=DCR, contrasts=Dict{Symbol,Any}()) where M
 
   cols = columntable(data)
@@ -95,7 +109,7 @@ function StatsModels.modelcols(trms::TupleTerm, data, counts::AbstractMatrix;
   modelcols(as, nonmissing, cols, counts)
 end
 
-function StatsModels.modelcols(as::TupleTerm, nonmissing, cols, counts::AbstractMatrix)
+function StatsModels.modelcols(as, nonmissing, cols, counts::AbstractMatrix)
 
   covars = modelcols(MatrixTerm(as), cols)
 
@@ -133,6 +147,9 @@ function Base.show(io::IO, model::TableCountsRegressionModel)
 
     # all coefnames including prediction target
     cfnames = coefnames(model.schema)
+    if isa(cfnames, String) 
+      cfnames = [cfnames]
+    end
 
     # remove projdir
     projdir = ixprojdir(model.schema, sprojdir)

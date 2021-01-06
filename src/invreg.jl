@@ -155,6 +155,11 @@ function ixprojdir(appliedschema, sprojdir::Symbol)
   mappedix
 end
 
+function ixprojdir(singleterm::AbstractTerm, sprojdir::Symbol) 
+  @assert termvars(singleterm) == [sprojdir] "Target variable $sprojdir must be in the model schema"
+  1
+end
+
 StatsModels.@delegate TableCountsRegressionModel.model [coeffwd, coefbwd, srproj, srprojX]
 
 """
