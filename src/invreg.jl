@@ -146,6 +146,10 @@ function StatsBase.fit(::Type{C}, m::Model, df, counts::AbstractMatrix, sprojdir
     df, counts, m, as, sprojdir)
 end
 
+# because DataFrames now support string column indexing ...
+StatsBase.fit(::Type{C}, m::Model, df, counts::AbstractMatrix, sprojdir::String, fmargs...;
+  kwargs...) where {BM,FM,C<:CIR{BM,FM}} = fit(C, m, df, counts, Symbol(sprojdir), fmargs...; kwargs...)
+
 "Find column number of sprojdir"
 function ixprojdir(appliedschema, sprojdir::Symbol)
   ix = something(findfirst(isequal(sprojdir), termvars(appliedschema)), 0)

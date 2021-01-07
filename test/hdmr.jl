@@ -217,7 +217,7 @@ hirglm = fit(CIR{HDMR{M}, GeneralizedLinearModel},covars,counts,projdir,Gamma();
 @test !(coeffwd(hirglm)[1] ≈ coeffwd(hir)[1])
 @test !(coeffwd(hirglm)[2] ≈ coeffwd(hir)[2])
 
-hirdf = fit(CIR{HDMR{M}, LinearModel},f,covarsdf,counts,:y;
+hirdf = fit(CIR{HDMR{M}, LinearModel},f,covarsdf,counts,"y";
     inzero=inzero, inpos=inpos, nocounts=true, testargs...)
 @test coefbwd(hirdf)[1] ≈ coef(hdmrcoefs)[1]
 @test coefbwd(hirdf)[2] ≈ coef(hdmrcoefs)[2]

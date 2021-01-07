@@ -172,7 +172,7 @@ mnirglm = fit(CIR{DMR,GeneralizedLinearModel},covars,counts,projdir,Gamma(); noc
 @test !(predict(mnir,covars[1:10,:],counts[1:10,:]) ≈ predict(mnir,covars[1:10,:],counts[1:10,:];nocounts=true))
 @test_throws ErrorException predict(mnirglm,covars[1:10,:],counts[1:10,:];nocounts=true)
 
-mnirdf = fit(CIR{DMR,LinearModel},f,covarsdf,counts,:y; nocounts=true, testargs...)
+mnirdf = fit(CIR{DMR,LinearModel},f,covarsdf,counts,"y"; nocounts=true, testargs...)
 @test coefbwd(mnirdf) ≈ coef(dmrcoefs)
 @test coeffwd(mnirdf) ≈ coeffwd(mnir)
 @test coeffwd(mnirdf) != coeffwd(mnir; nocounts=true)
