@@ -16,7 +16,7 @@ bioChemists.marMarried=bioChemists.mar .== "Married"
 bioChemists.femWomen=bioChemists.fem .== "Women"
 bioChemists.art = convert(Array{Union{Float64, Missings.Missing},1}, bioChemists.art)
 
-X=convert(Array{Float64,2},bioChemists[!,[:femWomen,:marMarried,:kid5,:phd,:ment]])
+X=Matrix{Float64}(bioChemists[!,[:femWomen,:marMarried,:kid5,:phd,:ment]])
 Xwconst=[ones(size(X,1)) X]
 y=convert(Array{Float64,1},bioChemists.art)
 const ixpartial = 50:60
@@ -36,9 +36,9 @@ const ixpartial = 50:60
 # writetable(joinpath(testdir,"data","hurdle_yhatR1.csv"),DataFrame(yhatR1=yhatR1))
 # writetable(joinpath(testdir,"data","hurdle_yhatR1partial.csv"),DataFrame(yhatR1partial=yhatR1partial))
 
-coefsR1=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_coefsR1.csv"), DataFrame)))
-yhatR1=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_yhatR1.csv"), DataFrame)))
-yhatR1partial=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_yhatR1partial.csv"), DataFrame)))
+coefsR1=vec(Matrix{Float64}(CSV.read(joinpath(testdir,"data","hurdle_coefsR1.csv"), DataFrame)))
+yhatR1=vec(Matrix{Float64}(CSV.read(joinpath(testdir,"data","hurdle_yhatR1.csv"), DataFrame)))
+yhatR1partial=vec(Matrix{Float64}(CSV.read(joinpath(testdir,"data","hurdle_yhatR1partial.csv"), DataFrame)))
 
 # simple hurdle with GLM underlying
 hurdlefit = fit(Hurdle,GeneralizedLinearModel,Xwconst,y)
@@ -143,9 +143,9 @@ end
 # writetable(joinpath(testdir,"data","hurdle_yhatR2.csv"),DataFrame(yhatR2=yhatR2))
 # writetable(joinpath(testdir,"data","hurdle_yhatR2partial.csv"),DataFrame(yhatR2partial=yhatR2partial))
 
-coefsR2=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_coefsR2.csv"), DataFrame)))
-yhatR2=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_yhatR2.csv"), DataFrame)))
-yhatR2partial=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_yhatR2partial.csv"), DataFrame)))
+coefsR2=vec(Matrix{Float64}(CSV.read(joinpath(testdir,"data","hurdle_coefsR2.csv"), DataFrame)))
+yhatR2=vec(Matrix{Float64}(CSV.read(joinpath(testdir,"data","hurdle_yhatR2.csv"), DataFrame)))
+yhatR2partial=vec(Matrix{Float64}(CSV.read(joinpath(testdir,"data","hurdle_yhatR2partial.csv"), DataFrame)))
 
 Xpos = X[:,1:3]
 Xzero = X[:,4:5]
@@ -238,9 +238,9 @@ end
 # writetable(joinpath(testdir,"data","hurdle_yhatR3.csv"),DataFrame(yhatR3=yhatR3))
 # writetable(joinpath(testdir,"data","hurdle_yhatR3partial.csv"),DataFrame(yhatR3partial=yhatR3partial))
 
-coefsR3=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_coefsR3.csv"), DataFrame)))
-yhatR3=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_yhatR3.csv"), DataFrame)))
-yhatR3partial=vec(convert(Matrix{Float64},CSV.read(joinpath(testdir,"data","hurdle_yhatR3partial.csv"), DataFrame)))
+coefsR3=vec(Matrix{Float64}(CSV.read(joinpath(testdir,"data","hurdle_coefsR3.csv"), DataFrame)))
+yhatR3=vec(Matrix{Float64}(CSV.read(joinpath(testdir,"data","hurdle_yhatR3.csv"), DataFrame)))
+yhatR3partial=vec(Matrix{Float64}(CSV.read(joinpath(testdir,"data","hurdle_yhatR3partial.csv"), DataFrame)))
 
 offpos = convert(Vector{Float64},bioChemists.offpos)
 offzero = convert(Vector{Float64},bioChemists.offzero)

@@ -42,7 +42,7 @@ eμ = vec(log.(sum(tcounts, dims=2)))
 @test tμ == eμ
 @test tcounts == counts
 
-Cf = convert(Matrix{Float64},counts)
+Cf = Matrix{Float64}(counts)
 tcovars, tcounts, tμ, tn = shifters(DMR, covars, Cf, true, nothing)
 @test tcounts === Cf
 @test tμ == eμ
@@ -78,7 +78,7 @@ eμ = vec(log.(sum(tcounts, dims=2)))
 @test tμzero == eμ
 @test tcounts == counts
 
-Cf = convert(Matrix{Float64},counts)
+Cf = Matrix{Float64}(counts)
 tcovars, tcounts, tμpos, tμzero, tn = shifters(M, covars, Cf, true, nothing, nothing, nothing)
 @test tcounts === Cf
 @test tμpos == eμ
@@ -124,7 +124,7 @@ eμzero = log.(pred ./ (d .- pred))
 @test tμzero == eμzero
 @test tcounts == counts
 
-Cf = convert(Matrix{Float64},counts)
+Cf = Matrix{Float64}(counts)
 tcovars, tcounts, tμpos, tμzero, tn = shifters(M, covars, Cf, true, nothing, nothing, nothing)
 @test tcounts === Cf
 @test tμpos == eμpos
