@@ -337,12 +337,6 @@ coefsJpos, coefsJzero = coef(hurdle;select=AllSeg())
 @test coefsJpos == zero(coefsJpos)
 @test size(coefsJzero,1) == 2
 
-ydeg = zero(y)
-ydeg[1] = 2
-ydeg[2] = 3
-hurdleglm = @test_logs (:warn, r"failed to fit truncated counts model to positive") fit(Hurdle,GeneralizedLinearModel,[ones(size(X,1)) X],ydeg; showwarnings=true)
-
-
 # degenerate positive counts data case 1 without >1
 y0or1 = deepcopy(y)
 y0or1[y.>1] .= 1
