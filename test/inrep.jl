@@ -302,8 +302,12 @@ coefsJpos, coefsJzero = coef(inrep;select=AllSeg())
 ydeg = zero(y)
 ydeg[1] = 2
 ydeg[2] = 3
-increpglm = @test_logs (:warn, r"failed to fit truncated counts model to positive") fit(InclusionRepetition,GeneralizedLinearModel,[ones(size(X,1)) X],ydeg; showwarnings=true)
-
+# should fail to fit positives model with dropcollinear=false (GLM<1.8.1 behavior)
+increpglm1 = @test_logs (:warn, r"failed to fit truncated counts model to positive") fit(InclusionRepetition,GeneralizedLinearModel,[ones(size(X,1)) X],ydeg; showwarnings=true, dropcollinear=false)
+# should be able to fit positives model with dropcollinear=true (default GLM>=1.8.1 behavior)
+increpglm2 = fit(InclusionRepetition,GeneralizedLinearModel,[ones(size(X,1)) X],ydeg; showwarnings=true)
+@test coef(increpglm1)[1] != coef(increpglm2)[1]
+@test coef(increpglm1)[2] ≈ coef(increpglm2)[2]
 
 # degenerate positive counts data case 1 without >1
 y0or1 = deepcopy(y)

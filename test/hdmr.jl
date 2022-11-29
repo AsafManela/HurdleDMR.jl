@@ -324,10 +324,6 @@ coefsHppos4, coefsHpzero4 = coef(hdmrcoefs4)
 @test coefsHpzero4[:,3] == zeros(p+1)
 @test HurdleDMR.includelinX(hdmrcoefs4) == includel
 
-if M == InclusionRepetition
-    @info("Testing hdmr degenerate cases. The 12 following warnings by workers are expected ...")
-end
-
 zcounts = Matrix(deepcopy(counts))
 Random.seed!(13)
 for I = eachindex(zcounts)
@@ -380,13 +376,7 @@ coefsHppos3, coefsHpzero3 = coef(hdmrcoefs3)
 @test HurdleDMR.includelinX(hdmrcoefs3) == includel
 
 # hurdle dmr parallel remote cluster
-if M == Hurdle
-    hdmrcoefs4 = fit(HDMRPaths{M},covars, zcounts; parallel=false, testargs...)
-else
-    rx = Regex("fit\\($M...\\) failed for countsj")
-    warnings = [(:warn, rx) for i=1:4]
-    hdmrcoefs4 = @test_logs(warnings..., fit(HDMRPaths{M},covars, zcounts; parallel=false, testargs...))
-end
+hdmrcoefs4 = fit(HDMRPaths{M},covars, zcounts; parallel=false, testargs...)
 coefsHppos4, coefsHpzero4 = coef(hdmrcoefs4)
 @test coefsHppos ≈ coefsHppos4
 @test coefsHpzero ≈ coefsHpzero4
