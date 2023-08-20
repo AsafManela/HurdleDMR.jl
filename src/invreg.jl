@@ -195,7 +195,7 @@ Predict using a fitted Counts inverse regression (CIR) given new covars datafram
 and counts. See also [`predict(::CIR)`](@ref).
 """
 function StatsBase.predict(mm::MM, df, counts::AbstractMatrix;
-  kwargs...) where {T,M<:CIR,D,C,MM<:Union{CIR,TableCountsRegressionModel{M,D,C}}}
+  kwargs...) where {M<:CIR,D,C,MM<:Union{CIR,TableCountsRegressionModel{M,D,C}}}
 
     # drop projection direction from schema used to select model cols so it can be missing
     as = StatsModels.drop_term(mm.schema, term(mm.sprojdir))
